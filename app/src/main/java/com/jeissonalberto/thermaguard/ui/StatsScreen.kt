@@ -87,7 +87,7 @@ fun StatsScreen(
 
             // ── LEARNING PROFILE ──────────────────────────────────────────
             profile?.let { p ->
-                LearningProfileCard(profile = p, sampleCount = p.sampleCount)
+                LearningProfileCard(profile = p, sampleCount = p.samplesCollected)
             }
 
             Spacer(Modifier.height(12.dp))
@@ -402,7 +402,7 @@ fun HourlyHeatmapCard(hourly: List<HourlyDataPoint>, accent: Color) {
 //  LEARNING PROFILE
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
-fun LearningProfileCard(profile: LearnedProfile, sampleCount: Int) {
+fun LearningProfileCard(profile: LearnedProfile, sampleCount: Int = 0) {
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -420,8 +420,8 @@ fun LearningProfileCard(profile: LearnedProfile, sampleCount: Int) {
                 Triple("Temp baseline", "${profile.baselineTemp.roundToInt()}°C", "Tu temperatura normal en reposo"),
                 Triple("Umbral dinámico", "${profile.dynamicThreshold.roundToInt()}°C", "Cuando el motor interviene"),
                 Triple("App más caliente", profile.topHeatApp.ifEmpty { "Sin datos" }, "La que más temperatura genera"),
-                Triple("Causa principal", profile.learnedCause.name, "Patrón detectado"),
-                Triple("Nivel de riesgo", profile.riskLevel.name, "Evaluación general"),
+                Triple("Causa principal", profile.likelyCause.name, "Patrón detectado"),
+                Triple("Nivel de riesgo", profile.personalRisk.name, "Evaluación general"),
             )
 
             rows.forEach { (label, value, desc) ->
