@@ -53,7 +53,7 @@ class ThermalMonitorService : Service() {
 
         val notif = buildNotification("Iniciando…", ThermalLevel.NORMAL, 0)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIF_ID, notif, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+            startForeground(NOTIF_ID, notif)
         } else {
             startForeground(NOTIF_ID, notif)
         }
@@ -127,7 +127,7 @@ class ThermalMonitorService : Service() {
 
     private fun sendAlert(snap: ThermalSnapshot, profile: LearnedProfile) {
         val notif = NotificationCompat.Builder(this, CHANNEL_ALERT)
-            .setSmallIcon(R.drawable.ic_launcher_round)
+            .setSmallIcon(android.R.drawable.ic_menu_compass)
             .setContentTitle("🔥 Temperatura crítica — ${snap.batteryTemp}°C")
             .setContentText("Risk score ${profile.riskScore}/100 · El motor está actuando automáticamente")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -151,14 +151,14 @@ class ThermalMonitorService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_round)
+            .setSmallIcon(android.R.drawable.ic_menu_compass)
             .setContentTitle(title)
             .setContentText(text)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setSilent(true)
             .setContentIntent(pendingIntent)
-            .addAction(R.drawable.ic_launcher_round, "Detener", stopIntent)
+            .addAction(android.R.drawable.ic_menu_compass, "Detener", stopIntent)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
     }
