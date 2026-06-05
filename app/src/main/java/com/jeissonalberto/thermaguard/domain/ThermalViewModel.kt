@@ -17,6 +17,9 @@ data class ThermalUiState(
     val optimizationPlan: List<OptimizationAction> = emptyList(),
     val smartTips: List<SmartTip> = emptyList(),
     val profile: LearnedProfile? = null,
+    val prediction: TempPrediction? = null,
+    val batteryHealth: BatteryHealthScore? = null,
+    val hourlyProfile: List<HourlyDataPoint> = emptyList(),
     val isMonitoring: Boolean = false,
     val autoMode: Boolean = false,
     val alertThreshold: Float = 43f,
@@ -25,10 +28,10 @@ data class ThermalUiState(
 
 class ThermalViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val sensorRepo = SensorRepository(application)
+    private val sensorRepo       = SensorRepository(application)
     private val optimizationRepo = OptimizationRepository(application)
-    private val learningEngine = ThermalLearningEngine(application)
-    private val db = ThermalDatabase.getInstance(application)
+    private val learningEngine   = ThermalLearningEngine(application)
+    private val db               = ThermalDatabase.getInstance(application)
 
     private val _uiState = MutableStateFlow(ThermalUiState())
     val uiState: StateFlow<ThermalUiState> = _uiState.asStateFlow()
@@ -43,20 +46,27 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             delay(1500L)
             while (true) {
                 try {
-                    val snapshot = sensorRepo.readSnapshot()
-                    val causes = sensorRepo.analyzeHeatCauses(snapshot)
-                    val plan = optimizationRepo.buildOptimizationPlan(snapshot)
-                    val profile = learningEngine.learn(snapshot)
-                    val tips = learningEngine.generateSmartTips(profile, snapshot)
+                    val snapshot    = sensorRepo.readSnapshot()
+                    val causes      = sensorRepo.analyzeHeatCauses(snapshot)
+                    val plan        = optimizationRepo.buildOptimizationPlan(snapshot)
+                    val profile     = learningEngine.learn(snapshot)
+                    val prediction  = learningEngine.predictNextTemp()
+                    val health      = learningEngine.computeBatteryHealthScore()
+                    val hourly      = learningEngine.getHourlyProfile()
+                    val tips        = learningEngine.generateSmartTips(profile, snapshot, prediction)
 
                     _uiState.update { state ->
                         state.copy(
-                            latest = snapshot,
-                            causes = causes,
+                            latest          = snapshot,
+                            causes          = causes,
                             optimizationPlan = plan,
-                            smartTips = tips,
-                            profile = profile,
-                            isLoading = false
+                            smartTips       = tips,
+                            profile         = profile,
+                            prediction      = prediction,
+                            batteryHealth   = health,
+                            hourlyProfile   = hourly,
+                            alertThreshold  = profile.dynamicThreshold,
+                            isLoading       = false
                         )
                     }
 
@@ -74,14 +84,13 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private fun observeHistory() {
         viewModelScope.launch {
             try {
-                db.thermalDao().getHistory(200).collect { history ->
+                db.thermalDao().getHistory(500).collect { history ->
                     _uiState.update { it.copy(history = history) }
                 }
             } catch (e: Exception) { }
         }
     }
 
-    /** Llamado desde MainActivity tras conceder permisos */
     fun startMonitor() {
         val context = getApplication<Application>()
         try {
@@ -92,7 +101,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     fun toggleMonitorService() {
         val context = getApplication<Application>()
-        val intent = Intent(context, ThermalMonitorService::class.java)
+        val intent  = Intent(context, ThermalMonitorService::class.java)
         try {
             if (ThermalMonitorService.isRunning) {
                 intent.action = ThermalMonitorService.ACTION_STOP
@@ -105,21 +114,14 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         } catch (e: Exception) { }
     }
 
-    fun toggleAutoMode() {
-        _uiState.update { it.copy(autoMode = !it.autoMode) }
-    }
-
-    fun setAlertThreshold(temp: Float) {
-        _uiState.update { it.copy(alertThreshold = temp) }
-    }
+    fun toggleAutoMode()              { _uiState.update { it.copy(autoMode = !it.autoMode) } }
+    fun setAlertThreshold(t: Float)   { _uiState.update { it.copy(alertThreshold = t) } }
+    fun resetLearning()               { learningEngine.reset() }
 
     private suspend fun executeAutoOptimization(plan: List<OptimizationAction>) {
         plan.forEach { action ->
-            when (action) {
-                is OptimizationAction.KillBackgroundApps -> {
-                    try { optimizationRepo.killBackgroundApps() } catch (e: Exception) { }
-                }
-                else -> { }
+            if (action is OptimizationAction.KillBackgroundApps) {
+                try { optimizationRepo.killBackgroundApps() } catch (e: Exception) { }
             }
         }
     }
