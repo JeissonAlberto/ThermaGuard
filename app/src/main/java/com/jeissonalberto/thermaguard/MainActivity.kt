@@ -64,7 +64,7 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                     )
                     NavigationBarItem(
                         selected = selectedTab == 3, onClick = { selectedTab = 3 },
-                        icon = { Icon(Icons.Default.TuneRounded, null) }, label = { Text("Optimizar") }
+                        icon = { Icon(Icons.Default.Tune, null) }, label = { Text("Optimizar") }
                     )
                     NavigationBarItem(
                         selected = selectedTab == 4, onClick = { selectedTab = 4 },
