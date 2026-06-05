@@ -1,349 +1,459 @@
 package com.jeissonalberto.thermaguard.ui
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
+import kotlin.math.roundToInt
 
 @Composable
 fun StatsScreen(
     uiState: ThermalUiState,
     onResetLearning: () -> Unit
 ) {
-    val scrollState = rememberScrollState()
+    val scroll  = rememberScrollState()
+    val level   = uiState.latest.batteryTemp.toThermalLevel()
+    val accent  = TG.accentFor(level)
+    val profile = uiState.profile
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF0F2027), Color(0xFF1a1a2e), Color(0xFF0F2027))))
+            .background(Brush.radialGradient(
+                colors  = listOf(TG.glowFor(level).copy(alpha = 0.10f), TG.bg),
+                center  = Offset(1f, 1f),
+                radius  = 700f
+            ))
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(scrollState).padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scroll)
+                .padding(horizontal = 20.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(Icons.Default.BarChart, null, tint = Color(0xFF80CBC4), modifier = Modifier.size(24.dp))
+            // ── HEADER ────────────────────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Column {
-                    Text("Estadisticas", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text("Analisis profundo de tu dispositivo", fontSize = 12.sp, color = Color.White.copy(alpha = 0.5f))
+                    Text("Estadísticas", fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                        color = TG.textPri, letterSpacing = (-0.5).sp)
+                    Text("Análisis profundo del motor", fontSize = 12.sp, color = TG.textSec)
+                }
+                IconButton(onClick = onResetLearning) {
+                    Icon(Icons.Default.Refresh, null, tint = TG.textDim, modifier = Modifier.size(20.dp))
                 }
             }
 
-            // Prediccion
-            uiState.prediction?.let { pred ->
-                PredictionCard(prediction = pred)
+            // ── RISK SCORE ────────────────────────────────────────────────
+            profile?.let { p ->
+                RiskScoreCard(profile = p, accent = accent)
             }
 
-            // Salud de bateria
+            // ── TEMP HISTORY CHART ────────────────────────────────────────
+            if (uiState.history.size >= 3) {
+                TempHistoryChart(history = uiState.history, accent = accent)
+            }
+
+            // ── BATTERY HEALTH ────────────────────────────────────────────
             uiState.batteryHealth?.let { health ->
                 BatteryHealthCard(health = health)
             }
 
-            // Grafica horaria
-            if (uiState.hourlyProfile.size >= 3) {
-                HourlyProfileCard(hourly = uiState.hourlyProfile)
+            // ── HOURLY HEATMAP ────────────────────────────────────────────
+            if (uiState.hourlyProfile.isNotEmpty()) {
+                HourlyHeatmapCard(hourly = uiState.hourlyProfile, accent = accent)
             }
 
-            // Grafica de historial completo
-            if (uiState.history.size >= 5) {
-                FullHistoryChart(history = uiState.history.takeLast(50))
+            // ── LEARNING PROFILE ──────────────────────────────────────────
+            profile?.let { p ->
+                LearningProfileCard(profile = p, sampleCount = p.sampleCount)
             }
 
-            // Estadisticas del perfil
-            uiState.profile?.let { profile ->
-                if (profile.samplesCollected >= 5) {
-                    ProfileStatsCard(profile = profile)
-                }
-            }
-
-            // Reset aprendizaje
-            var showResetDialog by remember { mutableStateOf(false) }
-            OutlinedButton(
-                onClick = { showResetDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF9A9A))
-            ) {
-                Icon(Icons.Default.RestartAlt, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Reiniciar motor de aprendizaje")
-            }
-
-            if (showResetDialog) {
-                AlertDialog(
-                    onDismissRequest = { showResetDialog = false },
-                    title = { Text("Reiniciar aprendizaje") },
-                    text = { Text("Esto borrara todos los datos aprendidos (baseline, patrones, correlaciones). La app volvera a aprender desde cero.") },
-                    confirmButton = {
-                        TextButton(onClick = { onResetLearning(); showResetDialog = false }) {
-                            Text("Reiniciar", color = Color(0xFFEF9A9A))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showResetDialog = false }) { Text("Cancelar") }
-                    }
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
         }
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  RISK SCORE
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
-fun PredictionCard(prediction: TempPrediction) {
-    val confColor = when (prediction.confidence) {
-        PredictionConfidence.HIGH   -> Color(0xFF00E676)
-        PredictionConfidence.MEDIUM -> Color(0xFFFFD600)
-        PredictionConfidence.LOW    -> Color(0xFF90A4AE)
-    }
-    val tempColor = when {
-        prediction.predictedTemp >= 45f -> Color(0xFFFF1744)
-        prediction.predictedTemp >= 40f -> Color(0xFFFF6D00)
-        prediction.predictedTemp >= 35f -> Color(0xFFFFD600)
-        else -> Color(0xFF00E676)
-    }
-
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White.copy(alpha = 0.06f),
-        modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFF7C4DFF).copy(alpha = 0.4f), RoundedCornerShape(16.dp))
-    ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.AutoGraph, null, tint = Color(0xFF7C4DFF), modifier = Modifier.size(18.dp))
-                Text("Prediccion (proxima lectura)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text("~${prediction.predictedTemp.toInt()}°C", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = tempColor)
-                    Text(prediction.trendText, fontSize = 13.sp, color = Color.White.copy(alpha = 0.7f))
-                }
-                Surface(shape = RoundedCornerShape(10.dp), color = confColor.copy(alpha = 0.15f)) {
-                    Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(when (prediction.confidence) {
-                            PredictionConfidence.HIGH -> "Alta"
-                            PredictionConfidence.MEDIUM -> "Media"
-                            PredictionConfidence.LOW -> "Baja"
-                        }, fontSize = 12.sp, color = confColor, fontWeight = FontWeight.Bold)
-                        Text("Confianza", fontSize = 10.sp, color = Color.White.copy(alpha = 0.5f))
-                    }
-                }
-            }
-            Text(
-                "Prediccion basada en regresion lineal sobre las ultimas lecturas.",
-                fontSize = 11.sp, color = Color.White.copy(alpha = 0.4f)
-            )
-        }
-    }
-}
-
-@Composable
-fun BatteryHealthCard(health: BatteryHealthScore) {
+fun RiskScoreCard(profile: LearnedProfile, accent: Color) {
+    val score = profile.riskScore.coerceIn(0, 100)
     val scoreColor = when {
-        health.score >= 85 -> Color(0xFF00E676)
-        health.score >= 70 -> Color(0xFFFFD600)
-        health.score >= 50 -> Color(0xFFFF6D00)
-        else -> Color(0xFFFF1744)
+        score >= 75 -> TG.red
+        score >= 50 -> Color(0xFFFF6D00)
+        score >= 25 -> TG.amber
+        else        -> TG.green
     }
-    val animScore by animateFloatAsState(targetValue = health.score.toFloat(), animationSpec = tween(1200), label = "score")
+    val scoreLabel = when {
+        score >= 75 -> "Alto riesgo"
+        score >= 50 -> "Moderado"
+        score >= 25 -> "Bajo"
+        else        -> "Óptimo"
+    }
+    val anim = rememberInfiniteTransition(label = "risk")
+    val sweep by animateFloatAsState(score / 100f * 280f, tween(1200, easing = EaseOutCubic), label = "sw")
 
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White.copy(alpha = 0.06f),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.Favorite, null, tint = scoreColor, modifier = Modifier.size(18.dp))
-                Text("Salud de la bateria", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
-            }
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                // Arco de score
-                Box(modifier = Modifier.size(90.dp), contentAlignment = Alignment.Center) {
-                    Canvas(modifier = Modifier.size(90.dp)) {
-                        val cx = size.width / 2; val cy = size.height / 2; val r = size.width * 0.4f
-                        drawArc(Color.White.copy(alpha = 0.08f), 135f, 270f, false,
-                            Offset(cx-r, cy-r), Size(r*2, r*2), style = Stroke(10f, cap = StrokeCap.Round))
-                        drawArc(scoreColor, 135f, animScore / 100f * 270f, false,
-                            Offset(cx-r, cy-r), Size(r*2, r*2), style = Stroke(10f, cap = StrokeCap.Round))
+    GlassCard(modifier = Modifier.fillMaxWidth(), accent = scoreColor) {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text("Score de riesgo térmico", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // Arc gauge
+                Box(modifier = Modifier.size(100.dp), contentAlignment = Alignment.Center) {
+                    Canvas(modifier = Modifier.size(100.dp)) {
+                        val stroke = 10f
+                        val startAngle = 130f
+                        // Track
+                        drawArc(
+                            color = Color.White.copy(alpha = 0.07f),
+                            startAngle = startAngle, sweepAngle = 280f,
+                            useCenter = false,
+                            style = Stroke(stroke, cap = StrokeCap.Round),
+                            topLeft = Offset(stroke / 2, stroke / 2),
+                            size = Size(size.width - stroke, size.height - stroke)
+                        )
+                        // Value
+                        drawArc(
+                            brush = Brush.sweepGradient(
+                                listOf(scoreColor.copy(alpha = 0.6f), scoreColor),
+                                center = Offset(size.width / 2, size.height / 2)
+                            ),
+                            startAngle = startAngle, sweepAngle = sweep,
+                            useCenter = false,
+                            style = Stroke(stroke, cap = StrokeCap.Round),
+                            topLeft = Offset(stroke / 2, stroke / 2),
+                            size = Size(size.width - stroke, size.height - stroke)
+                        )
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("${health.score}", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = scoreColor)
-                        Text("/100", fontSize = 10.sp, color = Color.White.copy(alpha = 0.4f))
+                        Text("$score", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = scoreColor)
+                        Text("/100", fontSize = 9.sp, color = TG.textDim)
                     }
                 }
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(health.level, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = scoreColor)
-                    health.factors.forEach { f ->
-                        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("•", fontSize = 12.sp, color = Color.White.copy(alpha = 0.4f))
-                            Text(f, fontSize = 11.sp, color = Color.White.copy(alpha = 0.6f), lineHeight = 16.sp)
+
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(shape = RoundedCornerShape(8.dp), color = scoreColor.copy(alpha = 0.15f)) {
+                        Text(scoreLabel,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = 12.sp, fontWeight = FontWeight.Bold, color = scoreColor)
+                    }
+                    StatRow("Baseline", "${profile.baselineTemp.roundToInt()}°C", TG.textSec)
+                    StatRow("Sesiones hoy", "${profile.heatSessionsToday}", TG.textSec)
+                    StatRow("Cooldown promedio", "${profile.avgCooldownMinutes.roundToInt()} min", TG.textSec)
+                    if (profile.isAnomaly) {
+                        Surface(shape = RoundedCornerShape(6.dp), color = TG.red.copy(alpha = 0.15f)) {
+                            Text("⚠ Anomalía detectada",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                fontSize = 10.sp, color = TG.red)
                         }
                     }
                 }
             }
-        }
-    }
-}
 
-@Composable
-fun HourlyProfileCard(hourly: List<HourlyDataPoint>) {
-    Surface(shape = RoundedCornerShape(16.dp), color = Color.White.copy(alpha = 0.06f)) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.Schedule, null, tint = Color(0xFFFFCC80), modifier = Modifier.size(18.dp))
-                Text("Patron horario aprendido", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
-            }
-            Canvas(modifier = Modifier.fillMaxWidth().height(80.dp)) {
-                if (hourly.isEmpty()) return@Canvas
-                val minT = hourly.minOf { it.avgTemp }
-                val maxT = (hourly.maxOf { it.avgTemp } + 2f)
-                val range = (maxT - minT).coerceAtLeast(5f)
-                val w = size.width; val h = size.height
-                val barW = w / 24f
-
-                for (slot in hourly) {
-                    val barH = ((slot.avgTemp - minT) / range * h).coerceAtLeast(4f)
-                    val x = slot.hour * barW
-                    val barColor = when {
-                        slot.avgTemp >= 45f -> Color(0xFFFF1744)
-                        slot.avgTemp >= 40f -> Color(0xFFFF6D00)
-                        slot.avgTemp >= 35f -> Color(0xFFFFD600)
-                        else -> Color(0xFF00E676)
+            // Factores del score
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf(
+                    Triple("Temp", profile.baselineTemp / 55f, accent),
+                    Triple("CPU", profile.highCpuHeatPct, TG.amber),
+                    Triple("Carga", profile.chargingHeatPct, Color(0xFFFF6D00)),
+                    Triple("Racha", (profile.consecutiveHotReadings / 10f).coerceIn(0f, 1f), TG.red)
+                ).forEach { (label, pct, color) ->
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(36.dp)
+                                .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(6.dp))
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(pct.coerceIn(0f, 1f))
+                                    .align(Alignment.BottomCenter)
+                                    .background(
+                                        Brush.verticalGradient(listOf(color.copy(alpha = 0.3f), color.copy(alpha = 0.7f))),
+                                        RoundedCornerShape(6.dp)
+                                    )
+                            )
+                        }
+                        Text(label, fontSize = 9.sp, color = TG.textDim, letterSpacing = 0.3.sp)
                     }
-                    drawRect(barColor.copy(alpha = 0.8f), Offset(x + 1f, h - barH), Size(barW - 2f, barH))
                 }
             }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("00h", fontSize = 9.sp, color = Color.White.copy(alpha = 0.3f))
-                Text("06h", fontSize = 9.sp, color = Color.White.copy(alpha = 0.3f))
-                Text("12h", fontSize = 9.sp, color = Color.White.copy(alpha = 0.3f))
-                Text("18h", fontSize = 9.sp, color = Color.White.copy(alpha = 0.3f))
-                Text("23h", fontSize = 9.sp, color = Color.White.copy(alpha = 0.3f))
-            }
-            Text("Altura = temperatura promedio registrada por hora del dia",
-                fontSize = 10.sp, color = Color.White.copy(alpha = 0.3f))
         }
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  TEMP HISTORY CHART
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
-fun FullHistoryChart(history: List<com.jeissonalberto.thermaguard.data.ThermalSnapshot>) {
-    Surface(shape = RoundedCornerShape(16.dp), color = Color.White.copy(alpha = 0.06f)) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.Timeline, null, tint = Color(0xFF64B5F6), modifier = Modifier.size(18.dp))
-                Text("Ultimas ${history.size} lecturas", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+fun TempHistoryChart(history: List<ThermalSnapshot>, accent: Color) {
+    val recent = history.takeLast(40)
+    val minT = (recent.minOfOrNull { it.batteryTemp } ?: 30f) - 2f
+    val maxT = (recent.maxOfOrNull { it.batteryTemp } ?: 50f) + 2f
+
+    GlassCard(modifier = Modifier.fillMaxWidth(), accent = accent) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.ShowChart, null, tint = accent, modifier = Modifier.size(16.dp))
+                    Text("Historial de temperatura", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                }
+                Text("${recent.size} lecturas", fontSize = 10.sp, color = TG.textDim)
             }
-            Canvas(modifier = Modifier.fillMaxWidth().height(100.dp)) {
-                if (history.size < 2) return@Canvas
-                val temps = history.map { it.batteryTemp }
-                val minT  = temps.min()
-                val maxT  = (temps.max() + 2f)
-                val range = (maxT - minT).coerceAtLeast(5f)
-                val w = size.width; val h = size.height
-                val step = w / (temps.size - 1)
 
-                val pts = temps.mapIndexed { i, t -> Offset(i * step, h - ((t - minT) / range * h)) }
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+            ) {
+                val w = size.width
+                val h = size.height
+                val n = recent.size
+                if (n < 2) return@Canvas
 
-                // Zona critica
-                val critY = h - ((45f - minT) / range * h)
-                if (critY in 0f..h) {
-                    drawLine(Color(0xFFFF1744).copy(alpha = 0.3f), Offset(0f, critY), Offset(w, critY), strokeWidth = 1f,
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 4f)))
+                val pts = recent.mapIndexed { i, snap ->
+                    val x = w * i / (n - 1)
+                    val y = h - (h * (snap.batteryTemp - minT) / (maxT - minT)).coerceIn(0f, h)
+                    Offset(x, y)
                 }
 
-                // Area
+                // Area fill
                 val path = Path().apply {
                     moveTo(pts.first().x, h)
                     pts.forEach { lineTo(it.x, it.y) }
-                    lineTo(pts.last().x, h); close()
+                    lineTo(pts.last().x, h)
+                    close()
                 }
-                drawPath(path, Brush.verticalGradient(listOf(Color(0xFF64B5F6).copy(alpha = 0.3f), Color.Transparent)))
+                drawPath(path, Brush.verticalGradient(listOf(accent.copy(alpha = 0.25f), Color.Transparent)))
 
-                // Linea
-                for (i in 0 until pts.size - 1) {
-                    val c = when {
-                        temps[i] >= 45f -> Color(0xFFFF1744)
-                        temps[i] >= 40f -> Color(0xFFFF6D00)
-                        else -> Color(0xFF64B5F6)
+                // Line
+                val linePath = Path().apply {
+                    moveTo(pts[0].x, pts[0].y)
+                    for (i in 1 until pts.size) {
+                        val cx = (pts[i-1].x + pts[i].x) / 2
+                        cubicTo(cx, pts[i-1].y, cx, pts[i].y, pts[i].x, pts[i].y)
                     }
-                    drawLine(c, pts[i], pts[i+1], strokeWidth = 2f, cap = StrokeCap.Round)
                 }
-                pts.forEachIndexed { i, p ->
-                    if (temps[i] >= 40f) drawCircle(Color(0xFFFF6D00), 4f, p)
+                drawPath(linePath, accent, style = Stroke(2.5f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+                // Último punto destacado
+                drawCircle(accent, 5f, pts.last())
+                drawCircle(Color.White, 2.5f, pts.last())
+
+                // Líneas de referencia
+                listOf(40f, 45f, 50f).forEach { ref ->
+                    if (ref in minT..maxT) {
+                        val y = h - (h * (ref - minT) / (maxT - minT))
+                        drawLine(Color.White.copy(alpha = 0.06f), Offset(0f, y), Offset(w, y), 1f)
+                    }
                 }
             }
+
+            // Eje Y etiquetas
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Min: ${history.minOf { it.batteryTemp }.toInt()}C", fontSize = 10.sp, color = Color(0xFF00E676))
-                Text("--- 45C critico", fontSize = 10.sp, color = Color(0xFFFF1744).copy(alpha=0.6f))
-                Text("Max: ${history.maxOf { it.batteryTemp }.toInt()}C", fontSize = 10.sp, color = Color(0xFFEF9A9A))
+                Text("${minT.roundToInt()}°", fontSize = 9.sp, color = TG.textDim)
+                Text("${((minT + maxT) / 2).roundToInt()}°", fontSize = 9.sp, color = TG.textDim)
+                Text("${maxT.roundToInt()}°", fontSize = 9.sp, color = TG.textDim)
             }
         }
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  BATTERY HEALTH
+// ─────────────────────────────────────────────────────────────────────────────
 @Composable
-fun ProfileStatsCard(profile: LearnedProfile) {
-    Surface(shape = RoundedCornerShape(16.dp), color = Color.White.copy(alpha = 0.06f)) {
+fun BatteryHealthCard(health: BatteryHealthScore) {
+    val color = when {
+        health.score >= 80 -> TG.green
+        health.score >= 60 -> TG.amber
+        else               -> TG.red
+    }
+    GlassCard(modifier = Modifier.fillMaxWidth(), accent = color) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.ModelTraining, null, tint = Color(0xFFCE93D8), modifier = Modifier.size(18.dp))
-                Text("Perfil del motor", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                Icon(Icons.Default.FavoriteBorder, null, tint = color, modifier = Modifier.size(16.dp))
+                Text("Salud de la batería", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                Spacer(Modifier.weight(1f))
+                Text("${health.score}/100", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = color)
             }
-            val rows = listOf(
-                Triple("Baseline personal", "${profile.baselineTemp.toInt()}°C", Color(0xFF80CBC4)),
-                Triple("Temp promedio", "${profile.averageTemp.toInt()}°C", Color(0xFFFFCC80)),
-                Triple("Maximo historico", "${profile.maxRecordedTemp.toInt()}°C", Color(0xFFEF9A9A)),
-                Triple("Minimo historico", if (profile.minRecordedTemp > 0f) "${profile.minRecordedTemp.toInt()}°C" else "N/D", Color(0xFF80CBC4)),
-                Triple("Umbral dinamico", "${profile.dynamicThreshold.toInt()}°C", Color(0xFFFFD54F)),
-                Triple("Muestras", "${profile.samplesCollected}", Color(0xFFCE93D8)),
-                Triple("App mas caliente", profile.topHeatApp.ifEmpty { "N/D" }, Color(0xFFFF8A65)),
-            )
-            rows.forEach { (label, value, color) ->
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(label, fontSize = 12.sp, color = Color.White.copy(alpha = 0.5f))
-                    Text(value, fontSize = 12.sp, color = color, fontWeight = FontWeight.Medium)
-                }
+
+            // Barra de salud
+            val animPct by animateFloatAsState(health.score / 100f, tween(1000, easing = EaseOutCubic), label = "hp")
+            Box(modifier = Modifier.fillMaxWidth().height(6.dp)
+                .background(Color.White.copy(alpha = 0.07f), CircleShape)) {
+                Box(modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(animPct)
+                    .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.5f), color)), CircleShape))
             }
-            // Precision del modelo
-            val pct = (profile.samplesCollected / 100f).coerceIn(0f, 1f)
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Precision del modelo", fontSize = 12.sp, color = Color.White.copy(alpha = 0.5f))
-                    Text("${(pct*100).toInt()}%", fontSize = 12.sp, color = Color(0xFFCE93D8), fontWeight = FontWeight.Bold)
+
+            Text(health.level, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TG.textPri)
+
+            if (health.factors.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    health.factors.take(4).forEach { factor ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(modifier = Modifier.size(5.dp).clip(CircleShape).background(color.copy(alpha = 0.6f)))
+                            Text(factor, fontSize = 11.sp, color = TG.textSec, lineHeight = 15.sp)
+                        }
+                    }
                 }
-                LinearProgressIndicator(
-                    progress = pct,
-                    modifier = Modifier.fillMaxWidth().height(5.dp).clip(RoundedCornerShape(3.dp)),
-                    color = Color(0xFFCE93D8),
-                    trackColor = Color.White.copy(alpha = 0.1f)
-                )
             }
         }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  HOURLY HEATMAP
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun HourlyHeatmapCard(hourly: List<HourlyDataPoint>, accent: Color) {
+    val maxT = hourly.maxOfOrNull { it.avgTemp } ?: 45f
+    val minT = hourly.minOfOrNull { it.avgTemp } ?: 30f
+
+    GlassCard(modifier = Modifier.fillMaxWidth(), accent = accent) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.AccessTime, null, tint = accent, modifier = Modifier.size(16.dp))
+                Text("Mapa de calor por hora", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.Bottom
+            ) {
+                hourly.sortedBy { it.hour }.forEach { dp ->
+                    val pct = if (maxT > minT) ((dp.avgTemp - minT) / (maxT - minT)).coerceIn(0f, 1f) else 0.5f
+                    val barColor = when {
+                        dp.avgTemp >= 45f -> TG.red
+                        dp.avgTemp >= 40f -> Color(0xFFFF6D00)
+                        dp.avgTemp >= 37f -> TG.amber
+                        else              -> TG.green
+                    }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Text("${dp.avgTemp.roundToInt()}°", fontSize = 7.sp, color = barColor)
+                        Box(
+                            modifier = Modifier
+                                .width(18.dp)
+                                .height((8 + pct * 48).dp)
+                                .background(
+                                    Brush.verticalGradient(listOf(barColor.copy(alpha = 0.4f), barColor)),
+                                    RoundedCornerShape(4.dp)
+                                )
+                        )
+                        Text(
+                            if (dp.hour < 10) "0${dp.hour}" else "${dp.hour}",
+                            fontSize = 7.sp, color = TG.textDim
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  LEARNING PROFILE
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun LearningProfileCard(profile: LearnedProfile, sampleCount: Int) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.Psychology, null, tint = TG.purple, modifier = Modifier.size(16.dp))
+                Text("Perfil aprendido", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                Spacer(Modifier.weight(1f))
+                Surface(shape = RoundedCornerShape(8.dp), color = TG.purple.copy(alpha = 0.15f)) {
+                    Text("$sampleCount muestras",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        fontSize = 10.sp, color = TG.purple)
+                }
+            }
+
+            val rows = listOf(
+                Triple("Temp baseline", "${profile.baselineTemp.roundToInt()}°C", "Tu temperatura normal en reposo"),
+                Triple("Umbral dinámico", "${profile.dynamicThreshold.roundToInt()}°C", "Cuando el motor interviene"),
+                Triple("App más caliente", profile.topHeatApp.ifEmpty { "Sin datos" }, "La que más temperatura genera"),
+                Triple("Causa principal", profile.learnedCause.name, "Patrón detectado"),
+                Triple("Nivel de riesgo", profile.riskLevel.name, "Evaluación general"),
+            )
+
+            rows.forEach { (label, value, desc) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .background(Color.White.copy(alpha = 0.03f), RoundedCornerShape(8.dp))
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(label, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TG.textPri)
+                        Text(desc, fontSize = 10.sp, color = TG.textDim)
+                    }
+                    Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TG.purple)
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun StatRow(label: String, value: String, color: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, fontSize = 11.sp, color = TG.textDim)
+        Text(value, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = color)
     }
 }
