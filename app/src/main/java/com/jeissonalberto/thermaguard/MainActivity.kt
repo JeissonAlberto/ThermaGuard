@@ -52,11 +52,11 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                 NavigationBar {
                     NavigationBarItem(
                         selected = selectedTab == 0, onClick = { selectedTab = 0 },
-                        icon = { Icon(Icons.Default.Home, null) }, label = { Text("Dashboard") }
+                        icon = { Icon(Icons.Default.Home, null) }, label = { Text("Inicio") }
                     )
                     NavigationBarItem(
                         selected = selectedTab == 1, onClick = { selectedTab = 1 },
-                        icon = { Icon(Icons.Default.Science, null) }, label = { Text("Diagnostico") }
+                        icon = { Icon(Icons.Default.Science, null) }, label = { Text("Diagnóstico") }
                     )
                     NavigationBarItem(
                         selected = selectedTab == 2, onClick = { selectedTab = 2 },
@@ -64,31 +64,26 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                     )
                     NavigationBarItem(
                         selected = selectedTab == 3, onClick = { selectedTab = 3 },
-                        icon = { Icon(Icons.Default.Tune, null) }, label = { Text("Optimizar") }
-                    )
-                    NavigationBarItem(
-                        selected = selectedTab == 4, onClick = { selectedTab = 4 },
-                        icon = { Icon(Icons.Default.Notifications, null) }, label = { Text("Alertas") }
+                        icon = { Icon(Icons.Default.Notifications, null) },
+                        label = { Text("Alertas") }
                     )
                 }
             }
         ) { innerPadding ->
-            Box(modifier = Modifier.padding(innerPadding)) {
+            Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
                 when (selectedTab) {
-                    0 -> DashboardScreen(uiState = uiState,
-                        onToggleMonitor = viewModel::toggleMonitorService,
-                        onToggleAutoMode = viewModel::toggleAutoMode)
+                    0 -> DashboardScreen(
+                        uiState          = uiState,
+                        onToggleMonitor  = viewModel::startMonitor,
+                        onToggleAutoMode = { /* siempre activo — no exponer toggle */ }
+                    )
                     1 -> DiagnosisScreen(uiState = uiState)
                     2 -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
-                    3 -> OptimizeScreen(
-                        uiState = uiState,
-                        onCoolingMode = viewModel::activateCoolingMode,
-                        onKillApps = viewModel::killApps,
-                        onFreeRam = viewModel::freeRam
-                    )
-                    4 -> AlertsScreen(uiState = uiState,
+                    3 -> AlertsScreen(
+                        uiState           = uiState,
                         onThresholdChange = viewModel::setAlertThreshold,
-                        onToggleAutoMode = viewModel::toggleAutoMode)
+                        onClearLog        = viewModel::clearAutoLog
+                    )
                 }
             }
         }
