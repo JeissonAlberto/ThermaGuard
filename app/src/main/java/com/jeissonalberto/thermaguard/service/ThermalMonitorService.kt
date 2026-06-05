@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import com.jeissonalberto.thermaguard.MainActivity
 import com.jeissonalberto.thermaguard.data.SensorRepository
 import com.jeissonalberto.thermaguard.data.ThermalDatabase
+import com.jeissonalberto.thermaguard.data.ThermalSnapshot
 import com.jeissonalberto.thermaguard.data.toThermalLevel
 import kotlinx.coroutines.*
 
@@ -46,16 +47,14 @@ class ThermalMonitorService : Service() {
 
         val notification = buildNotification("Monitoreando temperatura...")
 
-        // Llamada correcta segun version de Android
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            // Android 14+ (API 34)
-            startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // Android 10-13 (API 29-33)
-            startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_NONE)
-        } else {
-            // Android 8-9
-            startForeground(NOTIF_ID, notification)
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
+                startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_NONE)
+            }
+            else -> startForeground(NOTIF_ID, notification)
         }
 
         startMonitoring()
@@ -66,7 +65,7 @@ class ThermalMonitorService : Service() {
         serviceScope.launch {
             while (isActive) {
                 try {
-                    val snapshot = sensorRepository.readSnapshot()
+                    val snapshot: ThermalSnapshot = sensorRepository.readSnapshot()
                     db.thermalDao().insert(snapshot)
                     updateNotification(snapshot)
                     if (snapshot.batteryTemp >= 45f) sendThermalAlert(snapshot)
@@ -86,8 +85,8 @@ class ThermalMonitorService : Service() {
 
     private fun sendThermalAlert(snapshot: ThermalSnapshot) {
         val alert = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("ThermaGuard — Temperatura critica")
-            .setContentText("Bateria: ${snapshot.batteryTemp}C — Cierra apps pesadas")
+            .setContentTitle("ThermaGuard - Temperatura critica")
+            .setContentText("Bateria: ${snapshot.batteryTemp}C - Cierra apps pesadas")
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
