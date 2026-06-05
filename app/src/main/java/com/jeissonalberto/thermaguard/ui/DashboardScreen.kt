@@ -20,10 +20,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.data.*
+import com.jeissonalberto.thermaguard.domain.AutoAction
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
 
 @Composable
@@ -56,7 +56,7 @@ fun DashboardScreen(
                 .padding(horizontal = 18.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // ── Header compacto ──────────────────────────────────────────────
+            // ── Header ──────────────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -64,20 +64,28 @@ fun DashboardScreen(
             ) {
                 Column {
                     Text("ThermaGuard", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text(if (uiState.isMonitoring) "Monitoreando en tiempo real"
-                         else "Motor en espera",
+                    Text(
+                        if (uiState.isMonitoring) "Monitoreando en tiempo real" else "Motor en espera",
                         fontSize = 11.sp,
-                        color = if (uiState.isMonitoring) Color(0xFF00C853) else Color.White.copy(alpha = 0.4f))
+                        color = if (uiState.isMonitoring) Color(0xFF00C853) else Color.White.copy(alpha = 0.4f)
+                    )
                 }
                 // Badge motor AUTO — siempre visible
-                Surface(shape = RoundedCornerShape(20.dp), color = Color(0xFF00C853).copy(alpha = 0.12f),
-                    modifier = Modifier.border(1.dp, Color(0xFF00C853).copy(alpha = 0.4f), RoundedCornerShape(20.dp))) {
-                    Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color(0xFF00C853).copy(alpha = 0.12f),
+                    modifier = Modifier.border(1.dp, Color(0xFF00C853).copy(alpha = 0.4f), RoundedCornerShape(20.dp))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically) {
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         val pulse = rememberInfiniteTransition(label = "p")
-                        val a by pulse.animateFloat(0.4f, 1f,
-                            infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "a")
+                        val a by pulse.animateFloat(
+                            0.4f, 1f,
+                            infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "a"
+                        )
                         Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(Color(0xFF00C853).copy(alpha = a)))
                         Text("AUTO", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF00C853))
                     }
@@ -87,7 +95,7 @@ fun DashboardScreen(
             // ── Termómetro central ───────────────────────────────────────────
             TempGauge(snap = snap, level = level)
 
-            // ── Métricas secundarias (solo las que importan) ─────────────────
+            // ── Métricas secundarias ─────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -112,30 +120,30 @@ fun DashboardScreen(
                 )
                 MetricChip(
                     modifier = Modifier.weight(1f),
-                    label    = "RAM libre",
-                    value    = "${snap.freeRamMb} MB",
+                    label    = "RAM usada",
+                    value    = "${snap.ramUsageMb} MB",
                     icon     = Icons.Default.Storage,
                     color    = when {
-                        snap.freeRamMb < 300  -> Color(0xFFFF5252)
-                        snap.freeRamMb < 700  -> Color(0xFFFFD600)
-                        else                  -> Color(0xFF00E676)
+                        snap.ramUsageMb > 3500 -> Color(0xFFFF5252)
+                        snap.ramUsageMb > 2500 -> Color(0xFFFFD600)
+                        else                   -> Color(0xFF00E676)
                     }
                 )
             }
 
             // ── Predicción del motor ─────────────────────────────────────────
             uiState.prediction?.let { pred ->
-                if (pred.confidence > 0.4f) {
+                if (pred.confidence != PredictionConfidence.LOW && pred.predictedTemp > 0f) {
                     PredictionBanner(pred = pred)
                 }
             }
 
-            // ── Causas de calor (sin repetir temp) ──────────────────────────
+            // ── Causas de calor ──────────────────────────────────────────────
             if (uiState.causes.isNotEmpty()) {
                 CausesSection(causes = uiState.causes)
             }
 
-            // ── Acciones recientes del motor ─────────────────────────────────
+            // ── Última acción del motor ──────────────────────────────────────
             if (uiState.autoActionsLog.isNotEmpty()) {
                 LastAutoActionBanner(action = uiState.autoActionsLog.first())
             }
@@ -164,7 +172,8 @@ fun TempGauge(snap: ThermalSnapshot, level: ThermalLevel) {
     }
     val pulse = rememberInfiniteTransition(label = "gaugePulse")
     val scale by pulse.animateFloat(
-        1f, if (level == ThermalLevel.CRITICAL || level == ThermalLevel.EMERGENCY) 1.04f else 1f,
+        1f,
+        if (level == ThermalLevel.CRITICAL || level == ThermalLevel.EMERGENCY) 1.04f else 1f,
         infiniteRepeatable(tween(800, easing = EaseInOut), RepeatMode.Reverse), label = "s"
     )
 
@@ -197,11 +206,7 @@ fun TempGauge(snap: ThermalSnapshot, level: ThermalLevel) {
                 )
                 if (snap.topApp.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
-                    Text(
-                        snap.topApp,
-                        fontSize = 10.sp,
-                        color    = Color.White.copy(alpha = 0.4f)
-                    )
+                    Text(snap.topApp, fontSize = 10.sp, color = Color.White.copy(alpha = 0.4f))
                 }
             }
         }
@@ -235,7 +240,13 @@ fun MetricChip(
 
 @Composable
 fun PredictionBanner(pred: TempPrediction) {
-    val trendColor = if (pred.predictedTemp > pred.currentTemp) Color(0xFFFF6D00) else Color(0xFF00C853)
+    val rising = pred.slope > 0
+    val trendColor = if (rising) Color(0xFFFF6D00) else Color(0xFF00C853)
+    val confidenceLabel = when (pred.confidence) {
+        PredictionConfidence.HIGH   -> "Alta confianza"
+        PredictionConfidence.MEDIUM -> "Confianza media"
+        else                        -> "Datos iniciales"
+    }
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = Color.White.copy(alpha = 0.05f),
@@ -248,13 +259,13 @@ fun PredictionBanner(pred: TempPrediction) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(
-                if (pred.predictedTemp > pred.currentTemp) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
+                if (rising) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
                 null, tint = trendColor, modifier = Modifier.size(20.dp)
             )
             Column(modifier = Modifier.weight(1f)) {
-                Text("Predicción del motor — ${pred.minutesAhead} min",
+                Text("Predicción — $confidenceLabel",
                     fontSize = 11.sp, color = Color.White.copy(alpha = 0.5f))
-                Text("${pred.predictedTemp}°C esperados · ${(pred.confidence * 100).toInt()}% confianza",
+                Text("${pred.predictedTemp}°C esperados · ${pred.trendText}",
                     fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.White)
             }
         }
@@ -267,11 +278,10 @@ fun CausesSection(causes: List<HeatCause>) {
         Text("Por qué está caliente", fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
             color = Color.White.copy(alpha = 0.6f))
         causes.take(3).forEach { cause ->
-            val color = when (cause.severity) {
-                Severity.HIGH     -> Color(0xFFFF5252)
-                Severity.MEDIUM   -> Color(0xFFFFD600)
-                Severity.LOW      -> Color(0xFF69F0AE)
-                Severity.INFO     -> Color(0xFF80CBC4)
+            val color = when {
+                cause.severity >= 3 -> Color(0xFFFF5252)
+                cause.severity == 2 -> Color(0xFFFFD600)
+                else                -> Color(0xFF69F0AE)
             }
             Surface(
                 shape = RoundedCornerShape(11.dp),
@@ -279,17 +289,10 @@ fun CausesSection(causes: List<HeatCause>) {
                 modifier = Modifier.fillMaxWidth()
                     .border(1.dp, color.copy(alpha = 0.2f), RoundedCornerShape(11.dp))
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(cause.icon, fontSize = 18.sp)
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(cause.title, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.White)
-                        if (cause.detail.isNotEmpty()) {
-                            Text(cause.detail, fontSize = 10.sp, color = Color.White.copy(alpha = 0.45f))
-                        }
+                Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
+                    Text(cause.title, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color.White)
+                    if (cause.description.isNotEmpty()) {
+                        Text(cause.description, fontSize = 10.sp, color = Color.White.copy(alpha = 0.45f))
                     }
                 }
             }
@@ -336,7 +339,7 @@ fun TipsRow(tips: List<SmartTip>) {
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(tip.icon, fontSize = 18.sp)
-                    Text(tip.message, fontSize = 12.sp, color = Color.White.copy(alpha = 0.75f), lineHeight = 17.sp)
+                    Text(tip.title, fontSize = 12.sp, color = Color.White.copy(alpha = 0.75f), lineHeight = 17.sp)
                 }
             }
         }
