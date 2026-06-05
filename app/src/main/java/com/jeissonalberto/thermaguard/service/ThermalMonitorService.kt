@@ -47,12 +47,13 @@ class ThermalMonitorService : Service() {
 
         val notification = buildNotification("Monitoreando temperatura...")
 
+        // dataSync no requiere permisos especiales en ninguna version de Android
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
-                startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)
+                startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
-                startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_NONE)
+                startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
             }
             else -> startForeground(NOTIF_ID, notification)
         }
