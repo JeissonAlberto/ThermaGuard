@@ -50,7 +50,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         )
                     }
 
-                    // Auto-optimización si está activa
                     if (_uiState.value.autoMode && snapshot.batteryTemp >= _uiState.value.alertThreshold) {
                         executeAutoOptimization(plan)
                     }
@@ -58,7 +57,8 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                 } catch (e: Exception) {
                     // Error leyendo sensores
                 }
-                delay(2000) // Refresh cada 2 segundos en UI
+                // Refresco UI cada 10 segundos - mucho mas eficiente
+                delay(10_000L)
             }
         }
     }
@@ -96,7 +96,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         plan.forEach { action ->
             when (action) {
                 is OptimizationAction.KillBackgroundApps -> optimizationRepo.killBackgroundApps()
-                else -> { /* Acciones que requieren UI — se notifican */ }
+                else -> { }
             }
         }
     }
