@@ -23,15 +23,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ThermaGuardTheme {
-                ThermaGuardApp(onStartService = { startMonitorService() })
+                ThermaGuardApp(onStartService = {
+                    try { startForegroundService(Intent(this, ThermalMonitorService::class.java)) }
+                    catch (e: Exception) { }
+                })
             }
         }
-    }
-
-    private fun startMonitorService() {
-        try {
-            startForegroundService(Intent(this, ThermalMonitorService::class.java))
-        } catch (e: Exception) { }
     }
 }
 
@@ -59,11 +56,11 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                     )
                     NavigationBarItem(
                         selected = selectedTab == 1, onClick = { selectedTab = 1 },
-                        icon = { Icon(Icons.Default.BarChart, null) }, label = { Text("Stats") }
+                        icon = { Icon(Icons.Default.BioTech, null) }, label = { Text("Diagnostico") }
                     )
                     NavigationBarItem(
                         selected = selectedTab == 2, onClick = { selectedTab = 2 },
-                        icon = { Icon(Icons.Default.DateRange, null) }, label = { Text("Historial") }
+                        icon = { Icon(Icons.Default.BarChart, null) }, label = { Text("Stats") }
                     )
                     NavigationBarItem(
                         selected = selectedTab == 3, onClick = { selectedTab = 3 },
@@ -77,8 +74,8 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                     0 -> DashboardScreen(uiState = uiState,
                         onToggleMonitor = viewModel::toggleMonitorService,
                         onToggleAutoMode = viewModel::toggleAutoMode)
-                    1 -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
-                    2 -> HistoryScreen(history = uiState.history)
+                    1 -> DiagnosisScreen(uiState = uiState)
+                    2 -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
                     3 -> AlertsScreen(uiState = uiState,
                         onThresholdChange = viewModel::setAlertThreshold,
                         onToggleAutoMode = viewModel::toggleAutoMode)
