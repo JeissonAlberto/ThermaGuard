@@ -36,6 +36,23 @@ class ThermalLearningEngine(context: Context) {
     private var totalTempSum: Float
         get() = prefs.getFloat("total_temp_sum", 0f)
         set(v) { prefs.edit().putFloat("total_temp_sum", v).apply() }
+
+    // v3 fields
+    private var heatSessionsToday: Int
+        get() = prefs.getInt("heat_sessions_today", 0)
+        set(v) { prefs.edit().putInt("heat_sessions_today", v).apply() }
+    private var avgCooldownMinutes: Float
+        get() = prefs.getFloat("avg_cooldown_min", 5f)
+        set(v) { prefs.edit().putFloat("avg_cooldown_min", v).apply() }
+    private var emaTemp: Float
+        get() = prefs.getFloat("ema_temp", 32f)
+        set(v) { prefs.edit().putFloat("ema_temp", v).apply() }
+    private var lastSessionDate: String
+        get() = prefs.getString("last_session_date", "") ?: ""
+        set(v) { prefs.edit().putString("last_session_date", v).apply() }
+    private var inHeatSession: Boolean
+        get() = prefs.getBoolean("in_heat_session", false)
+        set(v) { prefs.edit().putBoolean("in_heat_session", v).apply() }
     private var totalCpuSum: Float
         get() = prefs.getFloat("total_cpu_sum", 0f)
         set(v) { prefs.edit().putFloat("total_cpu_sum", v).apply() }
@@ -646,6 +663,10 @@ class ThermalLearningEngine(context: Context) {
                 else -> 4
             }
         }).take(6)
+    }
+
+    fun recordCooldown(minutes: Float) {
+        avgCooldownMinutes = 0.3f * minutes + 0.7f * avgCooldownMinutes
     }
 
     fun reset() { prefs.edit().clear().apply() }
