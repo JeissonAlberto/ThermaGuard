@@ -6,8 +6,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import com.jeissonalberto.thermaguard.MainActivity
 import com.jeissonalberto.thermaguard.data.SensorRepository
 import com.jeissonalberto.thermaguard.data.ThermalDatabase
@@ -25,7 +28,6 @@ class ThermalMonitorService : Service() {
         const val CHANNEL_ID = "thermaguard_monitor"
         const val NOTIF_ID = 1001
         const val ACTION_STOP = "STOP_MONITOR"
-        // Intervalo optimizado: 30 segundos para no consumir bateria
         const val MONITOR_INTERVAL_MS = 30_000L
         var isRunning = false
     }
@@ -43,7 +45,21 @@ class ThermalMonitorService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
-        startForeground(NOTIF_ID, buildNotification("Iniciando monitor termico..."))
+
+        val notification = buildNotification("Monitoreando temperatura...")
+
+        // Android 14+ requiere especificar el tipo de servicio
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ServiceCompat.startForeground(
+                this,
+                NOTIF_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
+            )
+        } else {
+            startForeground(NOTIF_ID, notification)
+        }
+
         startMonitoring()
         return START_STICKY
     }
@@ -55,19 +71,12 @@ class ThermalMonitorService : Service() {
                     val snapshot = sensorRepository.readSnapshot()
                     db.thermalDao().insert(snapshot)
                     updateNotification(snapshot)
-
                     if (snapshot.batteryTemp >= 45f) {
                         sendThermalAlert(snapshot)
                     }
-
-                    // Limpiar historial mayor a 7 dias
                     val weekAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L)
                     db.thermalDao().deleteOlderThan(weekAgo)
-
-                } catch (e: Exception) {
-                    // Error puntual, continuar
-                }
-                // 30 segundos entre lecturas - balance perfecto rendimiento/bateria
+                } catch (e: Exception) { }
                 delay(MONITOR_INTERVAL_MS)
             }
         }
@@ -75,21 +84,21 @@ class ThermalMonitorService : Service() {
 
     private fun updateNotification(snapshot: ThermalSnapshot) {
         val level = snapshot.batteryTemp.toThermalLevel()
-        val text = "${level.emoji} Bateria: ${snapshot.batteryTemp}C | CPU: ${snapshot.cpuUsage.toInt()}% | ${if (snapshot.isCharging) "Cargando" else "Descargando"}"
+        val text = "${level.emoji} ${snapshot.batteryTemp}C | CPU ${snapshot.cpuUsage.toInt()}% | ${if (snapshot.isCharging) "Cargando" else "Bat ${snapshot.batteryLevel}%"}"
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(NOTIF_ID, buildNotification(text))
     }
 
     private fun sendThermalAlert(snapshot: ThermalSnapshot) {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        val alertNotif = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("ThermaGuard - Temperatura critica")
-            .setContentText("Bateria: ${snapshot.batteryTemp}C - Revisa las apps activas")
+        val alert = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("ThermaGuard — Temperatura critica")
+            .setContentText("Bateria: ${snapshot.batteryTemp}C — Cierra apps pesadas")
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
-        manager.notify(NOTIF_ID + 1, alertNotif)
+        manager.notify(NOTIF_ID + 1, alert)
     }
 
     private fun buildNotification(text: String): Notification {
@@ -116,15 +125,12 @@ class ThermalMonitorService : Service() {
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Monitor Termico",
-            NotificationManager.IMPORTANCE_LOW
+            CHANNEL_ID, "Monitor Termico", NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Monitoreo de temperatura del dispositivo"
+            description = "Monitoreo continuo de temperatura"
             setShowBadge(false)
         }
-        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
-            .createNotificationChannel(channel)
+        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
     }
 
     override fun onDestroy() {
