@@ -40,7 +40,7 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
         ) {
             // Header
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(Icons.Default.BioTech, null, tint = Color(0xFFFF8A65), modifier = Modifier.size(24.dp))
+                Icon(Icons.Default.Science, null, tint = Color(0xFFFF8A65), modifier = Modifier.size(24.dp))
                 Column {
                     Text("Diagnostico", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Text("Analisis de componentes en tiempo real", fontSize = 12.sp, color = Color.White.copy(alpha = 0.5f))
