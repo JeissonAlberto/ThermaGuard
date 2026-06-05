@@ -143,11 +143,5 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private suspend fun executeAutoOptimization(plan: List<OptimizationAction>) {
-        plan.forEach { action ->
-            if (action is OptimizationAction.KillBackgroundApps) {
-                try { optimizationRepo.killBackgroundApps() } catch (e: Exception) { }
-            }
-        }
-    }
+    // auto-optimization delegated to CoolingMode
 }
