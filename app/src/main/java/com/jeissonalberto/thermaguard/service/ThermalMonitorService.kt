@@ -66,7 +66,8 @@ class ThermalMonitorService : Service() {
         var wasHot = false
         var heatStartTime = 0L
 
-        while (isActive) {
+        while (true) {
+            kotlinx.coroutines.ensureActive()
             try {
                 val snap    = sensorRepo.readSnapshot()
                 val profile = learningEngine.learn(snap)
