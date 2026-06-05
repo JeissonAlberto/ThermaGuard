@@ -18,7 +18,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +31,7 @@ import com.jeissonalberto.thermaguard.R
 @Composable
 fun PermissionsScreen(onAllGranted: () -> Unit) {
     val context = LocalContext.current
+    var step by remember { mutableStateOf(0) } // 0=bienvenida, 1=permisos
 
     var hasNotifications by remember {
         mutableStateOf(
@@ -41,232 +41,217 @@ fun PermissionsScreen(onAllGranted: () -> Unit) {
             else true
         )
     }
-
     val notifLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { hasNotifications = it }
 
     val allGranted = hasNotifications
-    LaunchedEffect(allGranted) { if (allGranted) onAllGranted() }
+    LaunchedEffect(allGranted) { if (allGranted && step == 1) onAllGranted() }
 
-    // Animación del orb de fondo
-    val inf = rememberInfiniteTransition(label = "splash")
-    val orbScale by inf.animateFloat(1f, 1.15f,
-        infiniteRepeatable(tween(3000, easing = EaseInOut), RepeatMode.Reverse), label = "orb")
-    val logoAlpha by inf.animateFloat(0.8f, 1f,
-        infiniteRepeatable(tween(2000, easing = EaseInOut), RepeatMode.Reverse), label = "la")
+    val inf = rememberInfiniteTransition(label = "perm")
+    val orbScale by inf.animateFloat(0.95f, 1.05f,
+        infiniteRepeatable(tween(2000, easing = EaseInOut), RepeatMode.Reverse), label = "os")
+    val orbAlpha by inf.animateFloat(0.15f, 0.30f,
+        infiniteRepeatable(tween(1800, easing = EaseInOut), RepeatMode.Reverse), label = "oa")
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TG.bg),
+        modifier = Modifier.fillMaxSize().background(TG.bg),
         contentAlignment = Alignment.Center
     ) {
-        // Orb decorativo
+        // Orb
         Box(
             modifier = Modifier
-                .size(400.dp)
+                .size(420.dp)
                 .scale(orbScale)
-                .blur(100.dp)
-                .background(
-                    Brush.radialGradient(listOf(Color(0xFF00E5FF).copy(alpha = 0.12f), Color.Transparent)),
-                    CircleShape
-                )
+                .blur(80.dp)
+                .background(Color(0xFF00E5FF).copy(alpha = orbAlpha), CircleShape)
+                .align(Alignment.TopCenter)
+                .offset(y = (-60).dp)
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(0.dp)
-        ) {
-            Spacer(Modifier.height(60.dp))
-
-            // Logo Jasol
-            Surface(
-                modifier = Modifier.size(90.dp).alpha(logoAlpha),
-                shape = RoundedCornerShape(22.dp),
-                color = Color.White.copy(alpha = 0.06f)
+        if (step == 0) {
+            // ── PANTALLA BIENVENIDA ───────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
+                // Logo
                 Box(
-                    modifier = Modifier.fillMaxSize().border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(22.dp)),
+                    modifier = Modifier
+                        .size(110.dp)
+                        .background(Color.White.copy(alpha = 0.07f), RoundedCornerShape(24.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    androidx.compose.foundation.Image(
+                    Image(
                         painter = painterResource(id = R.drawable.jasol_logo),
                         contentDescription = "Jasol Group",
-                        modifier = Modifier.size(70.dp)
+                        modifier = Modifier.size(85.dp).clip(RoundedCornerShape(18.dp))
                     )
                 }
-            }
 
-            Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(24.dp))
 
-            Text(
-                "ThermaGuard",
-                fontSize = 30.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = TG.textPri,
-                letterSpacing = (-1).sp
-            )
-            Text(
-                "Motor térmico inteligente",
-                fontSize = 14.sp,
-                color = TG.textSec,
-                letterSpacing = 0.3.sp
-            )
+                Text("ThermaGuard", fontSize = 32.sp, fontWeight = FontWeight.ExtraBold,
+                    color = TG.textPri, letterSpacing = (-1).sp)
+                Text("Motor térmico inteligente", fontSize = 14.sp, color = TG.textSec,
+                    modifier = Modifier.padding(top = 4.dp))
 
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "by Jasol Group",
-                fontSize = 11.sp,
-                color = TG.textDim,
-                letterSpacing = 1.sp
-            )
+                Spacer(Modifier.height(40.dp))
 
-            Spacer(Modifier.height(40.dp))
-
-            // Cards de permisos
-            if (!hasNotifications) {
-                PermCard(
-                    icon        = Icons.Default.Notifications,
-                    title       = "Notificaciones",
-                    description = "Para alertarte cuando el dispositivo se calienta y mostrarte el estado en tiempo real.",
-                    isGranted   = false,
-                    isRequired  = true,
-                    onGrant     = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                    },
-                    onSettings  = {
-                        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.parse("package:${context.packageName}")
-                        })
-                    }
+                // Features
+                val features = listOf(
+                    Triple(Icons.Default.Thermostat,  "Monitoreo continuo", "Temperatura, CPU y componentes en tiempo real"),
+                    Triple(Icons.Default.Psychology,   "Motor adaptativo",    "Aprende tus patrones de uso y actúa solo"),
+                    Triple(Icons.Default.AutoFixHigh,  "Optimización auto",   "Enfría tu dispositivo sin que hagas nada"),
+                    Triple(Icons.Default.Notifications,"Alertas inteligentes","Te avisa solo cuando realmente importa"),
                 )
-                Spacer(Modifier.height(12.dp))
-            }
-
-            // Info card
-            Surface(
-                shape = RoundedCornerShape(18.dp),
-                color = Color.White.copy(alpha = 0.04f),
-                modifier = Modifier.fillMaxWidth()
-                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(18.dp))
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    FeatureRow(Icons.Default.Memory,          "Monitor de CPU y temperatura", "Lectura directa de sensores del sistema")
-                    FeatureRow(Icons.Default.AutoFixHigh,     "Motor de optimización autónomo", "Actúa automáticamente cuando detecta calor")
-                    FeatureRow(Icons.Default.Psychology,      "Aprendizaje adaptativo",        "Aprende tu patrón de uso con el tiempo")
-                    FeatureRow(Icons.Default.Science,         "Diagnóstico de componentes",    "Identifica qué parte genera más calor")
-                    FeatureRow(Icons.Default.BarChart,        "Estadísticas avanzadas",        "Risk score, heatmap horario, historial")
+                features.forEach { (icon, title, desc) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.size(42.dp).clip(CircleShape)
+                                .background(Color(0xFF00E5FF).copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(icon, null, tint = Color(0xFF00E5FF), modifier = Modifier.size(20.dp))
+                        }
+                        Column {
+                            Text(title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                            Text(desc, fontSize = 11.sp, color = TG.textSec, lineHeight = 15.sp)
+                        }
+                    }
                 }
-            }
 
-            Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(40.dp))
 
-            // Botón continuar (si ya tiene permisos)
-            if (hasNotifications) {
                 Button(
-                    onClick = onAllGranted,
+                    onClick = {
+                        if (allGranted) onAllGranted() else step = 1
+                    },
                     modifier = Modifier.fillMaxWidth().height(54.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
                 ) {
-                    Icon(Icons.Default.RocketLaunch, null, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(10.dp))
-                    Text("Iniciar motor", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TG.bg)
+                    Text("Comenzar", fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                        color = Color(0xFF080C14))
+                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.Default.ArrowForward, null,
+                        tint = Color(0xFF080C14), modifier = Modifier.size(18.dp))
+                }
+
+                Spacer(Modifier.height(12.dp))
+                Text("by Jasol Group", fontSize = 11.sp, color = TG.textDim, letterSpacing = 1.sp)
+            }
+        } else {
+            // ── PANTALLA PERMISOS ─────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Box(
+                    modifier = Modifier.size(72.dp).clip(CircleShape)
+                        .background(Color(0xFF00E5FF).copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Security, null, tint = Color(0xFF00E5FF),
+                        modifier = Modifier.size(34.dp))
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                Text("Un permiso necesario", fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                    color = TG.textPri, letterSpacing = (-0.5).sp)
+                Text("Para enviarte alertas cuando detecte temperatura crítica",
+                    fontSize = 13.sp, color = TG.textSec, textAlign = TextAlign.Center,
+                    lineHeight = 19.sp, modifier = Modifier.padding(top = 8.dp, bottom = 32.dp))
+
+                PermissionItem(
+                    icon        = Icons.Default.Notifications,
+                    title       = "Notificaciones",
+                    description = "Alertas de temperatura crítica y acciones del motor",
+                    granted     = hasNotifications,
+                    color       = Color(0xFF00E5FF),
+                    onGrant     = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                            notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        else hasNotifications = true
+                    }
+                )
+
+                Spacer(Modifier.height(32.dp))
+
+                Button(
+                    onClick = { if (allGranted) onAllGranted() },
+                    enabled = allGranted,
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF00E5FF),
+                        disabledContainerColor = Color(0xFF00E5FF).copy(alpha = 0.3f)
+                    )
+                ) {
+                    Text("Continuar", fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                        color = Color(0xFF080C14))
+                }
+
+                TextButton(onClick = { onAllGranted() }, modifier = Modifier.padding(top = 8.dp)) {
+                    Text("Omitir por ahora", fontSize = 12.sp, color = TG.textDim)
                 }
             }
-
-            Spacer(Modifier.height(24.dp))
-
-            Text(
-                "No requiere root · Sin acceso a datos personales",
-                fontSize = 10.sp,
-                color = TG.textDim,
-                textAlign = TextAlign.Center,
-                letterSpacing = 0.3.sp
-            )
         }
     }
 }
 
 @Composable
-fun PermCard(
+fun PermissionItem(
     icon: ImageVector,
     title: String,
     description: String,
-    isGranted: Boolean,
-    isRequired: Boolean,
-    onGrant: () -> Unit,
-    onSettings: () -> Unit
+    granted: Boolean,
+    color: Color,
+    onGrant: () -> Unit
 ) {
-    val accent = if (isGranted) TG.green else if (isRequired) Color(0xFFFF6D00) else TG.textSec
+    val borderColor = if (granted) color.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.1f)
     Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = accent.copy(alpha = 0.07f),
         modifier = Modifier.fillMaxWidth()
-            .border(1.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(18.dp))
+            .border(1.dp, borderColor, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        color = if (granted) color.copy(alpha = 0.07f) else TG.glass
     ) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Box(
-                modifier = Modifier.size(44.dp).clip(CircleShape).background(accent.copy(alpha = 0.12f)),
+                modifier = Modifier.size(44.dp).clip(CircleShape)
+                    .background(color.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(if (isGranted) Icons.Default.Check else icon, null, tint = accent, modifier = Modifier.size(22.dp))
+                Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
             }
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
-                    if (isRequired && !isGranted) {
-                        Surface(shape = RoundedCornerShape(4.dp), color = accent.copy(alpha = 0.2f)) {
-                            Text("Requerido", modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
-                                fontSize = 9.sp, color = accent)
-                        }
-                    }
-                }
+                Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
                 Text(description, fontSize = 11.sp, color = TG.textSec, lineHeight = 15.sp)
             }
-            if (!isGranted) {
-                Button(
-                    onClick = onGrant,
-                    modifier = Modifier.height(34.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = accent)
-                ) {
-                    Text("Permitir", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TG.bg)
+            if (granted) {
+                Icon(Icons.Default.CheckCircle, null, tint = color, modifier = Modifier.size(22.dp))
+            } else {
+                TextButton(onClick = onGrant, contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)) {
+                    Text("Activar", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = color)
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun FeatureRow(icon: ImageVector, title: String, subtitle: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Box(
-            modifier = Modifier.size(36.dp).clip(CircleShape).background(TG.green.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, null, tint = TG.green, modifier = Modifier.size(18.dp))
-        }
-        Column {
-            Text(title, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TG.textPri)
-            Text(subtitle, fontSize = 10.sp, color = TG.textSec)
         }
     }
 }
