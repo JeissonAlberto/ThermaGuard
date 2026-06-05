@@ -20,6 +20,7 @@ import kotlinx.coroutines.*
 class ThermalMonitorService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var wakeLock: android.os.PowerManager.WakeLock? = null
     private lateinit var sensorRepository: SensorRepository
     private lateinit var db: ThermalDatabase
 
@@ -38,6 +39,13 @@ class ThermalMonitorService : Service() {
         db = ThermalDatabase.getInstance(this)
         createNotificationChannel()
         isRunning = true
+        try {
+            val pm = getSystemService(POWER_SERVICE) as android.os.PowerManager
+            wakeLock = pm.newWakeLock(
+                android.os.PowerManager.PARTIAL_WAKE_LOCK,
+                "ThermaGuard::MonitorWakeLock"
+            ).apply { acquire(10 * 60 * 1000L) }
+        } catch (e: Exception) { }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -138,7 +146,7 @@ class ThermalMonitorService : Service() {
             .setContentTitle(title)
             .setContentText(text)
             .apply { subText?.let { setSubText(it) } }
-            .setSmallIcon(android.R.drawable.ic_menu_compass)
+            .setSmallIcon(com.jeissonalberto.thermaguard.R.mipmap.ic_launcher)
             .setContentIntent(openIntent)
             .addAction(android.R.drawable.ic_delete, "Detener", stopIntent)
             .setOngoing(true)
@@ -165,6 +173,7 @@ class ThermalMonitorService : Service() {
         super.onDestroy()
         isRunning = false
         serviceScope.cancel()
+        try { wakeLock?.release() } catch (e: Exception) { }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
