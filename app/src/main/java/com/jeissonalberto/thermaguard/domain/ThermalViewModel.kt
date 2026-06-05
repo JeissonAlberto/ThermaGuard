@@ -1,11 +1,9 @@
 package com.jeissonalberto.thermaguard.domain
 
 import android.app.Application
-import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jeissonalberto.thermaguard.data.*
-import com.jeissonalberto.thermaguard.service.ThermalMonitorService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -20,18 +18,16 @@ data class ThermalUiState(
     val batteryHealth: BatteryHealthScore? = null,
     val hourlyProfile: List<HourlyDataPoint> = emptyList(),
     val componentDiagnoses: List<ComponentDiagnosis> = emptyList(),
-    // Acciones automáticas ejecutadas por el motor
     val autoActionsLog: List<AutoAction> = emptyList(),
     val isMonitoring: Boolean = false,
     val alertThreshold: Float = 43f,
     val isLoading: Boolean = true
 )
 
-/** Registro de cada acción que el motor ejecutó automáticamente */
 data class AutoAction(
     val timestamp: Long = System.currentTimeMillis(),
     val description: String,
-    val trigger: String,          // qué la disparó
+    val trigger: String,
     val appsKilled: Int = 0
 )
 
@@ -45,10 +41,8 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _uiState = MutableStateFlow(ThermalUiState())
     val uiState: StateFlow<ThermalUiState> = _uiState.asStateFlow()
 
-    // Umbral de temperatura para que el motor actúe automáticamente
-    private var autoActThreshold = 42f
-    // Control de frecuencia: no actuar más de 1 vez cada 5 minutos
     private var lastAutoActionTime = 0L
+    private var autoThreshold = 42f
 
     init {
         observeHistory()
@@ -60,51 +54,45 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             delay(1500L)
             while (true) {
                 try {
-                    val snapshot    = sensorRepo.readSnapshot()
-                    val causes      = sensorRepo.analyzeHeatCauses(snapshot)
-                    val profile     = learningEngine.learn(snapshot)
-                    val prediction  = learningEngine.predictNextTemp()
-                    val health      = learningEngine.computeBatteryHealthScore()
-                    val hourly      = learningEngine.getHourlyProfile()
-                    val tips        = learningEngine.generateSmartTips(profile, snapshot, prediction)
-                    val diagnoses   = sensorRepo.getComponentDiagnoses()
-                    val dynThreshold = learningEngine.getDynamicThreshold()
+                    val snapshot  = sensorRepo.readSnapshot()
+                    val causes    = sensorRepo.analyzeHeatCauses(snapshot)
+                    val diagnoses = sensorRepo.diagnoseComponents(snapshot)
+                    val profile   = learningEngine.learn(snapshot)
+                    val prediction= learningEngine.predictNextTemp()
+                    val health    = learningEngine.computeBatteryHealthScore()
+                    val hourly    = learningEngine.getHourlyProfile()
+                    val tips      = learningEngine.generateSmartTips(profile, snapshot, prediction)
 
-                    // Actualizar umbral dinámico aprendido
-                    autoActThreshold = dynThreshold
+                    // Umbral dinámico: usa el del perfil aprendido si existe
+                    val dynThreshold = profile.dynamicThreshold.takeIf { it > 35f } ?: 43f
+                    autoThreshold = dynThreshold
 
                     _uiState.update {
                         it.copy(
-                            latest            = snapshot,
-                            causes            = causes,
-                            profile           = profile,
-                            prediction        = prediction,
-                            batteryHealth     = health,
-                            hourlyProfile     = hourly,
-                            smartTips         = tips,
-                            componentDiagnoses= diagnoses,
-                            alertThreshold    = dynThreshold,
-                            isLoading         = false,
-                            isMonitoring      = true
+                            latest             = snapshot,
+                            causes             = causes,
+                            profile            = profile,
+                            prediction         = prediction,
+                            batteryHealth      = health,
+                            hourlyProfile      = hourly,
+                            smartTips          = tips,
+                            componentDiagnoses = diagnoses,
+                            alertThreshold     = dynThreshold,
+                            isLoading          = false,
+                            isMonitoring       = true
                         )
                     }
 
-                    // Motor automático: actúa si supera el umbral aprendido
-                    executeAutoOptimization(snapshot, causes)
+                    executeAutoOptimization(snapshot)
 
-                } catch (e: Exception) { /* continuar */ }
+                } catch (_: Exception) { }
 
-                delay(30_000L) // cada 30 segundos
+                delay(30_000L)
             }
         }
     }
 
-    /**
-     * Motor de optimización automática.
-     * Se activa cuando el aprendizaje detecta temperatura anormal.
-     * Respeta un cooldown de 5 minutos entre acciones para no ser invasivo.
-     */
-    private fun executeAutoOptimization(snap: ThermalSnapshot, causes: List<HeatCause>) {
+    private fun executeAutoOptimization(snap: ThermalSnapshot) {
         val now = System.currentTimeMillis()
         val cooldownMs = 5 * 60 * 1000L
         if (now - lastAutoActionTime < cooldownMs) return
@@ -114,44 +102,39 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
         viewModelScope.launch {
             val actions = mutableListOf<AutoAction>()
-
-            when (level) {
-                ThermalLevel.HOT -> {
-                    val killed = optRepo.killBackgroundApps()
-                    if (killed > 0) {
-                        actions.add(AutoAction(
+            try {
+                when (level) {
+                    ThermalLevel.HOT -> {
+                        val killed = optRepo.killBackgroundApps()
+                        if (killed > 0) actions.add(AutoAction(
                             description = "Cerré $killed apps en segundo plano",
-                            trigger     = "Temperatura ${snap.batteryTemp}°C (HOT)",
-                            appsKilled  = killed
+                            trigger = "Temperatura ${snap.batteryTemp}°C — HOT",
+                            appsKilled = killed
                         ))
                     }
-                }
-                ThermalLevel.CRITICAL, ThermalLevel.EMERGENCY -> {
-                    val killed = optRepo.killBackgroundApps()
-                    val freed  = optRepo.freeRam()
-                    if (killed > 0 || freed > 0) {
-                        actions.add(AutoAction(
+                    ThermalLevel.CRITICAL, ThermalLevel.EMERGENCY -> {
+                        val killed = optRepo.killBackgroundApps()
+                        val freed  = optRepo.freeRam()
+                        if (killed > 0 || freed > 0) actions.add(AutoAction(
                             description = "Modo cooling: cerré $killed apps y liberé RAM",
-                            trigger     = "Temperatura ${snap.batteryTemp}°C (CRÍTICO)",
-                            appsKilled  = killed
+                            trigger = "Temperatura ${snap.batteryTemp}°C — CRÍTICO",
+                            appsKilled = killed
                         ))
+                        if (snap.isCharging && snap.batteryTemp >= 46f) {
+                            actions.add(AutoAction(
+                                description = "⚠️ Cargando con calor crítico — desconecta el cargador",
+                                trigger = "Cargando + ${snap.batteryTemp}°C"
+                            ))
+                        }
                     }
-                    // Acción adicional: si el aprendizaje detecta patrón de carga caliente
-                    if (snap.isCharging && snap.batteryTemp >= 46f) {
-                        actions.add(AutoAction(
-                            description = "⚠️ Cargando con calor crítico — considera desconectar el cargador",
-                            trigger     = "Cargando + ${snap.batteryTemp}°C"
-                        ))
-                    }
+                    else -> {}
                 }
-                else -> { /* NORMAL / WARM: no actuar */ }
-            }
+            } catch (_: Exception) { }
 
             if (actions.isNotEmpty()) {
                 lastAutoActionTime = now
                 _uiState.update { state ->
-                    val updated = (actions + state.autoActionsLog).take(20) // máx 20 entradas
-                    state.copy(autoActionsLog = updated)
+                    state.copy(autoActionsLog = (actions + state.autoActionsLog).take(20))
                 }
             }
         }
@@ -159,18 +142,16 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private fun observeHistory() {
         viewModelScope.launch {
-            db.snapshotDao().getAll().collect { rows ->
-                _uiState.update { it.copy(history = rows.map { r -> r.toSnapshot() }.takeLast(120)) }
+            db.thermalDao().getHistory(120).collect { rows ->
+                _uiState.update { it.copy(history = rows) }
             }
         }
     }
 
-    fun startMonitor() {
-        _uiState.update { it.copy(isMonitoring = true) }
-    }
+    fun startMonitor() { _uiState.update { it.copy(isMonitoring = true) } }
 
     fun setAlertThreshold(t: Float) {
-        autoActThreshold = t
+        autoThreshold = t
         _uiState.update { it.copy(alertThreshold = t) }
     }
 
