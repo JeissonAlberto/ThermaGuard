@@ -38,7 +38,7 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
     val viewModel: ThermalViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
     var permissionsGranted by remember { mutableStateOf(false) }
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by remember { mutableStateOf(0) }
 
     if (!permissionsGranted) {
         PermissionsScreen(onAllGranted = {
@@ -56,7 +56,7 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                     )
                     NavigationBarItem(
                         selected = selectedTab == 1, onClick = { selectedTab = 1 },
-                        icon = { Icon(Icons.Default.BioTech, null) }, label = { Text("Diagnostico") }
+                        icon = { Icon(Icons.Default.Science, null) }, label = { Text("Diagnostico") }
                     )
                     NavigationBarItem(
                         selected = selectedTab == 2, onClick = { selectedTab = 2 },
