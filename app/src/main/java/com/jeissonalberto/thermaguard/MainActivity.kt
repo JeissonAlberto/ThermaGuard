@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
 import com.jeissonalberto.thermaguard.service.ThermalMonitorService
+import com.jeissonalberto.thermaguard.data.toThermalLevel
 import com.jeissonalberto.thermaguard.ui.*
 import com.jeissonalberto.thermaguard.ui.theme.ThermaGuardTheme
 
