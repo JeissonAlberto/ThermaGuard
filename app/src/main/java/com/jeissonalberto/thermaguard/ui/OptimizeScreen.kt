@@ -53,7 +53,7 @@ fun OptimizeScreen(
         ) {
             // Header
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(Icons.Default.TuneRounded, null, tint = Color(0xFF00C853), modifier = Modifier.size(24.dp))
+                Icon(Icons.Default.Tune, null, tint = Color(0xFF00C853), modifier = Modifier.size(24.dp))
                 Column {
                     Text("Optimizar", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Text("Acciones directas para enfriar tu dispositivo", fontSize = 12.sp, color = Color.White.copy(alpha = 0.5f))
