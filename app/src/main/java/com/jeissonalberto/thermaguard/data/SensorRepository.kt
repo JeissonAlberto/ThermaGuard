@@ -43,7 +43,7 @@ class SensorRepository(private val context: Context) {
         val brightness    = readBrightness()
         val ramUsage      = readRamUsage()
 
-        ThermalSnapshot(
+        val snap = ThermalSnapshot(
             batteryTemp      = batteryTemp,
             cpuTemp          = allZones["cpu"]  ?: 0f,
             gpuTemp          = allZones["gpu"]  ?: 0f,
@@ -51,19 +51,20 @@ class SensorRepository(private val context: Context) {
             boardTemp        = allZones["board"] ?: allZones["pcb"] ?: 0f,
             modemTemp        = allZones["modem"] ?: allZones["wlan"] ?: 0f,
             displayTemp      = allZones["display"] ?: allZones["ddr"] ?: 0f,
-            allZones         = allZones,
             cpuUsage         = cpuUsage,
-            perCoreUsage     = perCoreUsage,
             batteryLevel     = batteryLevel,
             isCharging       = isCharging,
             thermalStatus    = thermalStatus,
             topApp           = topApp,
-            topProcesses     = topProcesses,
             wifiActive       = wifiActive,
             bluetoothActive  = bluetoothActive,
             brightnessLevel  = brightness,
             ramUsageMb       = ramUsage
         )
+        snap.allZones    = allZones
+        snap.perCoreUsage = perCoreUsage
+        snap.topProcesses = topProcesses
+        snap
     }
 
     // ============================================================
