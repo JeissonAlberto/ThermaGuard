@@ -15,6 +15,8 @@ data class ThermalUiState(
     val history: List<ThermalSnapshot> = emptyList(),
     val causes: List<HeatCause> = emptyList(),
     val optimizationPlan: List<OptimizationAction> = emptyList(),
+    val smartTips: List<SmartTip> = emptyList(),
+    val profile: LearnedProfile? = null,
     val isMonitoring: Boolean = false,
     val autoMode: Boolean = false,
     val alertThreshold: Float = 43f,
@@ -25,6 +27,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private val sensorRepo = SensorRepository(application)
     private val optimizationRepo = OptimizationRepository(application)
+    private val learningEngine = ThermalLearningEngine(application)
     private val db = ThermalDatabase.getInstance(application)
 
     private val _uiState = MutableStateFlow(ThermalUiState())
@@ -37,21 +40,26 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private fun startLiveReading() {
         viewModelScope.launch {
-            // Pequena pausa inicial para que la UI cargue completamente
             delay(1000L)
             while (true) {
                 try {
                     val snapshot = sensorRepo.readSnapshot()
                     val causes = sensorRepo.analyzeHeatCauses(snapshot)
                     val plan = optimizationRepo.buildOptimizationPlan(snapshot)
+                    val profile = learningEngine.learn(snapshot)
+                    val tips = learningEngine.generateSmartTips(profile, snapshot)
+
                     _uiState.update { state ->
                         state.copy(
                             latest = snapshot,
                             causes = causes,
                             optimizationPlan = plan,
+                            smartTips = tips,
+                            profile = profile,
                             isLoading = false
                         )
                     }
+
                     if (_uiState.value.autoMode && snapshot.batteryTemp >= _uiState.value.alertThreshold) {
                         executeAutoOptimization(plan)
                     }
