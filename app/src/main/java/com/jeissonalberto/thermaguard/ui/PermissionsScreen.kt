@@ -1,5 +1,7 @@
 package com.jeissonalberto.thermaguard.ui
 
+import com.jeissonalberto.thermaguard.R
+
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
@@ -27,6 +29,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -174,15 +178,11 @@ fun PermissionsScreen(
                 animationSpec = infiniteRepeatable(tween(1200, easing = EaseInOut), RepeatMode.Reverse),
                 label = "scale"
             )
-            Box(
-                modifier = Modifier
-                    .size(90.dp)
-                    .clip(CircleShape)
-                    .background(Brush.radialGradient(listOf(Color(0xFFFF6D00), Color(0xFFD50000)))),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("🌡️", fontSize = 44.sp)
-            }
+            Image(
+                painter = painterResource(id = R.drawable.jasol_logo),
+                contentDescription = "Jasol Group",
+                modifier = Modifier.size(110.dp).clip(RoundedCornerShape(20.dp))
+            )
 
             Spacer(Modifier.height(8.dp))
 
