@@ -177,7 +177,7 @@ fun BatteryHealthCard(health: BatteryHealthScore) {
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.FavoriteOutlined, null, tint = scoreColor, modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Favorite, null, tint = scoreColor, modifier = Modifier.size(18.dp))
                 Text("Salud de la bateria", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
             }
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
@@ -235,8 +235,7 @@ fun HourlyProfileCard(hourly: List<HourlyDataPoint>) {
                         slot.avgTemp >= 35f -> Color(0xFFFFD600)
                         else -> Color(0xFF00E676)
                     }
-                    drawRoundRect(barColor.copy(alpha = 0.8f),
-                        Offset(x + 1f, h - barH), Size(barW - 2f, barH), androidx.compose.ui.geometry.CornerRadius(3f))
+                    drawRect(barColor.copy(alpha = 0.8f), Offset(x + 1f, h - barH), Size(barW - 2f, barH))
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
