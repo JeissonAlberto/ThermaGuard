@@ -1,7 +1,5 @@
 package com.jeissonalberto.thermaguard.ui
 
-import com.jeissonalberto.thermaguard.R
-
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
@@ -25,12 +23,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,7 +49,6 @@ fun PermissionsScreen(
 ) {
     val context = LocalContext.current
 
-    // Estados de permisos
     var hasNotifications by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
@@ -61,203 +57,181 @@ fun PermissionsScreen(
             else true
         )
     }
-    var hasUsageStats by remember {
-        mutableStateOf(
-            try {
-                val am = context.getSystemService(android.app.AppOpsManager::class.java)
-                val mode = am.unsafeCheckOpNoThrow(
-                    "android:get_usage_stats",
-                    android.os.Process.myUid(), context.packageName
-                )
-                mode == android.app.AppOpsManager.MODE_ALLOWED
-            } catch (e: Exception) { false }
-        )
-    }
+
     var hasBatteryOptimization by remember {
         mutableStateOf(
             try {
-                val pm = context.getSystemService(android.os.PowerManager::class.java)
+                val pm = context.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
                 pm.isIgnoringBatteryOptimizations(context.packageName)
-            } catch (e: Exception) { false }
+            } catch (e: Exception) { true }
         )
     }
 
-    // Launchers
     val notifLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> hasNotifications = granted }
 
-    val batteryLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) {
-        hasBatteryOptimization = try {
-            val pm = context.getSystemService(android.os.PowerManager::class.java)
-            pm.isIgnoringBatteryOptimizations(context.packageName)
-        } catch (e: Exception) { false }
-    }
-
-    val usageLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) {
-        hasUsageStats = try {
-            val am = context.getSystemService(android.app.AppOpsManager::class.java)
-            val mode = am.unsafeCheckOpNoThrow(
-                "android:get_usage_stats",
-                android.os.Process.myUid(), context.packageName
-            )
-            mode == android.app.AppOpsManager.MODE_ALLOWED
-        } catch (e: Exception) { false }
-    }
-
-    val requiredGranted = hasNotifications && hasBatteryOptimization
-
-    LaunchedEffect(requiredGranted) {
-        if (requiredGranted) {
-            kotlinx.coroutines.delay(800)
-            onAllGranted()
+    val permissions = buildList {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            add(PermissionItem(
+                icon = Icons.Default.Notifications,
+                title = "Notificaciones",
+                description = "Alertas de temperatura en tiempo real y resumen en la barra de estado",
+                isGranted = hasNotifications,
+                onRequest = { notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) },
+                onOpenSettings = {
+                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                    })
+                }
+            ))
         }
-    }
-
-    val permissions = listOf(
-        PermissionItem(
-            icon = Icons.Default.Notifications,
-            title = "Notificaciones",
-            description = "Para mostrarte la temperatura en la barra de notificaciones en tiempo real.",
-            isGranted = hasNotifications,
-            isOptional = false,
-            onRequest = {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-            }
-        ),
-        PermissionItem(
-            icon = Icons.Default.BatterySaver,
-            title = "Sin restriccion de bateria",
-            description = "Permite que el monitor corra en segundo plano sin que Samsung lo mate.",
+        add(PermissionItem(
+            icon = Icons.Default.BatteryFull,
+            title = "Ejecucion en segundo plano",
+            description = "Permite el monitoreo continuo sin que el sistema mate el servicio",
             isGranted = hasBatteryOptimization,
-            isOptional = false,
-            onRequest = {
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:${context.packageName}")
-                }
-                batteryLauncher.launch(intent)
-            }
-        ),
-        PermissionItem(
-            icon = Icons.Default.Analytics,
-            title = "Estadisticas de uso (opcional)",
-            description = "Para detectar que app esta causando el calentamiento. Puedes saltarlo.",
-            isGranted = hasUsageStats,
             isOptional = true,
             onRequest = {
-                usageLauncher.launch(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                try {
+                    context.startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                    })
+                } catch (e: Exception) {
+                    context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                }
             }
-        )
-    )
+        ))
+    }
+
+    val allRequired = permissions.filter { !it.isOptional }.all { it.isGranted }
+
+    LaunchedEffect(allRequired) {
+        if (allRequired) onAllGranted()
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF1a1a2e))))
+            .background(Brush.verticalGradient(listOf(Color(0xFF0A1628), Color(0xFF1A1A2E), Color(0xFF0F2027))))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(48.dp))
 
-            // Logo / Icono animado
+            // Icono animado — termometro ThermaGuard (sin logo externo)
             val pulse = rememberInfiniteTransition(label = "pulse")
             val scale by pulse.animateFloat(
-                initialValue = 0.9f, targetValue = 1.1f,
+                initialValue = 0.92f, targetValue = 1.08f,
                 animationSpec = infiniteRepeatable(tween(1200, easing = EaseInOut), RepeatMode.Reverse),
                 label = "scale"
             )
-            Image(
-                painter = painterResource(id = R.drawable.jasol_logo),
-                contentDescription = "Jasol Group",
-                modifier = Modifier.size(110.dp).clip(RoundedCornerShape(20.dp))
-            )
 
-            Spacer(Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .scale(scale)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(listOf(Color(0xFFFF6D00), Color(0xFFD50000)))
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("🌡️", fontSize = 48.sp)
+            }
+
+            Spacer(Modifier.height(4.dp))
 
             Text(
-                "ThermaGuard", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White
+                "ThermaGuard",
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
             Text(
                 "Necesitamos algunos permisos\npara proteger tu dispositivo",
-                fontSize = 15.sp, color = Color.White.copy(alpha = 0.6f),
-                textAlign = TextAlign.Center, lineHeight = 22.sp
+                fontSize = 15.sp,
+                color = Color.White.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
             )
 
-            // Progreso
+            // Barra de progreso de permisos
             val grantedCount = permissions.count { it.isGranted }
-            val totalCount = permissions.size
+            val totalCount   = permissions.size
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.05f))
+                    .padding(14.dp)
             ) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Permisos concedidos", fontSize = 12.sp, color = Color.White.copy(alpha = 0.5f))
-                    Text("$grantedCount/$totalCount", fontSize = 12.sp, color = Color(0xFF00E676), fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Permisos concedidos", fontSize = 12.sp, color = Color.White.copy(0.6f))
+                    Text("$grantedCount / $totalCount", fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold, color = Color(0xFF00E676))
                 }
+                Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(
-                    progress = grantedCount.toFloat() / totalCount,
-                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                    progress = { if (totalCount > 0) grantedCount.toFloat() / totalCount else 0f },
+                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
                     color = Color(0xFF00E676),
-                    trackColor = Color.White.copy(alpha = 0.1f)
+                    trackColor = Color.White.copy(0.1f)
                 )
             }
 
-            // Cards de permisos
-            permissions.forEach { perm ->
-                PermissionCard(item = perm)
-            }
+            // Tarjetas de permisos
+            permissions.forEach { perm -> PermissionCard(perm) }
 
-            // Boton continuar (si requeridos OK)
-            AnimatedVisibility(visible = requiredGranted) {
+            // Boton continuar
+            AnimatedVisibility(visible = allRequired) {
                 Button(
                     onClick = onAllGranted,
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853))
                 ) {
                     Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Todo listo — Entrar a ThermaGuard", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.width(10.dp))
+                    Text("Continuar", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
-            // Saltar si solo falta el opcional
-            if (!requiredGranted) {
-                val requiredPending = permissions.filter { !it.isGranted && !it.isOptional }
-                if (requiredPending.isEmpty()) {
-                    TextButton(onClick = onAllGranted) {
-                        Text("Saltar opcionales y continuar", color = Color.White.copy(alpha = 0.5f))
-                    }
-                }
+            if (!allRequired) {
+                Text(
+                    "Los permisos obligatorios son necesarios para el correcto funcionamiento",
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.4f),
+                    textAlign = TextAlign.Center,
+                    lineHeight = 18.sp
+                )
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
-fun PermissionCard(item: PermissionItem) {
+fun PermissionCard(perm: PermissionItem) {
     val borderColor = when {
-        item.isGranted -> Color(0xFF00E676)
-        item.isOptional -> Color(0xFFFFD600).copy(alpha = 0.5f)
-        else -> Color(0xFFFF6D00).copy(alpha = 0.6f)
+        perm.isGranted  -> Color(0xFF00C853).copy(alpha = 0.5f)
+        perm.isOptional -> Color.White.copy(alpha = 0.1f)
+        else            -> Color(0xFFFF6D00).copy(alpha = 0.5f)
     }
     val bgColor = when {
-        item.isGranted -> Color(0xFF00E676).copy(alpha = 0.05f)
-        else -> Color.White.copy(alpha = 0.05f)
+        perm.isGranted  -> Color(0xFF00C853).copy(alpha = 0.05f)
+        else            -> Color.White.copy(alpha = 0.03f)
     }
 
     Surface(
@@ -268,57 +242,76 @@ fun PermissionCard(item: PermissionItem) {
             .border(1.dp, borderColor, RoundedCornerShape(16.dp))
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Icono con estado
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(44.dp)
                     .clip(CircleShape)
-                    .background(if (item.isGranted) Color(0xFF00E676).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.08f)),
+                    .background(
+                        if (perm.isGranted) Color(0xFF00C853).copy(0.15f)
+                        else Color.White.copy(0.06f)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                if (item.isGranted) {
-                    Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF00E676), modifier = Modifier.size(26.dp))
-                } else {
-                    Icon(item.icon, null, tint = if (item.isOptional) Color(0xFFFFD600) else Color(0xFFFF6D00),
-                        modifier = Modifier.size(26.dp))
-                }
+                Icon(
+                    imageVector = if (perm.isGranted) Icons.Default.CheckCircle else perm.icon,
+                    contentDescription = null,
+                    tint = if (perm.isGranted) Color(0xFF00C853) else Color.White.copy(0.7f),
+                    modifier = Modifier.size(22.dp)
+                )
             }
 
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(item.title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
-                    if (item.isOptional) {
-                        Surface(shape = RoundedCornerShape(6.dp), color = Color(0xFFFFD600).copy(alpha = 0.15f)) {
-                            Text("Opcional", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                fontSize = 10.sp, color = Color(0xFFFFD600))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        perm.title,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                    if (perm.isOptional) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color.White.copy(alpha = 0.08f)
+                        ) {
+                            Text(
+                                "Opcional",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
+                                fontSize = 9.sp,
+                                color = Color.White.copy(0.5f)
+                            )
                         }
                     }
                 }
-                Text(item.description, fontSize = 12.sp, color = Color.White.copy(alpha = 0.6f), lineHeight = 17.sp)
+                Text(
+                    perm.description,
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.5f),
+                    lineHeight = 17.sp
+                )
+            }
 
-                if (!item.isGranted) {
-                    Spacer(Modifier.height(4.dp))
-                    Button(
-                        onClick = item.onRequest,
-                        modifier = Modifier.height(34.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (item.isOptional) Color(0xFFFFD600).copy(alpha = 0.2f)
-                                            else Color(0xFFFF6D00).copy(alpha = 0.25f)
-                        )
-                    ) {
-                        Text(
-                            "Conceder permiso",
-                            fontSize = 12.sp,
-                            color = if (item.isOptional) Color(0xFFFFD600) else Color(0xFFFF8A65),
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+            if (!perm.isGranted) {
+                Button(
+                    onClick = perm.onRequest,
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (perm.isOptional) Color.White.copy(0.1f) else Color(0xFFFF6D00)
+                    )
+                ) {
+                    Text(
+                        "Permitir",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
             }
         }
