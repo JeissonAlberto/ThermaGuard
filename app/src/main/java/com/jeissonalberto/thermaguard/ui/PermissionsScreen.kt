@@ -93,15 +93,11 @@ fun PermissionsScreen(onAllGranted: () -> Unit) {
                     modifier = Modifier.fillMaxSize().border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(22.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    try {
-                        androidx.compose.foundation.Image(
-                            painter = painterResource(id = R.drawable.jasol_logo),
-                            contentDescription = "Jasol Group",
-                            modifier = Modifier.size(70.dp)
-                        )
-                    } catch (e: Exception) {
-                        Text("🌡️", fontSize = 36.sp)
-                    }
+                    androidx.compose.foundation.Image(
+                        painter = painterResource(id = R.drawable.jasol_logo),
+                        contentDescription = "Jasol Group",
+                        modifier = Modifier.size(70.dp)
+                    )
                 }
             }
 
