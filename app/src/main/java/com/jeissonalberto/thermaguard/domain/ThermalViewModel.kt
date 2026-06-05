@@ -40,7 +40,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private fun startLiveReading() {
         viewModelScope.launch {
-            delay(1000L)
+            delay(1500L)
             while (true) {
                 try {
                     val snapshot = sensorRepo.readSnapshot()
@@ -79,6 +79,15 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                 }
             } catch (e: Exception) { }
         }
+    }
+
+    /** Llamado desde MainActivity tras conceder permisos */
+    fun startMonitor() {
+        val context = getApplication<Application>()
+        try {
+            context.startForegroundService(Intent(context, ThermalMonitorService::class.java))
+            _uiState.update { it.copy(isMonitoring = true) }
+        } catch (e: Exception) { }
     }
 
     fun toggleMonitorService() {
