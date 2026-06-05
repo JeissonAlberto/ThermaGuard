@@ -75,7 +75,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     }
 
                     if (_uiState.value.autoMode && snapshot.batteryTemp >= _uiState.value.alertThreshold) {
-                        executeAutoOptimization(plan)
+                        try { optimizationRepo.killBackgroundApps() } catch (e: Exception) { }
                     }
                 } catch (e: Exception) {
                     _uiState.update { it.copy(isLoading = false) }
