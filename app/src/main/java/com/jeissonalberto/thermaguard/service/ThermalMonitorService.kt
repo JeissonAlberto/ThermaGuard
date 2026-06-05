@@ -13,6 +13,7 @@ import com.jeissonalberto.thermaguard.MainActivity
 import com.jeissonalberto.thermaguard.R
 import com.jeissonalberto.thermaguard.data.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.isActive
 
 class ThermalMonitorService : Service() {
 
@@ -66,7 +67,7 @@ class ThermalMonitorService : Service() {
         var wasHot = false
         var heatStartTime = 0L
 
-        while (kotlinx.coroutines.isActive) {
+        while (true) {
             try {
                 val snap    = sensorRepo.readSnapshot()
                 val profile = learningEngine.learn(snap)
