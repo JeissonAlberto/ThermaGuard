@@ -21,6 +21,7 @@ data class ThermalUiState(
     val batteryHealth: BatteryHealthScore? = null,
     val hourlyProfile: List<HourlyDataPoint> = emptyList(),
     val componentDiagnoses: List<ComponentDiagnosis> = emptyList(),
+    val coolingResult: CoolingResult? = null,
     val isMonitoring: Boolean = false,
     val autoMode: Boolean = false,
     val alertThreshold: Float = 43f,
@@ -120,6 +121,27 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     fun toggleAutoMode()            { _uiState.update { it.copy(autoMode = !it.autoMode) } }
     fun setAlertThreshold(t: Float) { _uiState.update { it.copy(alertThreshold = t) } }
     fun resetLearning()             { learningEngine.reset() }
+
+    fun activateCoolingMode() {
+        viewModelScope.launch {
+            try {
+                val result = optimizationRepo.executeCoolingMode(_uiState.value.latest)
+                _uiState.update { it.copy(coolingResult = result) }
+            } catch (e: Exception) { }
+        }
+    }
+
+    fun killApps() {
+        viewModelScope.launch {
+            try { optimizationRepo.killBackgroundApps() } catch (e: Exception) { }
+        }
+    }
+
+    fun freeRam() {
+        viewModelScope.launch {
+            try { optimizationRepo.freeRam() } catch (e: Exception) { }
+        }
+    }
 
     private suspend fun executeAutoOptimization(plan: List<OptimizationAction>) {
         plan.forEach { action ->
