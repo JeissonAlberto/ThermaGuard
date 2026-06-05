@@ -26,6 +26,7 @@ class ThermalMonitorService : Service() {
     companion object {
         const val CHANNEL_ID = "thermaguard_monitor"
         const val NOTIF_ID = 1001
+        const val ALERT_NOTIF_ID = 1002
         const val ACTION_STOP = "STOP_MONITOR"
         const val MONITOR_INTERVAL_MS = 30_000L
         var isRunning = false
@@ -45,9 +46,13 @@ class ThermalMonitorService : Service() {
             return START_NOT_STICKY
         }
 
-        val notification = buildNotification("Monitoreando temperatura...")
+        // Notificacion inicial en barra de notificaciones
+        val notification = buildNotification(
+            emoji = "🌡️",
+            title = "ThermaGuard activo",
+            text = "Iniciando monitoreo de temperatura..."
+        )
 
-        // dataSync no requiere permisos especiales en ninguna version de Android
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
                 startForeground(NOTIF_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
@@ -69,7 +74,13 @@ class ThermalMonitorService : Service() {
                     val snapshot: ThermalSnapshot = sensorRepository.readSnapshot()
                     db.thermalDao().insert(snapshot)
                     updateNotification(snapshot)
-                    if (snapshot.batteryTemp >= 45f) sendThermalAlert(snapshot)
+
+                    // Alerta separada si temperatura critica
+                    if (snapshot.batteryTemp >= 45f) {
+                        sendThermalAlert(snapshot)
+                    }
+
+                    // Limpiar historial mayor a 7 dias
                     val weekAgo = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000L)
                     db.thermalDao().deleteOlderThan(weekAgo)
                 } catch (e: Exception) { }
@@ -80,22 +91,39 @@ class ThermalMonitorService : Service() {
 
     private fun updateNotification(snapshot: ThermalSnapshot) {
         val level = snapshot.batteryTemp.toThermalLevel()
-        val text = "${level.emoji} ${snapshot.batteryTemp}C | CPU ${snapshot.cpuUsage.toInt()}% | ${if (snapshot.isCharging) "Cargando" else "Bat ${snapshot.batteryLevel}%"}"
-        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIF_ID, buildNotification(text))
+        val charging = if (snapshot.isCharging) "⚡ Cargando" else "🔋 ${snapshot.batteryLevel}%"
+        val cpu = "CPU ${snapshot.cpuUsage.toInt()}%"
+        val wifi = if (snapshot.wifiActive) "📶" else ""
+
+        val notif = buildNotification(
+            emoji = level.emoji,
+            title = "ThermaGuard — ${snapshot.batteryTemp}°C ${level.label}",
+            text = "$charging  |  $cpu  |  $wifi",
+            subText = if (snapshot.topApp.isNotEmpty()) "App: ${snapshot.topApp}" else null
+        )
+        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIF_ID, notif)
     }
 
     private fun sendThermalAlert(snapshot: ThermalSnapshot) {
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val alert = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("ThermaGuard - Temperatura critica")
-            .setContentText("Bateria: ${snapshot.batteryTemp}C - Cierra apps pesadas")
+            .setContentTitle("🔴 ThermaGuard — Temperatura critica!")
+            .setContentText("${snapshot.batteryTemp}°C — Cierra apps pesadas ahora")
+            .setStyle(NotificationCompat.BigTextStyle()
+                .bigText("Tu dispositivo esta a ${snapshot.batteryTemp}°C. Cierra apps pesadas, baja el brillo y desconecta el cargador si es posible. CPU al ${snapshot.cpuUsage.toInt()}%."))
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
-        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIF_ID + 1, alert)
+        manager.notify(ALERT_NOTIF_ID, alert)
     }
 
-    private fun buildNotification(text: String): Notification {
+    private fun buildNotification(
+        emoji: String,
+        title: String,
+        text: String,
+        subText: String? = null
+    ): Notification {
         val openIntent = PendingIntent.getActivity(
             this, 0, Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -105,23 +133,30 @@ class ThermalMonitorService : Service() {
             Intent(this, ThermalMonitorService::class.java).apply { action = ACTION_STOP },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("ThermaGuard activo")
+            .setContentTitle(title)
             .setContentText(text)
+            .apply { subText?.let { setSubText(it) } }
             .setSmallIcon(android.R.drawable.ic_menu_compass)
             .setContentIntent(openIntent)
             .addAction(android.R.drawable.ic_delete, "Detener", stopIntent)
             .setOngoing(true)
             .setSilent(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            CHANNEL_ID, "Monitor Termico", NotificationManager.IMPORTANCE_LOW
+            CHANNEL_ID,
+            "Monitor Termico ThermaGuard",
+            NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Monitoreo continuo de temperatura"
+            description = "Temperatura del dispositivo en tiempo real"
             setShowBadge(false)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
         (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
     }
