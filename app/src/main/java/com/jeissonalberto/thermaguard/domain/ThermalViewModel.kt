@@ -14,29 +14,41 @@ data class ThermalUiState(
     val latest: ThermalSnapshot = ThermalSnapshot(),
     val history: List<ThermalSnapshot> = emptyList(),
     val causes: List<HeatCause> = emptyList(),
-    val optimizationPlan: List<OptimizationAction> = emptyList(),
     val smartTips: List<SmartTip> = emptyList(),
     val profile: LearnedProfile? = null,
     val prediction: TempPrediction? = null,
     val batteryHealth: BatteryHealthScore? = null,
     val hourlyProfile: List<HourlyDataPoint> = emptyList(),
     val componentDiagnoses: List<ComponentDiagnosis> = emptyList(),
-    val coolingResult: CoolingResult? = null,
+    // Acciones automáticas ejecutadas por el motor
+    val autoActionsLog: List<AutoAction> = emptyList(),
     val isMonitoring: Boolean = false,
-    val autoMode: Boolean = false,
     val alertThreshold: Float = 43f,
     val isLoading: Boolean = true
 )
 
+/** Registro de cada acción que el motor ejecutó automáticamente */
+data class AutoAction(
+    val timestamp: Long = System.currentTimeMillis(),
+    val description: String,
+    val trigger: String,          // qué la disparó
+    val appsKilled: Int = 0
+)
+
 class ThermalViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val sensorRepo       = SensorRepository(application)
-    private val optimizationRepo = OptimizationRepository(application)
-    private val learningEngine   = ThermalLearningEngine(application)
-    private val db               = ThermalDatabase.getInstance(application)
+    private val sensorRepo     = SensorRepository(application)
+    private val optRepo        = OptimizationRepository(application)
+    private val learningEngine = ThermalLearningEngine(application)
+    private val db             = ThermalDatabase.getInstance(application)
 
     private val _uiState = MutableStateFlow(ThermalUiState())
     val uiState: StateFlow<ThermalUiState> = _uiState.asStateFlow()
+
+    // Umbral de temperatura para que el motor actúe automáticamente
+    private var autoActThreshold = 42f
+    // Control de frecuencia: no actuar más de 1 vez cada 5 minutos
+    private var lastAutoActionTime = 0L
 
     init {
         observeHistory()
@@ -48,100 +60,121 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             delay(1500L)
             while (true) {
                 try {
-                    val snapshot   = sensorRepo.readSnapshot()
-                    val causes     = sensorRepo.analyzeHeatCauses(snapshot)
-                    val plan       = optimizationRepo.buildOptimizationPlan(snapshot)
-                    val profile    = learningEngine.learn(snapshot)
-                    val prediction = learningEngine.predictNextTemp()
-                    val health     = learningEngine.computeBatteryHealthScore()
-                    val hourly     = learningEngine.getHourlyProfile()
-                    val tips       = learningEngine.generateSmartTips(profile, snapshot, prediction)
-                    val diagnoses  = sensorRepo.diagnoseComponents(snapshot)
+                    val snapshot    = sensorRepo.readSnapshot()
+                    val causes      = sensorRepo.analyzeHeatCauses(snapshot)
+                    val profile     = learningEngine.learn(snapshot)
+                    val prediction  = learningEngine.predictNextTemp()
+                    val health      = learningEngine.computeBatteryHealthScore()
+                    val hourly      = learningEngine.getHourlyProfile()
+                    val tips        = learningEngine.generateSmartTips(profile, snapshot, prediction)
+                    val diagnoses   = sensorRepo.getComponentDiagnoses()
+                    val dynThreshold = learningEngine.getDynamicThreshold()
 
-                    _uiState.update { state ->
-                        state.copy(
-                            latest             = snapshot,
-                            causes             = causes,
-                            optimizationPlan   = plan,
-                            smartTips          = tips,
-                            profile            = profile,
-                            prediction         = prediction,
-                            batteryHealth      = health,
-                            hourlyProfile      = hourly,
-                            componentDiagnoses = diagnoses,
-                            alertThreshold     = profile.dynamicThreshold,
-                            isLoading          = false
+                    // Actualizar umbral dinámico aprendido
+                    autoActThreshold = dynThreshold
+
+                    _uiState.update {
+                        it.copy(
+                            latest            = snapshot,
+                            causes            = causes,
+                            profile           = profile,
+                            prediction        = prediction,
+                            batteryHealth     = health,
+                            hourlyProfile     = hourly,
+                            smartTips         = tips,
+                            componentDiagnoses= diagnoses,
+                            alertThreshold    = dynThreshold,
+                            isLoading         = false,
+                            isMonitoring      = true
                         )
                     }
 
-                    if (_uiState.value.autoMode && snapshot.batteryTemp >= _uiState.value.alertThreshold) {
-                        try { optimizationRepo.killBackgroundApps() } catch (e: Exception) { }
+                    // Motor automático: actúa si supera el umbral aprendido
+                    executeAutoOptimization(snapshot, causes)
+
+                } catch (e: Exception) { /* continuar */ }
+
+                delay(30_000L) // cada 30 segundos
+            }
+        }
+    }
+
+    /**
+     * Motor de optimización automática.
+     * Se activa cuando el aprendizaje detecta temperatura anormal.
+     * Respeta un cooldown de 5 minutos entre acciones para no ser invasivo.
+     */
+    private fun executeAutoOptimization(snap: ThermalSnapshot, causes: List<HeatCause>) {
+        val now = System.currentTimeMillis()
+        val cooldownMs = 5 * 60 * 1000L
+        if (now - lastAutoActionTime < cooldownMs) return
+
+        val level = snap.batteryTemp.toThermalLevel()
+        if (level == ThermalLevel.NORMAL || level == ThermalLevel.WARM) return
+
+        viewModelScope.launch {
+            val actions = mutableListOf<AutoAction>()
+
+            when (level) {
+                ThermalLevel.HOT -> {
+                    val killed = optRepo.killBackgroundApps()
+                    if (killed > 0) {
+                        actions.add(AutoAction(
+                            description = "Cerré $killed apps en segundo plano",
+                            trigger     = "Temperatura ${snap.batteryTemp}°C (HOT)",
+                            appsKilled  = killed
+                        ))
                     }
-                } catch (e: Exception) {
-                    _uiState.update { it.copy(isLoading = false) }
                 }
-                delay(10_000L)
+                ThermalLevel.CRITICAL, ThermalLevel.EMERGENCY -> {
+                    val killed = optRepo.killBackgroundApps()
+                    val freed  = optRepo.freeRam()
+                    if (killed > 0 || freed > 0) {
+                        actions.add(AutoAction(
+                            description = "Modo cooling: cerré $killed apps y liberé RAM",
+                            trigger     = "Temperatura ${snap.batteryTemp}°C (CRÍTICO)",
+                            appsKilled  = killed
+                        ))
+                    }
+                    // Acción adicional: si el aprendizaje detecta patrón de carga caliente
+                    if (snap.isCharging && snap.batteryTemp >= 46f) {
+                        actions.add(AutoAction(
+                            description = "⚠️ Cargando con calor crítico — considera desconectar el cargador",
+                            trigger     = "Cargando + ${snap.batteryTemp}°C"
+                        ))
+                    }
+                }
+                else -> { /* NORMAL / WARM: no actuar */ }
+            }
+
+            if (actions.isNotEmpty()) {
+                lastAutoActionTime = now
+                _uiState.update { state ->
+                    val updated = (actions + state.autoActionsLog).take(20) // máx 20 entradas
+                    state.copy(autoActionsLog = updated)
+                }
             }
         }
     }
 
     private fun observeHistory() {
         viewModelScope.launch {
-            try {
-                db.thermalDao().getHistory(500).collect { history ->
-                    _uiState.update { it.copy(history = history) }
-                }
-            } catch (e: Exception) { }
+            db.snapshotDao().getAll().collect { rows ->
+                _uiState.update { it.copy(history = rows.map { r -> r.toSnapshot() }.takeLast(120)) }
+            }
         }
     }
 
     fun startMonitor() {
-        val ctx = getApplication<Application>()
-        try {
-            ctx.startForegroundService(Intent(ctx, ThermalMonitorService::class.java))
-            _uiState.update { it.copy(isMonitoring = true) }
-        } catch (e: Exception) { }
+        _uiState.update { it.copy(isMonitoring = true) }
     }
 
-    fun toggleMonitorService() {
-        val ctx    = getApplication<Application>()
-        val intent = Intent(ctx, ThermalMonitorService::class.java)
-        try {
-            if (ThermalMonitorService.isRunning) {
-                intent.action = ThermalMonitorService.ACTION_STOP
-                ctx.startService(intent)
-                _uiState.update { it.copy(isMonitoring = false) }
-            } else {
-                ctx.startForegroundService(intent)
-                _uiState.update { it.copy(isMonitoring = true) }
-            }
-        } catch (e: Exception) { }
+    fun setAlertThreshold(t: Float) {
+        autoActThreshold = t
+        _uiState.update { it.copy(alertThreshold = t) }
     }
 
-    fun toggleAutoMode()            { _uiState.update { it.copy(autoMode = !it.autoMode) } }
-    fun setAlertThreshold(t: Float) { _uiState.update { it.copy(alertThreshold = t) } }
-    fun resetLearning()             { learningEngine.reset() }
+    fun resetLearning() { learningEngine.reset() }
 
-    fun activateCoolingMode() {
-        viewModelScope.launch {
-            try {
-                val result = optimizationRepo.executeCoolingMode(_uiState.value.latest)
-                _uiState.update { it.copy(coolingResult = result) }
-            } catch (e: Exception) { }
-        }
-    }
-
-    fun killApps() {
-        viewModelScope.launch {
-            try { optimizationRepo.killBackgroundApps() } catch (e: Exception) { }
-        }
-    }
-
-    fun freeRam() {
-        viewModelScope.launch {
-            try { optimizationRepo.freeRam() } catch (e: Exception) { }
-        }
-    }
-
-    // auto-optimization delegated to CoolingMode
+    fun clearAutoLog() { _uiState.update { it.copy(autoActionsLog = emptyList()) } }
 }
