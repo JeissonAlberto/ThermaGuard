@@ -20,6 +20,7 @@ data class ThermalUiState(
     val prediction: TempPrediction? = null,
     val batteryHealth: BatteryHealthScore? = null,
     val hourlyProfile: List<HourlyDataPoint> = emptyList(),
+    val componentDiagnoses: List<ComponentDiagnosis> = emptyList(),
     val isMonitoring: Boolean = false,
     val autoMode: Boolean = false,
     val alertThreshold: Float = 43f,
@@ -46,27 +47,29 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             delay(1500L)
             while (true) {
                 try {
-                    val snapshot    = sensorRepo.readSnapshot()
-                    val causes      = sensorRepo.analyzeHeatCauses(snapshot)
-                    val plan        = optimizationRepo.buildOptimizationPlan(snapshot)
-                    val profile     = learningEngine.learn(snapshot)
-                    val prediction  = learningEngine.predictNextTemp()
-                    val health      = learningEngine.computeBatteryHealthScore()
-                    val hourly      = learningEngine.getHourlyProfile()
-                    val tips        = learningEngine.generateSmartTips(profile, snapshot, prediction)
+                    val snapshot   = sensorRepo.readSnapshot()
+                    val causes     = sensorRepo.analyzeHeatCauses(snapshot)
+                    val plan       = optimizationRepo.buildOptimizationPlan(snapshot)
+                    val profile    = learningEngine.learn(snapshot)
+                    val prediction = learningEngine.predictNextTemp()
+                    val health     = learningEngine.computeBatteryHealthScore()
+                    val hourly     = learningEngine.getHourlyProfile()
+                    val tips       = learningEngine.generateSmartTips(profile, snapshot, prediction)
+                    val diagnoses  = sensorRepo.diagnoseComponents(snapshot)
 
                     _uiState.update { state ->
                         state.copy(
-                            latest          = snapshot,
-                            causes          = causes,
-                            optimizationPlan = plan,
-                            smartTips       = tips,
-                            profile         = profile,
-                            prediction      = prediction,
-                            batteryHealth   = health,
-                            hourlyProfile   = hourly,
-                            alertThreshold  = profile.dynamicThreshold,
-                            isLoading       = false
+                            latest             = snapshot,
+                            causes             = causes,
+                            optimizationPlan   = plan,
+                            smartTips          = tips,
+                            profile            = profile,
+                            prediction         = prediction,
+                            batteryHealth      = health,
+                            hourlyProfile      = hourly,
+                            componentDiagnoses = diagnoses,
+                            alertThreshold     = profile.dynamicThreshold,
+                            isLoading          = false
                         )
                     }
 
@@ -92,31 +95,31 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun startMonitor() {
-        val context = getApplication<Application>()
+        val ctx = getApplication<Application>()
         try {
-            context.startForegroundService(Intent(context, ThermalMonitorService::class.java))
+            ctx.startForegroundService(Intent(ctx, ThermalMonitorService::class.java))
             _uiState.update { it.copy(isMonitoring = true) }
         } catch (e: Exception) { }
     }
 
     fun toggleMonitorService() {
-        val context = getApplication<Application>()
-        val intent  = Intent(context, ThermalMonitorService::class.java)
+        val ctx    = getApplication<Application>()
+        val intent = Intent(ctx, ThermalMonitorService::class.java)
         try {
             if (ThermalMonitorService.isRunning) {
                 intent.action = ThermalMonitorService.ACTION_STOP
-                context.startService(intent)
+                ctx.startService(intent)
                 _uiState.update { it.copy(isMonitoring = false) }
             } else {
-                context.startForegroundService(intent)
+                ctx.startForegroundService(intent)
                 _uiState.update { it.copy(isMonitoring = true) }
             }
         } catch (e: Exception) { }
     }
 
-    fun toggleAutoMode()              { _uiState.update { it.copy(autoMode = !it.autoMode) } }
-    fun setAlertThreshold(t: Float)   { _uiState.update { it.copy(alertThreshold = t) } }
-    fun resetLearning()               { learningEngine.reset() }
+    fun toggleAutoMode()            { _uiState.update { it.copy(autoMode = !it.autoMode) } }
+    fun setAlertThreshold(t: Float) { _uiState.update { it.copy(alertThreshold = t) } }
+    fun resetLearning()             { learningEngine.reset() }
 
     private suspend fun executeAutoOptimization(plan: List<OptimizationAction>) {
         plan.forEach { action ->
