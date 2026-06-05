@@ -64,6 +64,10 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                     )
                     NavigationBarItem(
                         selected = selectedTab == 3, onClick = { selectedTab = 3 },
+                        icon = { Icon(Icons.Default.TuneRounded, null) }, label = { Text("Optimizar") }
+                    )
+                    NavigationBarItem(
+                        selected = selectedTab == 4, onClick = { selectedTab = 4 },
                         icon = { Icon(Icons.Default.Notifications, null) }, label = { Text("Alertas") }
                     )
                 }
@@ -76,7 +80,13 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                         onToggleAutoMode = viewModel::toggleAutoMode)
                     1 -> DiagnosisScreen(uiState = uiState)
                     2 -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
-                    3 -> AlertsScreen(uiState = uiState,
+                    3 -> OptimizeScreen(
+                        uiState = uiState,
+                        onCoolingMode = viewModel::activateCoolingMode,
+                        onKillApps = viewModel::killApps,
+                        onFreeRam = viewModel::freeRam
+                    )
+                    4 -> AlertsScreen(uiState = uiState,
                         onThresholdChange = viewModel::setAlertThreshold,
                         onToggleAutoMode = viewModel::toggleAutoMode)
                 }
