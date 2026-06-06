@@ -80,7 +80,7 @@ fun AboutScreen() {
                     letterSpacing = (-0.5).sp
                 )
                 Text(
-                    "v2.8.0",
+                    "v3.4.0",
                     fontSize = 12.sp,
                     color    = Color(0xFF00E5FF).copy(alpha = 0.6f),
                     modifier = Modifier.padding(top = 2.dp)
@@ -207,10 +207,10 @@ fun AboutScreen() {
                 Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Información técnica", fontSize = 11.sp, color = TG.textSec, letterSpacing = 1.sp)
                     listOf(
-                        "Versión"    to "2.8.0",
-                        "Motor"      to "v3 — EMA + Risk Score",
+                        "Versión"    to "3.4.0",
+                        "Motor"      to "v5 — Ley de Moore (P=V²·F)",
                         "Plataforma" to "Android (Kotlin + Jetpack Compose)",
-                        "Mínimo"     to "Android 8.0 (API 26)",
+                        "Mínimo"     to "Android 5.0 (API 21)",
                     ).forEach { (label, value) ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -225,7 +225,7 @@ fun AboutScreen() {
 
             // ── Footer ───────────────────────────────────────────────────
             Text(
-                "© 2025 Jasol Group · Todos los derechos reservados",
+                "© 2026 Jasol Group · Todos los derechos reservados",
                 fontSize  = 10.sp,
                 color     = TG.textDim,
                 textAlign = TextAlign.Center,
