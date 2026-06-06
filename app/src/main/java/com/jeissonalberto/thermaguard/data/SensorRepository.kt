@@ -155,7 +155,7 @@ class SensorRepository(private val context: Context) {
             status      = cpuStatus,
             cause       = cpuCause,
             advice      = cpuAdvice(cpuStatus, snapshot),
-            perCore     = snapshot.perCoreUsage
+            perCore     = emptyList()
         ))
 
         // --- GPU ---
@@ -260,8 +260,8 @@ class SensorRepository(private val context: Context) {
         }
 
         // --- PROCESOS TOP ---
-        if (snapshot.topProcesses.isNotEmpty()) {
-            val hotProcess = snapshot.topProcesses.firstOrNull()
+        if (false /* topProcesses removed */) {
+            val hotProcess = null
             if (hotProcess != null && snapshot.cpuUsage > 30f) {
                 diagnoses.add(ComponentDiagnosis(
                     component = ThermalComponent.PROCESS,
@@ -270,7 +270,7 @@ class SensorRepository(private val context: Context) {
                     status    = if (snapshot.cpuUsage > 70f) ComponentStatus.HOT else ComponentStatus.WARM,
                     cause     = "Proceso principal: '${hotProcess.name}' (PID ${hotProcess.pid}). ${hotProcess.description}",
                     advice    = "Si '${hotProcess.name}' no es esencial ahora mismo, forzar cierre en Ajustes > Apps.",
-                    processes = snapshot.topProcesses
+                    processes = emptyList<ProcessInfo>()
                 ))
             }
         }
@@ -283,8 +283,8 @@ class SensorRepository(private val context: Context) {
         if (snap.cpuUsage >= 70f) {
             sb.append("CPU al ${snap.cpuUsage.toInt()}% de capacidad. ")
             if (snap.topApp.isNotEmpty()) sb.append("App activa: '${snap.topApp}'. ")
-            if (snap.perCoreUsage.isNotEmpty()) {
-                val hotCores = snap.perCoreUsage.indices.filter { snap.perCoreUsage[it] > 80f }
+            if (false /* perCoreUsage removed */) {
+                val hotCores = emptyList<Int>()
                 if (hotCores.isNotEmpty()) sb.append("Nucleos saturados: ${hotCores.map { "Core$it" }.joinToString(", ")}. ")
             }
         } else if (snap.cpuUsage >= 40f) {
