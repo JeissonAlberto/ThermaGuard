@@ -374,9 +374,11 @@ class ThermalLearningEngine(context: Context) {
             num += (i - xMean) * (window[i] - yMean)
             den += (i - xMean) * (i - xMean)
         }
-        val tempSlope     = if (den != 0.0) (num / den).toFloat() else 0f
+        val rawTempSlope  = if (den != 0.0) (num / den).toFloat() else 0f
+        // Limitar pendiente: máx 0.8°C por intervalo (evita predicciones absurdas)
+        val tempSlope     = rawTempSlope.coerceIn(-0.8f, 0.8f)
         val tempIntercept = (yMean - tempSlope * xMean).toFloat()
-        val tempPredicted = tempIntercept + tempSlope * n
+        val tempPredicted = (tempIntercept + tempSlope * n).coerceIn(20f, 62f)
 
         // --- Factor 2: tendencia de CPU (indica si la carga va a aumentar la temp) ---
         val cpuSlope = if (windowCpu.size >= 3) {
@@ -526,11 +528,18 @@ class ThermalLearningEngine(context: Context) {
             else              -> RiskLevel.NORMAL
         }
 
+        val currentTrend = when {
+            consecutiveHotReadings >= 3 -> TempTrend.RISING_FAST
+            consecutiveHotReadings >= 1 -> TempTrend.RISING
+            else                        -> TempTrend.STABLE
+        }
         val riskScoreNow = computeRiskScore(
             snapshot.batteryTemp,
             snapshot.cpuUsage,
             snapshot.isCharging,
-            consecutiveHotReadings
+            consecutiveHotReadings,
+            snapshot.modemTemp,
+            currentTrend
         )
 
         return LearnedProfile(
