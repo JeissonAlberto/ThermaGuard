@@ -718,9 +718,19 @@ class ThermalLearningEngine(context: Context) {
      * Sin root: usamos P ∝ V²·F donde V se estima del ratio de frecuencia.
      * Con datos históricos: ajustamos k (constante del chip) por regresión.
      */
+
+    // Power score basado en uso de CPU (sin acceso a /sys/cpufreq sin root)
+    private fun computePowerFromCpu(cpuUsage: Float): Float {
+        // Modelo Moore simplificado: P ∝ V²·F, aproximado con cpuUsage
+        val f = (cpuUsage / 100f).coerceIn(0f, 1f)
+        val v = 0.6f + 0.4f * f
+        return (v * v * f * 100f).coerceIn(0f, 100f)
+    }
+
     fun analyzeMoore(snapshot: ThermalSnapshot): MoorePowerState {
-        val power = snapshot.thermalPowerScore   // 0-100, ya calculado
-        val freqs = snapshot.cpuFreqsMHz
+        // Calcular power score directamente (los campos se movieron fuera del @Entity)
+        val power = computePowerFromCpu(snapshot.cpuUsage)
+        val freqs = emptyList<Float>()  // sin root, frecuencias no disponibles
         val avgF  = if (freqs.isEmpty()) 0f else freqs.average().toFloat()
         val maxF  = freqs.maxOrNull() ?: 0f
 
