@@ -369,7 +369,7 @@ fun BatteryHealthCard(health: BatteryHealthScore) {
                 Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(health.score / 100f)
                     .clip(RoundedCornerShape(3.dp)).background(c))
             }
-            health.tips.take(2).forEach { tip ->
+            health.factors.take(2).forEach { tip ->
                 Text("• $tip", fontSize = 11.sp, color = TG.textSec, lineHeight = 15.sp)
             }
         }
