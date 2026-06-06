@@ -227,7 +227,8 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     }
 
     // ── Exportar CSV ─────────────────────────────────────────────────────
-    fun exportHistoryToCsv(context: Context): String {
+    fun exportHistoryToCsv(): String {
+        val ctx = getApplication<android.app.Application>()
         val sb = StringBuilder()
         sb.appendLine("timestamp,batteryTemp,cpuUsage,batteryLevel,topApp,riskLevel")
         _uiState.value.history.forEach { snap ->
@@ -236,7 +237,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             val risk = snap.batteryTemp.toThermalLevel().name
             sb.appendLine("$dt,${snap.batteryTemp},${snap.cpuUsage.toInt()},${snap.batteryLevel},${snap.topApp},$risk")
         }
-        val file = java.io.File(context.getExternalFilesDir(null), "thermaguard_export_${System.currentTimeMillis()}.csv")
+        val file = java.io.File(ctx.getExternalFilesDir(null), "thermaguard_${System.currentTimeMillis()}.csv")
         file.writeText(sb.toString())
         return file.absolutePath
     }
