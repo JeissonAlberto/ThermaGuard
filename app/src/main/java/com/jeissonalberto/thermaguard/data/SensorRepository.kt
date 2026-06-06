@@ -470,7 +470,7 @@ class SensorRepository(private val context: Context) {
         val result = mutableListOf<Float>()
         try {
             val cpuDir = java.io.File("/sys/devices/system/cpu/")
-            val cores = cpuDir.listFiles { f -> f.name.matches(Regex("cpu\\d+")) }
+            val cores = cpuDir.listFiles { f -> f.name.matches(Regex("cpu\d+")) }
                 ?.sortedBy { it.name.removePrefix("cpu").toIntOrNull() ?: 99 } ?: return result
             for (core in cores) {
                 val freqFile = java.io.File(core, "cpufreq/scaling_cur_freq")
@@ -489,7 +489,7 @@ class SensorRepository(private val context: Context) {
     fun estimateThermalPowerScore(): Float {
         return try {
             val cpuDir  = java.io.File("/sys/devices/system/cpu/")
-            val cores   = cpuDir.listFiles { f -> f.name.matches(Regex("cpu\\d+")) } ?: return 0f
+            val cores   = cpuDir.listFiles { f -> f.name.matches(Regex("cpu\d+")) } ?: return 0f
             var totalPower = 0f
             var activeCores = 0
             for (core in cores) {
