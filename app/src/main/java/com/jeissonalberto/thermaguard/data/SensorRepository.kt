@@ -25,7 +25,11 @@ class SensorRepository(private val context: Context) {
     //  SNAPSHOT PRINCIPAL
     // ============================================================
 
-    suspend fun readSnapshot(): ThermalSnapshot = withContext(Dispatchers.IO) {
+    // Cache de topApp — no llamar ActivityManager en cada ciclo
+    private var cachedTopApp: String = ""
+    private var topAppCacheCount: Int = 0
+
+    suspend fun readSnapshot(lightMode: Boolean = false): ThermalSnapshot = withContext(Dispatchers.IO) {
         val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
 
         val batteryTemp  = (batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0) / 10f
@@ -34,14 +38,21 @@ class SensorRepository(private val context: Context) {
 
         val thermalStatus = readThermalStatus()
         val allZones      = readAllThermalZones()          // mapa completo tipo->temp
-        val cpuUsage      = readCpuUsage()
+        // Modo ligero: solo temperatura cuando está en zona normal
+        val cpuUsage      = if (lightMode) 0f else readCpuUsage()
         val perCoreUsage  = readPerCoreUsage()
-        val topApp        = getTopApp()
+        // Cachear topApp: llamar ActivityManager cada 3 lecturas
+        topAppCacheCount++
+        if (!lightMode && topAppCacheCount >= 3) {
+            cachedTopApp = getTopApp()
+            topAppCacheCount = 0
+        }
+        val topApp = if (lightMode) "" else cachedTopApp
         val topProcesses  = getTopProcesses()
         val wifiActive    = isWifiActive()
         val bluetoothActive = readBluetoothState()
         val brightness    = readBrightness()
-        val ramUsage      = readRamUsage()
+        val ramUsage      = if (lightMode) 0 else readRamUsage()
 
         val snap = ThermalSnapshot(
             batteryTemp      = batteryTemp,
