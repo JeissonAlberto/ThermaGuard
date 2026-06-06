@@ -27,23 +27,6 @@ data class ThermalSnapshot(
 )
 
 
-// Datos runtime de ThermalSnapshot (no persistidos en Room)
-// Separados del @Entity para compatibilidad con KAPT
-data class ThermalRuntimeData(
-    val snapshot: ThermalSnapshot,
-    val allZones: Map<String, Float> = emptyMap(),
-    val perCoreUsage: List<Float> = emptyList(),
-    val topProcesses: List<ProcessInfo> = emptyList(),
-    val cpuFreqsMHz: List<Float> = emptyList(),
-    val thermalPowerScore: Float = 0f
-) {
-    // Acceso directo a campos del snapshot
-    val batteryTemp get() = snapshot.batteryTemp
-    val cpuUsage    get() = snapshot.cpuUsage
-    val topApp      get() = snapshot.topApp
-    val timestamp   get() = snapshot.timestamp
-}
-
 enum class ThermalLevel(val label: String, val emoji: String) {
     NORMAL("Normal", "🟢"),
     WARM("Tibio", "🟡"),
@@ -157,5 +140,22 @@ enum class MooreAction {
     BIG_LITTLE,     // migrar a núcleos eficientes
     WARN_THROTTLE,  // throttle del sistema en ~2 min
     CRITICAL        // reducción urgente
+}
+
+// Datos runtime de ThermalSnapshot (no persistidos en Room)
+// Separados del @Entity para compatibilidad con KAPT
+data class ThermalRuntimeData(
+    val snapshot: ThermalSnapshot,
+    val allZones: Map<String, Float> = emptyMap(),
+    val perCoreUsage: List<Float> = emptyList(),
+    val topProcesses: List<ProcessInfo> = emptyList(),
+    val cpuFreqsMHz: List<Float> = emptyList(),
+    val thermalPowerScore: Float = 0f
+) {
+    // Acceso directo a campos del snapshot
+    val batteryTemp get() = snapshot.batteryTemp
+    val cpuUsage    get() = snapshot.cpuUsage
+    val topApp      get() = snapshot.topApp
+    val timestamp   get() = snapshot.timestamp
 }
 
