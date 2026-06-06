@@ -582,7 +582,7 @@ fun PredictionCard(pred: TempPrediction, accent: Color) {
                 Text("Predicción del motor",
                     fontSize = 10.sp, color = TG.textSec, letterSpacing = 0.5.sp)
                 Spacer(Modifier.height(2.dp))
-                Text("${pred.predictedTemp}°C esperados",
+                Text("${"%.1f".format(pred.predictedTemp)}°C esperados",
                     fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
                 Text(pred.trendText, fontSize = 11.sp, color = TG.textSec)
             }
