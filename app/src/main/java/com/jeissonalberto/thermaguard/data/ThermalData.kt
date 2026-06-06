@@ -26,12 +26,31 @@ data class ThermalSnapshot(
     val brightnessLevel: Int = 0,
     val ramUsageMb: Int = 0
 ) {
-    // Campos no persistidos en Room (calculados en runtime)
-    @Ignore @JvmField var allZones: Map<String, Float> = emptyMap()
-    @Ignore @JvmField var cpuFreqsMHz: List<Float> = emptyList()
-    @Ignore @JvmField var thermalPowerScore: Float = 0f
-    @Ignore @JvmField var perCoreUsage: List<Float> = emptyList()
-    @Ignore @JvmField var topProcesses: List<ProcessInfo> = emptyList()
+    // Campos runtime (no persistidos en Room) — constructor secundario para KAPT
+    @Ignore constructor(
+        id: Long, timestamp: Long, batteryTemp: Float, cpuTemp: Float, gpuTemp: Float,
+        skinTemp: Float, boardTemp: Float, modemTemp: Float, displayTemp: Float,
+        cpuUsage: Float, batteryLevel: Int, isCharging: Boolean, thermalStatus: Int,
+        topApp: String, wifiActive: Boolean, bluetoothActive: Boolean,
+        brightnessLevel: Int, ramUsageMb: Int,
+        allZones: Map<String, Float>, perCoreUsage: List<Float>,
+        topProcesses: List<ProcessInfo>, cpuFreqsMHz: List<Float>,
+        thermalPowerScore: Float
+    ) : this(id, timestamp, batteryTemp, cpuTemp, gpuTemp, skinTemp, boardTemp,
+             modemTemp, displayTemp, cpuUsage, batteryLevel, isCharging, thermalStatus,
+             topApp, wifiActive, bluetoothActive, brightnessLevel, ramUsageMb) {
+        this.allZones         = allZones
+        this.perCoreUsage     = perCoreUsage
+        this.topProcesses     = topProcesses
+        this.cpuFreqsMHz      = cpuFreqsMHz
+        this.thermalPowerScore = thermalPowerScore
+    }
+
+    var allZones: Map<String, Float>  = emptyMap()
+    var cpuFreqsMHz: List<Float>      = emptyList()
+    var thermalPowerScore: Float      = 0f
+    var perCoreUsage: List<Float>     = emptyList()
+    var topProcesses: List<ProcessInfo> = emptyList()
 }
 
 enum class ThermalLevel(val label: String, val emoji: String) {
