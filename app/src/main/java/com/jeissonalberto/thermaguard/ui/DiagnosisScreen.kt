@@ -57,7 +57,7 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
                 Column {
                     Text("Diagnóstico", fontSize = 22.sp, fontWeight = FontWeight.Bold,
                         color = TG.textPri, letterSpacing = (-0.5).sp)
-                    Text("Análisis de componentes en tiempo real", fontSize = 12.sp, color = TG.textSec)
+                    Text("Sensores del chip en tiempo real · Motor v5", fontSize = 12.sp, color = TG.textSec)
                 }
             }
 
