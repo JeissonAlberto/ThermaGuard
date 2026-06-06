@@ -252,7 +252,12 @@ class ThermalLearningEngine(context: Context) {
 
         // Umbral dinamico
         val deviation = if (n > 20) computeStdDevFromRolling() else 8f
-        dynamicThreshold = (baselineTemp + deviation * 1.5f).coerceIn(38f, 50f)
+        // Con pocas muestras: umbral conservador fijo; luego se ajusta con aprendizaje
+        dynamicThreshold = if (sampleCount < 20) {
+            42f
+        } else {
+            (baselineTemp + deviation * 1.5f).coerceIn(38f, 50f)
+        }
 
         return buildProfile(snapshot)
     }
