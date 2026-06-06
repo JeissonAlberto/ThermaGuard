@@ -74,6 +74,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     val gameMode   = detectGameMode(snapshot.topApp)
                     val safeCharge = evalSafeCharge(snapshot)
                     val appRanking = computeAppRanking()
+                    val mooreState = learningEngine.analyzeMoore(snapshot)
                     val wasCooling = _uiState.value.isCoolingDown
                     val isCooling  = !snapshot.batteryTemp.toThermalLevel().let {
                         it == ThermalLevel.HOT || it == ThermalLevel.CRITICAL || it == ThermalLevel.EMERGENCY
@@ -108,7 +109,8 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                             gameModeState      = gameMode,
                             safeChargeState    = safeCharge,
                             isCoolingDown      = isCooling,
-                            appHeatRanking     = appRanking
+                            appHeatRanking     = appRanking,
+                            mooreState         = mooreState
                         )
                     }
 
