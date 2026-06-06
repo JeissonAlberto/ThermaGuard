@@ -174,12 +174,12 @@ fun DashboardScreen(
                 )
                 MetricTile(
                     modifier = Modifier.weight(1f),
-                    label    = "RAM",
+                    label    = "RAM libre",
                     value    = "${snap.ramUsageMb}MB",
-                    icon     = Icons.Default.Storage,
+                    icon     = Icons.Default.Memory,
                     color    = when {
-                        snap.ramUsageMb > 3500 -> TG.red
-                        snap.ramUsageMb > 2500 -> TG.amber
+                        snap.ramUsageMb < 400  -> TG.red
+                        snap.ramUsageMb < 900  -> TG.amber
                         else                   -> TG.green
                     }
                 )
