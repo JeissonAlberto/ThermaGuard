@@ -27,11 +27,11 @@ data class ThermalSnapshot(
     val ramUsageMb: Int = 0
 ) {
     // Campos no persistidos en Room (calculados en runtime)
-    @Ignore var allZones: Map<String, Float> = emptyMap()
-    @Ignore var cpuFreqsMHz: List<Float> = emptyList()   // frecuencia por núcleo
-    @Ignore var thermalPowerScore: Float = 0f              // P=V²·F normalizado 0-100
-    @Ignore var perCoreUsage: List<Float> = emptyList()
-    @Ignore var topProcesses: List<ProcessInfo> = emptyList()
+    @Ignore @JvmField var allZones: Map<String, Float> = emptyMap()
+    @Ignore @JvmField var cpuFreqsMHz: List<Float> = emptyList()
+    @Ignore @JvmField var thermalPowerScore: Float = 0f
+    @Ignore @JvmField var perCoreUsage: List<Float> = emptyList()
+    @Ignore @JvmField var topProcesses: List<ProcessInfo> = emptyList()
 }
 
 enum class ThermalLevel(val label: String, val emoji: String) {
