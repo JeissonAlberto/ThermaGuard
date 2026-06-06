@@ -1,7 +1,6 @@
 package com.jeissonalberto.thermaguard.data
 
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "thermal_history")
@@ -25,9 +24,7 @@ data class ThermalSnapshot(
     val bluetoothActive: Boolean = false,
     val brightnessLevel: Int = 0,
     val ramUsageMb: Int = 0
-) {
-
-}
+)
 
 
 // Datos runtime de ThermalSnapshot (no persistidos en Room)
