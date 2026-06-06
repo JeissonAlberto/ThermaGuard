@@ -103,13 +103,12 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                             componentDiagnoses = diagnoses,
                             alertThreshold     = dynThreshold,
                             isLoading          = false,
-                            isMonitoring       = true
+                            isMonitoring       = true,
+                            gameModeState      = gameMode,
+                            safeChargeState    = safeCharge,
+                            isCoolingDown      = isCooling,
+                            appHeatRanking     = appRanking
                         )
-                    
-                        gameModeState  = gameMode,
-                        safeChargeState= safeCharge,
-                        isCoolingDown  = isCooling,
-                        appHeatRanking = appRanking
                     }
 
                     executeAutoOptimization(snapshot, profile)
