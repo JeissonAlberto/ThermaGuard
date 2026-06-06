@@ -372,8 +372,8 @@ class SensorRepository(private val context: Context) {
             if (s1 != null) {
                 delay(350L)
                 val s2 = File("/proc/stat").readLines().firstOrNull { it.startsWith("cpu ") } ?: return@withContext 0f
-                val v1 = s1.trim().split("\s+".toRegex()).drop(1).mapNotNull { it.toLongOrNull() }
-                val v2 = s2.trim().split("\s+".toRegex()).drop(1).mapNotNull { it.toLongOrNull() }
+                val v1 = s1.trim().split(" ").filter { it.isNotEmpty() }.drop(1).mapNotNull { it.toLongOrNull() }
+                val v2 = s2.trim().split(" ").filter { it.isNotEmpty() }.drop(1).mapNotNull { it.toLongOrNull() }
                 if (v1.size >= 4 && v2.size >= 4) {
                     val totalDiff = v2.sum() - v1.sum()
                     val idleDiff  = v2[3] - v1[3]
