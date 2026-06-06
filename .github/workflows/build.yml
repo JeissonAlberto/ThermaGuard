@@ -25,8 +25,8 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/libs.versions.toml') }}
-          restore-keys: gradle-
+          key: gradle-clean-1780778001-${{ hashFiles('**/*.gradle*', '**/libs.versions.toml') }}
+          restore-keys: gradle-clean-1780778001-
 
       - name: Dar permisos a gradlew
         run: chmod +x gradlew
