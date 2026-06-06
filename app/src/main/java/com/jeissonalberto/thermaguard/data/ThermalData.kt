@@ -1,6 +1,7 @@
 package com.jeissonalberto.thermaguard.data
 
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "thermal_history")
@@ -24,8 +25,12 @@ data class ThermalSnapshot(
     val bluetoothActive: Boolean = false,
     val brightnessLevel: Int = 0,
     val ramUsageMb: Int = 0
-)
-
+) {
+    // Campos no persistidos en Room (calculados en runtime)
+    @Ignore var allZones: Map<String, Float> = emptyMap()
+    @Ignore var perCoreUsage: List<Float> = emptyList()
+    @Ignore var topProcesses: List<ProcessInfo> = emptyList()
+}
 
 enum class ThermalLevel(val label: String, val emoji: String) {
     NORMAL("Normal", "🟢"),
@@ -122,40 +127,3 @@ data class SmartAlert(
     val priority: Int,  // 1=info, 2=warning, 3=critical
     val suppressUntil: Long = 0L  // no molestar hasta este timestamp
 )
-
-// ── Motor v5: estado de potencia según Ley de Moore ─────────────────────────
-data class MoorePowerState(
-    val powerScore: Float = 0f,         // P=V²·F normalizado 0-100
-    val freqsMHz: List<Float> = emptyList(),
-    val avgFreqMHz: Float = 0f,
-    val maxFreqMHz: Float = 0f,
-    val predictedTempRise: Float = 0f,  // °C adicionales esperados en 3 min
-    val recommendation: MooreAction = MooreAction.NONE,
-    val efficiencyRatio: Float = 1f     // actual vs óptimo (1.0 = perfecto)
-)
-
-enum class MooreAction {
-    NONE,           // todo OK
-    REDUCE_LOAD,    // CPU al límite, bajar carga
-    BIG_LITTLE,     // migrar a núcleos eficientes
-    WARN_THROTTLE,  // throttle del sistema en ~2 min
-    CRITICAL        // reducción urgente
-}
-
-// Datos runtime de ThermalSnapshot (no persistidos en Room)
-// Separados del @Entity para compatibilidad con KAPT
-data class ThermalRuntimeData(
-    val snapshot: ThermalSnapshot,
-    val allZones: Map<String, Float> = emptyMap(),
-    val perCoreUsage: List<Float> = emptyList(),
-    val topProcesses: List<ProcessInfo> = emptyList(),
-    val cpuFreqsMHz: List<Float> = emptyList(),
-    val thermalPowerScore: Float = 0f
-) {
-    // Acceso directo a campos del snapshot
-    val batteryTemp get() = snapshot.batteryTemp
-    val cpuUsage    get() = snapshot.cpuUsage
-    val topApp      get() = snapshot.topApp
-    val timestamp   get() = snapshot.timestamp
-}
-
