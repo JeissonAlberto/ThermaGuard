@@ -92,3 +92,38 @@ data class ProcessInfo(
     val importance: Int,
     val description: String
 )
+
+// ---- Modo Juego ----
+data class GameModeState(
+    val isActive: Boolean = false,
+    val detectedGame: String = "",
+    val permissiveThreshold: Float = 46f,  // más alto que el normal
+    val startedAt: Long = 0L
+)
+
+// ---- Modo Carga Segura ----
+data class SafeChargeState(
+    val isCharging: Boolean = false,
+    val chargingTemp: Float = 0f,
+    val isOverheating: Boolean = false,   // >38°C mientras carga
+    val recommendation: String = ""
+)
+
+// ---- Exportación ----
+data class ExportRecord(
+    val timestamp: String,
+    val batteryTemp: Float,
+    val cpuUsage: Float,
+    val batteryLevel: Int,
+    val topApp: String,
+    val riskLevel: String
+)
+
+// ---- Alerta inteligente ----
+data class SmartAlert(
+    val id: String,
+    val title: String,
+    val body: String,
+    val priority: Int,  // 1=info, 2=warning, 3=critical
+    val suppressUntil: Long = 0L  // no molestar hasta este timestamp
+)
