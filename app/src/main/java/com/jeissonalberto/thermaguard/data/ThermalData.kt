@@ -26,8 +26,7 @@ data class ThermalSnapshot(
     val brightnessLevel: Int = 0,
     val ramUsageMb: Int = 0
 ) {
-    @Ignore var allZones: Map<String, Float> = emptyMap()
-    @Ignore var perCoreUsage: List<Float>    = emptyList()
+
 }
 
 
@@ -47,11 +46,6 @@ data class ThermalRuntimeData(
     val topApp      get() = snapshot.topApp
     val timestamp   get() = snapshot.timestamp
 }
-
-// Extension functions para acceso de compatibilidad en código existente
-val ThermalSnapshot.cpuFreqsMHz: List<Float> get() = emptyList()
-val ThermalSnapshot.thermalPowerScore: Float get() = 0f
-val ThermalSnapshot.topProcesses: List<ProcessInfo> get() = emptyList()
 
 enum class ThermalLevel(val label: String, val emoji: String) {
     NORMAL("Normal", "🟢"),
