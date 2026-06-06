@@ -25,11 +25,7 @@ class SensorRepository(private val context: Context) {
     //  SNAPSHOT PRINCIPAL
     // ============================================================
 
-    // Cache de topApp — no llamar ActivityManager en cada ciclo
-    private var cachedTopApp: String = ""
-    private var topAppCacheCount: Int = 0
-
-    suspend fun readSnapshot(lightMode: Boolean = false): ThermalSnapshot = withContext(Dispatchers.IO) {
+    suspend fun readSnapshot(): ThermalSnapshot = withContext(Dispatchers.IO) {
         val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
 
         val batteryTemp  = (batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0) / 10f
@@ -38,21 +34,14 @@ class SensorRepository(private val context: Context) {
 
         val thermalStatus = readThermalStatus()
         val allZones      = readAllThermalZones()          // mapa completo tipo->temp
-        // Modo ligero: solo temperatura cuando está en zona normal
-        val cpuUsage      = if (lightMode) 0f else readCpuUsage()
+        val cpuUsage      = readCpuUsage()
         val perCoreUsage  = readPerCoreUsage()
-        // Cachear topApp: llamar ActivityManager cada 3 lecturas
-        topAppCacheCount++
-        if (!lightMode && topAppCacheCount >= 3) {
-            cachedTopApp = getTopApp()
-            topAppCacheCount = 0
-        }
-        val topApp = if (lightMode) "" else cachedTopApp
+        val topApp        = getTopApp()
         val topProcesses  = getTopProcesses()
         val wifiActive    = isWifiActive()
         val bluetoothActive = readBluetoothState()
         val brightness    = readBrightness()
-        val ramUsage      = if (lightMode) 0 else readRamUsage()
+        val ramUsage      = readRamUsage()
 
         val snap = ThermalSnapshot(
             batteryTemp      = batteryTemp,
@@ -72,6 +61,9 @@ class SensorRepository(private val context: Context) {
             brightnessLevel  = brightness,
             ramUsageMb       = ramUsage
         )
+        snap.allZones    = allZones
+        snap.perCoreUsage = perCoreUsage
+        snap.topProcesses = topProcesses
         snap
     }
 
@@ -155,7 +147,7 @@ class SensorRepository(private val context: Context) {
             status      = cpuStatus,
             cause       = cpuCause,
             advice      = cpuAdvice(cpuStatus, snapshot),
-            perCore     = emptyList()
+            perCore     = snapshot.perCoreUsage
         ))
 
         // --- GPU ---
@@ -260,8 +252,8 @@ class SensorRepository(private val context: Context) {
         }
 
         // --- PROCESOS TOP ---
-        if (false /* topProcesses removed */) {
-            val hotProcess = null
+        if (snapshot.topProcesses.isNotEmpty()) {
+            val hotProcess = snapshot.topProcesses.firstOrNull()
             if (hotProcess != null && snapshot.cpuUsage > 30f) {
                 diagnoses.add(ComponentDiagnosis(
                     component = ThermalComponent.PROCESS,
@@ -270,7 +262,7 @@ class SensorRepository(private val context: Context) {
                     status    = if (snapshot.cpuUsage > 70f) ComponentStatus.HOT else ComponentStatus.WARM,
                     cause     = "Proceso principal: '${hotProcess.name}' (PID ${hotProcess.pid}). ${hotProcess.description}",
                     advice    = "Si '${hotProcess.name}' no es esencial ahora mismo, forzar cierre en Ajustes > Apps.",
-                    processes = emptyList<ProcessInfo>()
+                    processes = snapshot.topProcesses
                 ))
             }
         }
@@ -283,8 +275,8 @@ class SensorRepository(private val context: Context) {
         if (snap.cpuUsage >= 70f) {
             sb.append("CPU al ${snap.cpuUsage.toInt()}% de capacidad. ")
             if (snap.topApp.isNotEmpty()) sb.append("App activa: '${snap.topApp}'. ")
-            if (false /* perCoreUsage removed */) {
-                val hotCores = emptyList<Int>()
+            if (snap.perCoreUsage.isNotEmpty()) {
+                val hotCores = snap.perCoreUsage.indices.filter { snap.perCoreUsage[it] > 80f }
                 if (hotCores.isNotEmpty()) sb.append("Nucleos saturados: ${hotCores.map { "Core$it" }.joinToString(", ")}. ")
             }
         } else if (snap.cpuUsage >= 40f) {
@@ -458,50 +450,6 @@ class SensorRepository(private val context: Context) {
                 }
             } ?: ""
     } catch (e: Exception) { "" }
-
-
-    // ── Frecuencia CPU por núcleo (kHz → MHz) ────────────────────────────────
-    fun readCpuFrequenciesMHz(): List<Float> {
-        val result = mutableListOf<Float>()
-        try {
-            val cpuDir = java.io.File("/sys/devices/system/cpu/")
-            val cores = cpuDir.listFiles { f -> f.name.matches(Regex("cpu\d+")) }
-                ?.sortedBy { it.name.removePrefix("cpu").toIntOrNull() ?: 99 } ?: return result
-            for (core in cores) {
-                val freqFile = java.io.File(core, "cpufreq/scaling_cur_freq")
-                val maxFile  = java.io.File(core, "cpufreq/cpuinfo_max_freq")
-                if (freqFile.exists()) {
-                    val khz = freqFile.readText().trim().toLongOrNull() ?: continue
-                    result.add(khz / 1000f)  // → MHz
-                }
-            }
-        } catch (_: Exception) {}
-        return result
-    }
-
-    // ── Potencia térmica estimada por Moore: P = k·V²·F ──────────────────────
-    // Sin root no podemos leer voltaje real. Usamos modelo lineal: V ≈ 0.6 + 0.4*(F/Fmax)
-    fun estimateThermalPowerScore(): Float {
-        return try {
-            val cpuDir  = java.io.File("/sys/devices/system/cpu/")
-            val cores   = cpuDir.listFiles { f -> f.name.matches(Regex("cpu\d+")) } ?: return 0f
-            var totalPower = 0f
-            var activeCores = 0
-            for (core in cores) {
-                val curFile = java.io.File(core, "cpufreq/scaling_cur_freq")
-                val maxFile = java.io.File(core, "cpufreq/cpuinfo_max_freq")
-                if (!curFile.exists() || !maxFile.exists()) continue
-                val cur = curFile.readText().trim().toLongOrNull() ?: continue
-                val max = maxFile.readText().trim().toLongOrNull()?.takeIf { it > 0 } ?: continue
-                val fRatio = cur.toFloat() / max.toFloat()          // 0.0 – 1.0
-                val vNorm  = 0.6f + 0.4f * fRatio                   // voltaje normalizado
-                val power  = vNorm * vNorm * fRatio                  // P ∝ V²·F
-                totalPower += power
-                activeCores++
-            }
-            if (activeCores == 0) 0f else (totalPower / activeCores * 100f).coerceIn(0f, 100f)
-        } catch (_: Exception) { 0f }
-    }
 
     fun analyzeHeatCauses(snapshot: ThermalSnapshot): List<HeatCause> {
         val causes = mutableListOf<HeatCause>()
