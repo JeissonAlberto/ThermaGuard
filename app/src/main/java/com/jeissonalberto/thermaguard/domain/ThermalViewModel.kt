@@ -19,7 +19,6 @@ data class ThermalUiState(
     val hourlyProfile: List<HourlyDataPoint> = emptyList(),
     val componentDiagnoses: List<ComponentDiagnosis> = emptyList(),
     val autoActionsLog: List<AutoAction> = emptyList(),
-    val mooreState: MoorePowerState = MoorePowerState(),
     val isMonitoring: Boolean = false,
     val alertThreshold: Float = 43f,
     val isLoading: Boolean = true,
@@ -74,7 +73,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     val gameMode   = detectGameMode(snapshot.topApp)
                     val safeCharge = evalSafeCharge(snapshot)
                     val appRanking = computeAppRanking()
-                    val mooreState = learningEngine.analyzeMoore(snapshot)
                     val wasCooling = _uiState.value.isCoolingDown
                     val isCooling  = !snapshot.batteryTemp.toThermalLevel().let {
                         it == ThermalLevel.HOT || it == ThermalLevel.CRITICAL || it == ThermalLevel.EMERGENCY
@@ -109,8 +107,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                             gameModeState      = gameMode,
                             safeChargeState    = safeCharge,
                             isCoolingDown      = isCooling,
-                            appHeatRanking     = appRanking,
-                            mooreState         = mooreState
+                            appHeatRanking     = appRanking
                         )
                     }
 
