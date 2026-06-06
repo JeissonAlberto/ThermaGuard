@@ -1,82 +1,164 @@
 # 🌡️ ThermaGuard
 
-**App Android para detectar y optimizar el calentamiento del teléfono**
+> **App Android de monitoreo térmico y optimización autónoma** · by [Jasol Group](https://site.zapia.com/t2ible74)
 
-![Min SDK](https://img.shields.io/badge/Min%20SDK-API%2026-blue)
-![Language](https://img.shields.io/badge/Language-Kotlin-orange)
-![UI](https://img.shields.io/badge/UI-Jetpack%20Compose-green)
+<p align="center">
+  <img src="https://img.shields.io/badge/version-v3.4.0-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Android-5.0%2B-green?style=for-the-badge&logo=android" />
+  <img src="https://img.shields.io/badge/Kotlin-Jetpack%20Compose-blue?style=for-the-badge&logo=kotlin" />
+  <img src="https://img.shields.io/badge/Motor-v5%20Moore-red?style=for-the-badge" />
+</p>
 
 ---
 
-## ¿Qué hace?
+## ⬇️ Descarga
 
-ThermaGuard monitorea en tiempo real todos los sensores térmicos de tu dispositivo Android, detecta las causas de calentamiento y ejecuta optimizaciones automáticas o manuales para reducir la temperatura.
-
-## Funcionalidades
-
-- 🌡️ **Monitor en tiempo real** — temperatura de batería, CPU, GPU y superficie
-- 📊 **Historial** — registro completo con estadísticas (promedio, máximo, eventos)
-- ⚠️ **Detección de causas** — identifica qué está generando calor
-- 🤖 **Modo automático** — optimiza solo cuando detecta temperatura alta
-- 🕹️ **Modo manual** — control total de cada acción
-- 🚨 **Alertas configurables** — notificación cuando supera el umbral que definas
-- 🔄 **Foreground Service** — monitoreo continuo en segundo plano
-- 📱 **Arranca con el sistema** — activo desde que enciendes el teléfono
-
-## Arquitectura
-
-```
-Clean Architecture + MVVM + Repository Pattern
-├── UI Layer: Jetpack Compose
-├── Domain Layer: ViewModel + Use Cases
-├── Data Layer: Repository + Room DB
-└── Service Layer: Foreground Service
-```
-
-## Stack técnico
-
-| Componente | Tecnología |
-|---|---|
-| Lenguaje | Kotlin |
-| UI | Jetpack Compose + Material 3 |
-| Base de datos | Room |
-| Concurrencia | Coroutines + Flow |
-| Arquitectura | Clean Architecture + MVVM |
-| Sensores | PowerManager + BatteryManager + /sys/class/thermal |
-
-## Sensores utilizados
-
-| Sensor | API | Requiere root |
+| Versión | Descripción | APK |
 |---|---|---|
-| Temperatura batería | `BatteryManager` | No |
-| Estado térmico sistema | `PowerManager.currentThermalStatus` | No |
-| Zonas térmicas (CPU/GPU/skin) | `/sys/class/thermal/` | No |
-| Uso de CPU | `/proc/stat` | No |
-| Apps activas | `ActivityManager` | No |
-| WiFi/BT activos | `ConnectivityManager` + `BluetoothManager` | No |
-
-## Setup
-
-1. Clona el repositorio
-2. Abre en IntelliJ IDEA con plugin Android o Android Studio
-3. Conecta tu dispositivo con **Depuración USB** activada
-4. `Run > Run 'app'`
-
-## Permisos requeridos
-
-- `FOREGROUND_SERVICE` — monitoreo en background
-- `PACKAGE_USAGE_STATS` — detectar app activa (requiere activación manual en ajustes)
-- `POST_NOTIFICATIONS` — alertas de temperatura
-- `RECEIVE_BOOT_COMPLETED` — arranque automático
-
-## Roadmap
-
-- [ ] Fase 2: Gráficas de temperatura en tiempo real (MPAndroidChart)
-- [ ] Fase 3: ML para predicción de calentamiento (TFLite)
-- [ ] Fase 4: Control de kernel con root (CPU governor)
-- [ ] Fase 5: Widget en pantalla de inicio
-- [ ] Fase 6: Publicación en Play Store
+| **v3.4.0** *(última)* | Motor v5 — Ley de Moore | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.4.0/ThermaGuard-v3.4.0.apk) |
+| v3.3.1 | Bugfix gauge + filtros | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.3.1/ThermaGuard-v3.3.1.apk) |
+| v3.3.0 | Gauge velocímetro 240° | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.3.0/ThermaGuard-v3.3.0.apk) |
+| v3.2.0 | Modo Juego + Stats 24h | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.2.0/ThermaGuard-v3.2.0.apk) |
 
 ---
 
-Desarrollado por JeissonAlberto · Saravena, Arauca, Colombia
+## 🚀 ¿Qué es ThermaGuard?
+
+ThermaGuard es una app Android nativa que **monitorea en tiempo real la temperatura** de tu dispositivo y toma decisiones automáticas para mantenerlo frío y eficiente. Sin root. Sin permisos especiales.
+
+Construida sobre un **Motor de Aprendizaje Adaptativo** que aprende el comportamiento térmico específico de tu teléfono con el uso real.
+
+---
+
+## ✨ Funciones principales
+
+### 🌡️ Dashboard
+- **Gauge velocímetro 240°** con aguja animada y gradiente verde→amarillo→rojo
+- **Temperatura en tiempo real** con predicción de subida
+- **Barra de estado contextual** — "Todo bien", "Caliente", "Crítico"
+- **Banners inteligentes** — Modo Juego, Carga Segura, Enfriando
+
+### ⚙️ Motor v5 — Ley de Moore
+- **Modelo P = V²·F** — estima la potencia térmica del procesador
+- **Predicción pre-throttle** — avisa ~3 min antes de que el sistema frene el CPU
+- **Barras de frecuencia por núcleo** — visualiza qué núcleos están al límite
+- **Eficiencia energética** — ratio de trabajo útil vs calor generado
+- **Regresión online de k** — aprende la constante térmica de tu chip con el uso real
+- **Recomendaciones automáticas** — acciones según nivel de carga
+
+### 📊 Estadísticas
+- Gráfico de temperatura de las últimas **24 horas**
+- **Ranking de apps** que más calientan el equipo
+- **Perfil horario** — a qué horas te calienta más el teléfono
+- **Score de salud de batería** con factores de desgaste
+
+### 🎮 Modo Juego
+- Detección automática (ML, Free Fire, Roblox, CoD, etc.)
+- Sube el umbral de alerta a **46°C** para no interrumpir
+
+### 🔋 Carga Segura
+- Monitor de temperatura al cargar
+- Alerta si la temperatura de carga es riesgosa
+
+### 🔔 Alertas y Diagnóstico
+- Historial de acciones automáticas
+- Diagnóstico de componentes (CPU, GPU, modem, batería)
+- Causas de calor identificadas en tiempo real
+- Exportar historial a **CSV**
+
+### 📱 Acerca de
+- Créditos a **Jasol Group** e **Ing. Jeisson Alberto Sarmiento Cabrera**
+
+---
+
+## 📐 Motor de Aprendizaje Adaptativo
+
+```
+Versión   Innovación principal
+─────────────────────────────────────────────────
+v1        Lectura básica de temperatura
+v2        EMA simple para suavizar lecturas
+v3        Baseline personalizado por dispositivo  
+v4        EMA adaptativo (α 0.08–0.45) + histéresis
+v5        Modelo P=V²·F (Ley de Moore) + regresión online
+```
+
+El motor aprende y mejora con cada lectura. La constante térmica `k` de tu chip se calibra automáticamente con el historial real de tu teléfono.
+
+---
+
+## 🛠️ Stack técnico
+
+- **Lenguaje:** Kotlin 100%
+- **UI:** Jetpack Compose + Material 3
+- **Arquitectura:** MVVM + Repository
+- **Base de datos:** Room (SQLite)
+- **Gráficos:** Canvas API nativo (sin librerías externas)
+- **Servicios:** ForegroundService para monitoreo continuo
+- **Mínimo Android:** 5.0 (API 21)
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+app/src/main/java/com/jeissonalberto/thermaguard/
+├── data/
+│   ├── ThermalData.kt           # Modelos y entidades Room
+│   ├── ThermalLearningEngine.kt # Motor v5 — cerebro de la app
+│   ├── SensorRepository.kt      # Lectura de sensores del sistema
+│   └── OptimizationRepository.kt
+├── domain/
+│   └── ThermalViewModel.kt      # Estado y lógica de negocio
+├── service/
+│   └── ThermalMonitorService.kt # Servicio en primer plano
+└── ui/
+    ├── DashboardScreen.kt       # Pantalla principal + Gauge Moore
+    ├── StatsScreen.kt           # Estadísticas y gráficos 24h
+    ├── DiagnosisScreen.kt       # Diagnóstico de componentes
+    ├── AlertsScreen.kt          # Alertas y log de acciones
+    └── AboutScreen.kt           # Créditos Jasol Group
+```
+
+---
+
+## 📸 Capturas
+
+> *Pantallas del Dashboard con gauge velocímetro, panel Motor v5 y estadísticas 24h.*
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Motor v1–v4: EMA adaptativo + histéresis
+- [x] Motor v5: Ley de Moore P=V²·F
+- [x] Gauge velocímetro 240° animado
+- [x] Modo Juego automático
+- [x] Estadísticas 24h + Ranking apps
+- [ ] Soporte root (control directo de frecuencia CPU/GPU)
+- [ ] Widget para pantalla de inicio
+- [ ] Perfiles de temperatura personalizados
+- [ ] Modo oscuro/claro manual
+- [ ] Publicación en Google Play Store
+
+---
+
+## 👤 Autor
+
+**Ing. Jeisson Alberto Sarmiento Cabrera**  
+🇨🇴 Saravena, Arauca, Colombia  
+📱 322 379 8725  
+📧 jetfixer03@gmail.com  
+🌐 [Jasol Group](https://site.zapia.com/t2ible74)
+
+---
+
+## 📄 Licencia
+
+MIT License © 2025 Jasol Group
+
+---
+
+<p align="center">
+  Hecho con ❤️ desde Saravena, Arauca, Colombia 🇨🇴
+</p>
