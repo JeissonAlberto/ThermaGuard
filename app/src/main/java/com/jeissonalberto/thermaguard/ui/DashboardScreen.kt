@@ -185,6 +185,18 @@ fun DashboardScreen(
                 SmartTipsCard(tips = tips)
             }
 
+            // ── MODO JUEGO ───────────────────────────────────────────────────
+            if (uiState.gameModeState.isActive) {
+                GameModeBanner(gameMode = uiState.gameModeState)
+            }
+            // ── CARGA SEGURA ──────────────────────────────────────────────────
+            if (uiState.safeChargeState.isCharging) {
+                SafeChargeBanner(safeCharge = uiState.safeChargeState)
+            }
+            // ── ENFRIANDO ─────────────────────────────────────────────────────
+            if (uiState.isCoolingDown) {
+                CoolingAnimation()
+            }
             // ── FOOTER JASOL ──────────────────────────────────────────────
             JasolFooter()
 
