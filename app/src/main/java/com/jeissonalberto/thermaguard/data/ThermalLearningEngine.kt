@@ -76,9 +76,9 @@ class ThermalLearningEngine(context: Context) {
         get() = prefs.getInt("idle_heat_events", 0)
         set(v) { prefs.edit().putInt("idle_heat_events", v).apply() }
     private var consecutiveHotReadings: Int
-    private var consecutiveCoolReadings: Int = 0
         get() = prefs.getInt("consec_hot", 0)
         set(v) { prefs.edit().putInt("consec_hot", v).apply() }
+    private var consecutiveCoolReadings: Int = 0  // no persistido — se reinicia con la app
 
     // ---- Ventana de prediccion EMA (ultimas 6 lecturas suavizadas) ----
     private var windowTemps: String
