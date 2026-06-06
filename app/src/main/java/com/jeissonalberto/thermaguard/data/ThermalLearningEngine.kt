@@ -54,7 +54,16 @@ class ThermalLearningEngine(context: Context) {
     private var emaCpu: Float
         get() = prefs.getFloat("ema_cpu", -1f)
         set(v) { prefs.edit().putFloat("ema_cpu", v).apply() }
-    private val EMA_ALPHA = 0.3f
+    // EMA alpha adaptativo: conservador en zona normal, reactivo en anomalía
+    private fun emaAlpha(current: Float, baseline: Float): Float {
+        val deviation = kotlin.math.abs(current - baseline)
+        return when {
+            deviation > 6f -> 0.45f   // Cambio brusco: reaccionar rápido
+            deviation > 3f -> 0.25f   // Cambio moderado
+            deviation > 1f -> 0.15f   // Zona estable: suavizar mucho
+            else           -> 0.08f   // Temperatura muy estable
+        }
+    }
 
     // ---- Patron de calor ----
     private var chargingHeatEvents: Int
@@ -67,6 +76,7 @@ class ThermalLearningEngine(context: Context) {
         get() = prefs.getInt("idle_heat_events", 0)
         set(v) { prefs.edit().putInt("idle_heat_events", v).apply() }
     private var consecutiveHotReadings: Int
+    private var consecutiveCoolReadings: Int = 0
         get() = prefs.getInt("consec_hot", 0)
         set(v) { prefs.edit().putInt("consec_hot", v).apply() }
 
@@ -156,10 +166,12 @@ class ThermalLearningEngine(context: Context) {
         // --- EMA fija alpha=0.3 para suavizado de temperatura ---
         val prevEmaTemp = emaTemp
         val prevEmaCpu  = emaCpu
+        val alphaTemp = if (prevEmaTemp < 0f) 1f else emaAlpha(snapshot.batteryTemp, baselineTemp.coerceAtLeast(snapshot.batteryTemp - 5f))
+        val alphaCpu  = if (prevEmaCpu  < 0f) 1f else emaAlpha(snapshot.cpuUsage, baselineCpu.coerceAtLeast(snapshot.cpuUsage - 10f))
         emaTemp = if (prevEmaTemp < 0f) snapshot.batteryTemp
-                  else prevEmaTemp * (1f - EMA_ALPHA) + snapshot.batteryTemp * EMA_ALPHA
+                  else prevEmaTemp * (1f - alphaTemp) + snapshot.batteryTemp * alphaTemp
         emaCpu  = if (prevEmaCpu < 0f) snapshot.cpuUsage
-                  else prevEmaCpu * (1f - EMA_ALPHA) + snapshot.cpuUsage * EMA_ALPHA
+                  else prevEmaCpu * (1f - alphaCpu) + snapshot.cpuUsage * alphaCpu
 
         // Baseline adaptativo (mas lento, largo plazo)
         val alpha = when {
@@ -224,6 +236,7 @@ class ThermalLearningEngine(context: Context) {
                 snapshot.cpuUsage < 20f -> idleHeatEvents++
             }
             consecutiveHotReadings++
+            consecutiveCoolReadings = 0   // cancelar cooldown si vuelve a calentar
             totalHotMinutes += ThermalMonitorIntervalMin
 
             // Inicio de sesion de calor
@@ -232,8 +245,12 @@ class ThermalLearningEngine(context: Context) {
                 heatSessionsToday++
             }
         } else {
-            if (inHeatSession) inHeatSession = false   // fin de sesion
-            consecutiveHotReadings = 0
+            // Histéresis: solo bajar consecutiveHot si hay 2 lecturas frías seguidas
+            consecutiveCoolReadings++
+            if (consecutiveCoolReadings >= 2) {
+                if (inHeatSession) inHeatSession = false
+                if (consecutiveHotReadings > 0) consecutiveHotReadings--
+            }
         }
         if (snapshot.batteryTemp >= 45f) totalCriticalMinutes += ThermalMonitorIntervalMin
 
@@ -252,11 +269,15 @@ class ThermalLearningEngine(context: Context) {
 
         // Umbral dinamico
         val deviation = if (n > 20) computeStdDevFromRolling() else 8f
-        // Con pocas muestras: umbral conservador fijo; luego se ajusta con aprendizaje
+        // Umbral dinámico con contexto: baseline + desviación adaptativa
         dynamicThreshold = if (sampleCount < 20) {
+            // Inicio: umbral conservador hasta tener datos suficientes
             42f
         } else {
-            (baselineTemp + deviation * 1.5f).coerceIn(38f, 50f)
+            // Ajuste por hora: de noche/madrugada la temp ambiente es menor
+            val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+            val timeBonus = if (hour in 0..6 || hour in 22..23) -1f else 0f  // más estricto de noche
+            (baselineTemp + deviation * 1.5f + timeBonus).coerceIn(37f, 50f)
         }
 
         return buildProfile(snapshot)
