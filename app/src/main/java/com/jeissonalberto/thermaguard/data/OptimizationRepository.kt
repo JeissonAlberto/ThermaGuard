@@ -3,9 +3,7 @@ package com.jeissonalberto.thermaguard.data
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
 import android.net.Uri
-import android.net.wifi.WifiManager
 import android.os.PowerManager
 import android.provider.Settings
 import kotlinx.coroutines.Dispatchers
