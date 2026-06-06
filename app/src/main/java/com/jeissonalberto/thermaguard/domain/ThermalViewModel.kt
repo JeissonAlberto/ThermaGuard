@@ -21,7 +21,13 @@ data class ThermalUiState(
     val autoActionsLog: List<AutoAction> = emptyList(),
     val isMonitoring: Boolean = false,
     val alertThreshold: Float = 43f,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    // v3.2 nuevas funciones
+    val gameModeState: GameModeState = GameModeState(),
+    val safeChargeState: SafeChargeState = SafeChargeState(),
+    val isCoolingDown: Boolean = false,         // animación de enfriamiento
+    val appHeatRanking: List<Pair<String,Float>> = emptyList(),  // ranking apps
+    val smartAlerts: List<SmartAlert> = emptyList()
 )
 
 data class AutoAction(
@@ -64,6 +70,13 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     val health     = learningEngine.computeBatteryHealthScore()
                     val hourly     = learningEngine.getHourlyProfile()
                     val tips       = learningEngine.generateSmartTips(profile, snapshot, prediction)
+                    val gameMode   = detectGameMode(snapshot.topApp)
+                    val safeCharge = evalSafeCharge(snapshot)
+                    val appRanking = computeAppRanking()
+                    val wasCooling = _uiState.value.isCoolingDown
+                    val isCooling  = !snapshot.batteryTemp.toThermalLevel().let {
+                        it == ThermalLevel.HOT || it == ThermalLevel.CRITICAL || it == ThermalLevel.EMERGENCY
+                    } && wasHot
 
                     // Umbral dinámico desde el perfil aprendido
                     val dynThreshold = profile.dynamicThreshold.takeIf { it > 35f } ?: 43f
@@ -92,6 +105,11 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                             isLoading          = false,
                             isMonitoring       = true
                         )
+                    
+                        gameModeState  = gameMode,
+                        safeChargeState= safeCharge,
+                        isCoolingDown  = isCooling,
+                        appHeatRanking = appRanking
                     }
 
                     executeAutoOptimization(snapshot, profile)
@@ -183,4 +201,79 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     fun setAlertThreshold(t: Float) { _uiState.update { it.copy(alertThreshold = t) } }
     fun resetLearning()             { learningEngine.reset() }
     fun clearAutoLog()              { _uiState.update { it.copy(autoActionsLog = emptyList()) } }
+    // ── Modo Juego ──────────────────────────────────────────────────────
+    private val gamingPackages = listOf['com.mobile.legends', 'com.tencent.ig', 'com.activision.callofduty', 'com.garena.game', 'com.dts.freefireth', 'com.king.candycrushsaga', 'com.supercell.clashofclans', 'com.epicgames', 'com.roblox.client', 'com.mojang.minecraftpe']
+
+    fun detectGameMode(topApp: String): GameModeState {
+        val isGame = gamingPackages.any { pkg -> topApp.contains(pkg, ignoreCase = true) }
+                  || topApp.lowercase().let { it.contains("game") || it.contains("arena") || it.contains("clash") || it.contains("legend") }
+        return if (isGame) GameModeState(
+            isActive             = true,
+            detectedGame         = topApp,
+            permissiveThreshold  = 46f,
+            startedAt            = System.currentTimeMillis()
+        ) else GameModeState()
+    }
+
+    // ── Modo Carga Segura ────────────────────────────────────────────────
+    fun evalSafeCharge(snap: ThermalSnapshot): SafeChargeState {
+        if (!snap.isCharging) return SafeChargeState()
+        val overheating = snap.batteryTemp > 38f
+        val rec = when {
+            snap.batteryTemp > 42f -> "Retira el cargador temporalmente"
+            snap.batteryTemp > 39f -> "Carga lenta recomendada — evita usar el teléfono"
+            else                   -> "Temperatura de carga normal"
+        }
+        return SafeChargeState(isCharging = true, chargingTemp = snap.batteryTemp, isOverheating = overheating, recommendation = rec)
+    }
+
+    // ── Exportar CSV ─────────────────────────────────────────────────────
+    fun exportHistoryToCsv(context: Context): String {
+        val sb = StringBuilder()
+        sb.appendLine("timestamp,batteryTemp,cpuUsage,batteryLevel,topApp,riskLevel")
+        _uiState.value.history.forEach { snap ->
+            val dt = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                .format(java.util.Date(snap.timestamp))
+            val risk = snap.batteryTemp.toThermalLevel().name
+            sb.appendLine("$dt,${snap.batteryTemp},${snap.cpuUsage.toInt()},${snap.batteryLevel},${snap.topApp},$risk")
+        }
+        val file = java.io.File(context.getExternalFilesDir(null), "thermaguard_export_${System.currentTimeMillis()}.csv")
+        file.writeText(sb.toString())
+        return file.absolutePath
+    }
+
+    // ── Ranking apps ─────────────────────────────────────────────────────
+    fun computeAppRanking(): List<Pair<String, Float>> {
+        val scores = mutableMapOf<String, MutableList<Float>>()
+        _uiState.value.history
+            .filter { it.topApp.isNotEmpty() && it.batteryTemp >= 38f }
+            .forEach { snap -> scores.getOrPut(snap.topApp) { mutableListOf() }.add(snap.batteryTemp) }
+        return scores.map { (app, temps) -> app to temps.average().toFloat() }
+            .sortedByDescending { it.second }.take(5)
+    }
+
+    // ── Alerta inteligente: no molestar si ya avisó en los últimos 10 min ─
+    private val alertSuppressMap = mutableMapOf<String, Long>()
+    fun shouldFireAlert(id: String, cooldownMs: Long = 10 * 60 * 1000L): Boolean {
+        val now  = System.currentTimeMillis()
+        val last = alertSuppressMap[id] ?: 0L
+        return if (now - last > cooldownMs) {
+            alertSuppressMap[id] = now
+            true
+        } else false
+    }
+
+    fun clearAutoLog() {
+        _uiState.update { it.copy(autoActionsLog = emptyList()) }
+    }
+
+    fun setAlertThreshold(v: Float) {
+        _uiState.update { it.copy(alertThreshold = v) }
+    }
+
+    fun resetLearning() {
+        learningEngine.resetAll()
+        _uiState.update { it.copy(profile = null) }
+    }
+
 }
