@@ -28,6 +28,8 @@ data class ThermalSnapshot(
 ) {
     // Campos no persistidos en Room (calculados en runtime)
     @Ignore var allZones: Map<String, Float> = emptyMap()
+    @Ignore var cpuFreqsMHz: List<Float> = emptyList()   // frecuencia por núcleo
+    @Ignore var thermalPowerScore: Float = 0f              // P=V²·F normalizado 0-100
     @Ignore var perCoreUsage: List<Float> = emptyList()
     @Ignore var topProcesses: List<ProcessInfo> = emptyList()
 }
@@ -127,3 +129,23 @@ data class SmartAlert(
     val priority: Int,  // 1=info, 2=warning, 3=critical
     val suppressUntil: Long = 0L  // no molestar hasta este timestamp
 )
+
+// ── Motor v5: estado de potencia según Ley de Moore ─────────────────────────
+data class MoorePowerState(
+    val powerScore: Float = 0f,         // P=V²·F normalizado 0-100
+    val freqsMHz: List<Float> = emptyList(),
+    val avgFreqMHz: Float = 0f,
+    val maxFreqMHz: Float = 0f,
+    val predictedTempRise: Float = 0f,  // °C adicionales esperados en 3 min
+    val recommendation: MooreAction = MooreAction.NONE,
+    val efficiencyRatio: Float = 1f     // actual vs óptimo (1.0 = perfecto)
+)
+
+enum class MooreAction {
+    NONE,           // todo OK
+    REDUCE_LOAD,    // CPU al límite, bajar carga
+    BIG_LITTLE,     // migrar a núcleos eficientes
+    WARN_THROTTLE,  // throttle del sistema en ~2 min
+    CRITICAL        // reducción urgente
+}
+
