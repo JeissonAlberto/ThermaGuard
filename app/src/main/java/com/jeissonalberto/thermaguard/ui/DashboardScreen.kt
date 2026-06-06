@@ -244,7 +244,7 @@ fun PremiumGauge(
     )
 
     // Risk score animado
-    val riskScore = uiState.riskScore.coerceIn(0, 100)
+    val riskScore = uiState.profile?.riskScore ?: 0.coerceIn(0, 100)
     val riskAnim by animateFloatAsState(riskScore.toFloat(), tween(800, easing = EaseOutCubic), label = "rs")
 
     Box(
