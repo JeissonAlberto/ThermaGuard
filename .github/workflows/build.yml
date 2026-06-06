@@ -32,7 +32,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Compilar APK Debug
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --info 2>&1 | tee build.log || (grep -E 'error:|e: |Unresolved|Cannot|Could not' build.log | tail -50 && exit 1)
 
       - name: Subir APK como artefacto
         uses: actions/upload-artifact@v4
