@@ -17,12 +17,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.graphics.StrokeCap
-import kotlin.math.cos
-import kotlin.math.sin
-import android.graphics.Color as AndroidColor
-import android.graphics.Color as AndroidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -194,10 +188,6 @@ fun DashboardScreen(
                 SmartTipsCard(tips = tips)
             }
 
-
-            // ── PANEL MOORE v5 ────────────────────────────────────────────────
-            MoorePowerPanel(moore = uiState.mooreState)
-
             // ── MODO JUEGO ───────────────────────────────────────────────────
             if (uiState.gameModeState.isActive) {
                 GameModeBanner(gameMode = uiState.gameModeState)
@@ -321,9 +311,9 @@ fun PremiumGauge(
             // Dividido en 3 segmentos: verde→amarillo→rojo
             val seg = arcSweep / 3f
             listOf(
-                Triple(arcStart,          seg,  AndroidColor.parseColor("#00E676")),
-                Triple(arcStart + seg,    seg,  AndroidColor.parseColor("#FFD740")),
-                Triple(arcStart + seg*2f, seg,  AndroidColor.parseColor("#FF1744")),
+                Triple(arcStart,          seg,  android.graphics.Color.parseColor("#00E676")),
+                Triple(arcStart + seg,    seg,  android.graphics.Color.parseColor("#FFD740")),
+                Triple(arcStart + seg*2f, seg,  android.graphics.Color.parseColor("#FF1744")),
             ).forEach { (start, sweep, col) ->
                 val segEnd   = start + sweep
                 val progEnd  = arcStart + tempPct * arcSweep
@@ -716,132 +706,6 @@ fun SmartTipsCard(tips: List<SmartTip>) {
 // ─────────────────────────────────────────────────────────────────────────────
 //  MODO JUEGO BANNER
 // ─────────────────────────────────────────────────────────────────────────────
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  PANEL MOTOR v5 — Ley de Moore
-// ─────────────────────────────────────────────────────────────────────────────
-@Composable
-fun MoorePowerPanel(moore: MoorePowerState) {
-    val actionColor = when (moore.recommendation) {
-        MooreAction.NONE          -> TG.green
-        MooreAction.REDUCE_LOAD   -> TG.yellow
-        MooreAction.BIG_LITTLE    -> TG.yellow
-        MooreAction.WARN_THROTTLE -> TG.orange
-        MooreAction.CRITICAL      -> TG.red
-    }
-    val actionIcon = when (moore.recommendation) {
-        MooreAction.NONE          -> "✅"
-        MooreAction.REDUCE_LOAD   -> "⚡"
-        MooreAction.BIG_LITTLE    -> "🔀"
-        MooreAction.WARN_THROTTLE -> "⚠️"
-        MooreAction.CRITICAL      -> "🔴"
-    }
-    val actionText = when (moore.recommendation) {
-        MooreAction.NONE          -> "CPU eficiente · Temperatura estable"
-        MooreAction.REDUCE_LOAD   -> "Cierra apps en segundo plano"
-        MooreAction.BIG_LITTLE    -> "Núcleos grandes al límite"
-        MooreAction.WARN_THROTTLE -> "Sistema frenará el CPU pronto"
-        MooreAction.CRITICAL      -> "Reducir uso inmediatamente"
-    }
-
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-        shape    = RoundedCornerShape(16.dp),
-        color    = TG.glass
-    ) {
-        Column(modifier = Modifier
-            .border(1.dp, actionColor.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
-            .padding(14.dp)
-        ) {
-            // Título
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()) {
-                Text("⚙️ Motor v5 · Ley de Moore",
-                    fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                    color = TG.textSec, letterSpacing = 0.5.sp)
-                Text("P = V²·F", fontSize = 9.sp, color = TG.textDim, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
-            }
-            Spacer(Modifier.height(10.dp))
-
-            // Power score barra
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                Text("Carga térmica", fontSize = 10.sp, color = TG.textSec, modifier = Modifier.width(90.dp))
-                Box(modifier = Modifier.weight(1f).height(6.dp).clip(RoundedCornerShape(3.dp)).background(TG.surface)) {
-                    Box(modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(moore.powerScore / 100f)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(Brush.horizontalGradient(listOf(TG.green, TG.yellow, TG.red)))
-                    )
-                }
-                Text(" ${"%.0f".format(moore.powerScore)}%", fontSize = 10.sp,
-                    color = actionColor, fontWeight = FontWeight.Bold, modifier = Modifier.width(36.dp))
-            }
-            Spacer(Modifier.height(6.dp))
-
-            // Frecuencias por núcleo
-            if (moore.freqsMHz.isNotEmpty()) {
-                Text("Núcleos CPU (MHz)", fontSize = 9.sp, color = TG.textDim)
-                Spacer(Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
-                    moore.freqsMHz.take(8).forEachIndexed { idx, freq ->
-                        val maxF = moore.maxFreqMHz.takeIf { it > 0f } ?: 3200f
-                        val ratio = (freq / maxF).coerceIn(0f, 1f)
-                        val coreColor = when {
-                            ratio > 0.85f -> TG.red
-                            ratio > 0.60f -> TG.orange
-                            else          -> TG.green
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                            Box(modifier = Modifier.height(28.dp).fillMaxWidth(0.7f).clip(RoundedCornerShape(3.dp)).background(TG.surface)) {
-                                Box(modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(ratio)
-                                    .background(coreColor.copy(alpha = 0.8f)))
-                            }
-                            Text("C${idx+1}", fontSize = 7.sp, color = TG.textDim)
-                        }
-                    }
-                }
-                Spacer(Modifier.height(6.dp))
-            }
-
-            // Predicción de temperatura
-            if (moore.predictedTempRise > 0.3f) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()) {
-                    Text("📈 Subida estimada (3 min)", fontSize = 10.sp, color = TG.textSec)
-                    Text("+${"%.1f".format(moore.predictedTempRise)}°C",
-                        fontSize = 11.sp, fontWeight = FontWeight.Bold, color = actionColor)
-                }
-                Spacer(Modifier.height(6.dp))
-            }
-
-            // Eficiencia
-            val effPct = (moore.efficiencyRatio * 100f).coerceIn(0f, 200f)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()) {
-                Text("⚡ Eficiencia CPU", fontSize = 10.sp, color = TG.textSec)
-                Text("${"%.0f".format(effPct.coerceAtMost(100f))}%",
-                    fontSize = 10.sp, color = if (effPct >= 70f) TG.green else TG.yellow,
-                    fontWeight = FontWeight.SemiBold)
-            }
-            Spacer(Modifier.height(8.dp))
-
-            // Recomendación
-            Surface(shape = RoundedCornerShape(8.dp), color = actionColor.copy(alpha = 0.1f),
-                modifier = Modifier.fillMaxWidth()) {
-                Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(actionIcon, fontSize = 14.sp)
-                    Text(actionText, fontSize = 10.sp, color = actionColor, fontWeight = FontWeight.SemiBold)
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun GameModeBanner(gameMode: GameModeState) {
     val inf = rememberInfiniteTransition(label = "game")
