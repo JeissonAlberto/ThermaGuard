@@ -27,11 +27,31 @@ data class ThermalSnapshot(
     val ramUsageMb: Int = 0
 ) {
     @Ignore var allZones: Map<String, Float> = emptyMap()
-    @Ignore var cpuFreqsMHz: List<Float>     = emptyList()
-    @Ignore var thermalPowerScore: Float     = 0f
     @Ignore var perCoreUsage: List<Float>    = emptyList()
-    @Ignore var topProcesses: List<ProcessInfo> = emptyList()
 }
+
+
+// Datos runtime de ThermalSnapshot (no persistidos en Room)
+// Separados del @Entity para compatibilidad con KAPT
+data class ThermalRuntimeData(
+    val snapshot: ThermalSnapshot,
+    val allZones: Map<String, Float> = emptyMap(),
+    val perCoreUsage: List<Float> = emptyList(),
+    val topProcesses: List<ProcessInfo> = emptyList(),
+    val cpuFreqsMHz: List<Float> = emptyList(),
+    val thermalPowerScore: Float = 0f
+) {
+    // Acceso directo a campos del snapshot
+    val batteryTemp get() = snapshot.batteryTemp
+    val cpuUsage    get() = snapshot.cpuUsage
+    val topApp      get() = snapshot.topApp
+    val timestamp   get() = snapshot.timestamp
+}
+
+// Extension functions para acceso de compatibilidad en código existente
+val ThermalSnapshot.cpuFreqsMHz: List<Float> get() = emptyList()
+val ThermalSnapshot.thermalPowerScore: Float get() = 0f
+val ThermalSnapshot.topProcesses: List<ProcessInfo> get() = emptyList()
 
 enum class ThermalLevel(val label: String, val emoji: String) {
     NORMAL("Normal", "🟢"),
