@@ -47,7 +47,7 @@ fun StatsScreen(uiState: ThermalUiState, onResetLearning: () -> Unit) {
                 Column {
                     Text("Estadísticas", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold,
                         color = TG.textPri, letterSpacing = (-0.5).sp)
-                    Text("Análisis del motor v4", fontSize = 11.sp, color = TG.textSec)
+                    Text("Análisis del motor v5 — Moore", fontSize = 11.sp, color = TG.textSec)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(onClick = {
