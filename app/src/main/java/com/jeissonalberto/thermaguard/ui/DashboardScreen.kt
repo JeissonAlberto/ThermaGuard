@@ -605,6 +605,106 @@ fun SmartTipsCard(tips: List<SmartTip>) {
     }
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  MODO JUEGO BANNER
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun GameModeBanner(gameMode: GameModeState) {
+    val inf = rememberInfiniteTransition(label = "game")
+    val glow by inf.animateFloat(0.3f, 0.7f,
+        infiniteRepeatable(tween(800, easing = EaseInOut), RepeatMode.Reverse), label = "g")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.horizontalGradient(listOf(Color(0xFF7B1FA2).copy(alpha = 0.15f), Color(0xFF1565C0).copy(alpha = 0.15f))),
+                RoundedCornerShape(14.dp)
+            )
+            .border(1.dp,
+                Brush.horizontalGradient(listOf(Color(0xFFCE93D8).copy(alpha = glow), Color(0xFF90CAF9).copy(alpha = glow))),
+                RoundedCornerShape(14.dp)
+            )
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("🎮", fontSize = 22.sp)
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Modo Juego activo",
+                fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TG.textPri)
+            Text("Umbrales ajustados para gaming · ${gameMode.detectedGame.take(20)}",
+                fontSize = 10.sp, color = TG.textSec)
+        }
+        Surface(shape = RoundedCornerShape(8.dp),
+            color = Color(0xFFCE93D8).copy(alpha = 0.15f)) {
+            Text("46°C", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFCE93D8))
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  MODO CARGA SEGURA BANNER
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun SafeChargeBanner(safeCharge: SafeChargeState) {
+    val color = if (safeCharge.isOverheating) TG.amber else TG.green
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color.copy(alpha = 0.07f), RoundedCornerShape(14.dp))
+            .border(1.dp, color.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Icon(
+            if (safeCharge.isOverheating) Icons.Default.Warning else Icons.Default.BatteryChargingFull,
+            null, tint = color, modifier = Modifier.size(22.dp)
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Carga Segura",
+                fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TG.textPri)
+            Text(safeCharge.recommendation,
+                fontSize = 10.sp, color = TG.textSec, lineHeight = 14.sp)
+        }
+        Text("${safeCharge.chargingTemp.toInt()}°C",
+            fontSize = 13.sp, fontWeight = FontWeight.Bold, color = color)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ANIMACIÓN ENFRIAMIENTO
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun CoolingAnimation() {
+    val inf = rememberInfiniteTransition(label = "cool")
+    val scale by inf.animateFloat(0.95f, 1.05f,
+        infiniteRepeatable(tween(1000, easing = EaseInOut), RepeatMode.Reverse), label = "s")
+    val alpha by inf.animateFloat(0.4f, 0.9f,
+        infiniteRepeatable(tween(800, easing = EaseInOut), RepeatMode.Reverse), label = "a")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(TG.teal.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
+            .border(1.dp, TG.teal.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("❄️", fontSize = 22.sp, modifier = Modifier.scale(scale).alpha(alpha))
+        Column(modifier = Modifier.weight(1f)) {
+            Text("Enfriando...",
+                fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TG.teal)
+            Text("El dispositivo está bajando de temperatura. ¡Bien hecho!",
+                fontSize = 10.sp, color = TG.textSec, lineHeight = 14.sp)
+        }
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  JASOL FOOTER
 // ─────────────────────────────────────────────────────────────────────────────
