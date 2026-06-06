@@ -245,98 +245,180 @@ fun PremiumGauge(
     uiState: ThermalUiState
 ) {
     val isCritical = level == ThermalLevel.CRITICAL || level == ThermalLevel.EMERGENCY
-    val pulse = rememberInfiniteTransition(label = "g")
-    val ringAlpha by pulse.animateFloat(
-        0.35f, if (isCritical) 1f else 0.6f,
-        infiniteRepeatable(tween(if (isCritical) 800 else 1400, easing = EaseInOut), RepeatMode.Reverse), label = "r"
-    )
-    val scaleAnim by pulse.animateFloat(
-        1f, if (isCritical) 1.06f else 1.01f,
-        infiniteRepeatable(tween(1200, easing = EaseInOut), RepeatMode.Reverse), label = "s"
+    val pulse = rememberInfiniteTransition(label = "gauge")
+
+    // Temperatura animada (suave entre valores)
+    val tempAnim by animateFloatAsState(snap.batteryTemp, tween(900, easing = EaseOutCubic), label = "t")
+
+    // Glow pulsante en crítico
+    val glowAlpha by pulse.animateFloat(
+        if (isCritical) 0.4f else 0.15f,
+        if (isCritical) 0.85f else 0.30f,
+        infiniteRepeatable(tween(if (isCritical) 700 else 1800, easing = EaseInOut), RepeatMode.Reverse), label = "gl"
     )
 
-    // Risk score animado
-    val riskScore = uiState.profile?.riskScore ?: 0.coerceIn(0, 100)
-    val riskAnim by animateFloatAsState(riskScore.toFloat(), tween(800, easing = EaseOutCubic), label = "rs")
+    // Rango del termómetro: 25°C = 0%, 55°C = 100%
+    val minTemp = 25f
+    val maxTemp = 55f
+    val tempPct = ((tempAnim - minTemp) / (maxTemp - minTemp)).coerceIn(0f, 1f)
+
+    // Arco: 240° de barrido, empieza en 150° (abajo-izquierda)
+    val arcStart  = 150f
+    val arcSweep  = 240f
+    val needleAngle = arcStart + tempPct * arcSweep
+
+    val riskScore = uiState.profile?.riskScore ?: 0
 
     Box(
-        modifier         = Modifier.size(230.dp).scale(scaleAnim),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp)
+            .padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Glow ring exterior
-        Box(
-            modifier = Modifier
-                .size(230.dp)
-                .clip(CircleShape)
-                .background(Brush.radialGradient(listOf(accent.copy(alpha = ringAlpha * 0.25f), Color.Transparent)))
-        )
-        // Ring animado
-        Box(
-            modifier = Modifier
-                .size(210.dp)
-                .clip(CircleShape)
-                .border(
-                    1.5.dp,
-                    Brush.sweepGradient(listOf(Color.Transparent, accent.copy(alpha = ringAlpha), Color.Transparent)),
-                    CircleShape
-                )
-        )
-        // Superficie glass central
-        Surface(
-            modifier = Modifier.size(178.dp),
-            shape    = CircleShape,
-            color    = TG.glass
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .border(1.5.dp, accent.copy(alpha = 0.22f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier            = Modifier.padding(12.dp)
-                ) {
-                    // Emoji nivel
-                    Text(level.emoji, fontSize = 26.sp)
-                    Spacer(Modifier.height(1.dp))
-                    // Temperatura principal
-                    AnimatedContent(
-                        targetState = snap.batteryTemp,
-                        transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) },
-                        label = "temp"
-                    ) { t ->
-                        Text(
-                            "${t}°C",
-                            fontSize      = 40.sp,
-                            fontWeight    = FontWeight.ExtraBold,
-                            color         = accent,
-                            letterSpacing = (-1).sp
-                        )
-                    }
-                    // Estado en texto
-                    Text(
-                        level.label.uppercase(),
-                        fontSize      = 9.sp,
-                        fontWeight    = FontWeight.Bold,
-                        color         = accent.copy(alpha = 0.65f),
-                        letterSpacing = 2.sp
-                    )
-                    // Barra de riesgo mini
-                    Spacer(Modifier.height(6.dp))
-                    RiskMiniBar(risk = riskAnim, accent = accent)
-                    Spacer(Modifier.height(3.dp))
-                    Text(
-                        "Riesgo ${riskScore}%",
-                        fontSize = 9.sp,
-                        color    = TG.textDim
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val cx = size.width / 2f
+            val cy = size.height * 0.52f
+            val radius = size.width.coerceAtMost(size.height) * 0.42f
+            val strokeW = radius * 0.085f
+
+            // ── Glow exterior ──────────────────────────────────────────
+            drawArc(
+                color      = accent.copy(alpha = glowAlpha * 0.35f),
+                startAngle = arcStart,
+                sweepAngle = arcSweep,
+                useCenter  = false,
+                topLeft    = Offset(cx - radius - strokeW * 2, cy - radius - strokeW * 2),
+                size       = Size((radius + strokeW * 2) * 2, (radius + strokeW * 2) * 2),
+                style      = Stroke(width = strokeW * 3.5f, cap = StrokeCap.Round)
+            )
+
+            // ── Track (fondo gris) ─────────────────────────────────────
+            drawArc(
+                color      = Color.White.copy(alpha = 0.07f),
+                startAngle = arcStart,
+                sweepAngle = arcSweep,
+                useCenter  = false,
+                topLeft    = Offset(cx - radius, cy - radius),
+                size       = Size(radius * 2, radius * 2),
+                style      = Stroke(width = strokeW, cap = StrokeCap.Round)
+            )
+
+            // ── Arco de progreso con gradiente de color ────────────────
+            // Dividido en 3 segmentos: verde→amarillo→rojo
+            val seg = arcSweep / 3f
+            listOf(
+                Triple(arcStart,          seg,  android.graphics.Color.parseColor("#00E676")),
+                Triple(arcStart + seg,    seg,  android.graphics.Color.parseColor("#FFD740")),
+                Triple(arcStart + seg*2f, seg,  android.graphics.Color.parseColor("#FF1744")),
+            ).forEach { (start, sweep, col) ->
+                val segEnd   = start + sweep
+                val progEnd  = arcStart + tempPct * arcSweep
+                val drawSweep = (progEnd - start).coerceIn(0f, sweep)
+                if (drawSweep > 0f) {
+                    drawArc(
+                        color      = Color(col).copy(alpha = 0.9f),
+                        startAngle = start,
+                        sweepAngle = drawSweep,
+                        useCenter  = false,
+                        topLeft    = Offset(cx - radius, cy - radius),
+                        size       = Size(radius * 2, radius * 2),
+                        style      = Stroke(width = strokeW, cap = StrokeCap.Round)
                     )
                 }
             }
+
+            // ── Marcas de tick ─────────────────────────────────────────
+            val tickTemps = listOf(25f, 30f, 35f, 40f, 45f, 50f, 55f)
+            tickTemps.forEach { t ->
+                val pct   = (t - minTemp) / (maxTemp - minTemp)
+                val angle = Math.toRadians((arcStart + pct * arcSweep).toDouble())
+                val isMajor = t % 5 == 0f
+                val outerR = radius - strokeW * 0.8f
+                val innerR = outerR - if (isMajor) strokeW * 1.2f else strokeW * 0.6f
+                drawLine(
+                    color       = Color.White.copy(alpha = if (isMajor) 0.5f else 0.25f),
+                    start       = Offset(cx + (outerR * kotlin.math.cos(angle)).toFloat(), cy + (outerR * kotlin.math.sin(angle)).toFloat()),
+                    end         = Offset(cx + (innerR * kotlin.math.cos(angle)).toFloat(), cy + (innerR * kotlin.math.sin(angle)).toFloat()),
+                    strokeWidth = if (isMajor) 2.5f else 1.5f
+                )
+            }
+
+            // ── Aguja ──────────────────────────────────────────────────
+            val needleRad = Math.toRadians(needleAngle.toDouble())
+            val needleLen = radius - strokeW * 2.5f
+            val nx = cx + (needleLen * kotlin.math.cos(needleRad)).toFloat()
+            val ny = cy + (needleLen * kotlin.math.sin(needleRad)).toFloat()
+
+            // Sombra de aguja
+            drawLine(
+                color       = Color.Black.copy(alpha = 0.4f),
+                start       = Offset(cx + 3f, cy + 3f),
+                end         = Offset(nx + 3f, ny + 3f),
+                strokeWidth = strokeW * 0.18f,
+                cap         = StrokeCap.Round
+            )
+            // Aguja principal
+            drawLine(
+                color       = accent,
+                start       = Offset(cx, cy),
+                end         = Offset(nx, ny),
+                strokeWidth = strokeW * 0.16f,
+                cap         = StrokeCap.Round
+            )
+            // Centro de aguja
+            drawCircle(accent,          strokeW * 0.35f, Offset(cx, cy))
+            drawCircle(Color(0xFF080C14), strokeW * 0.18f, Offset(cx, cy))
+
+            // ── Punto de glow en la punta ──────────────────────────────
+            drawCircle(accent.copy(alpha = glowAlpha), strokeW * 0.8f, Offset(nx, ny))
+            drawCircle(accent,                          strokeW * 0.25f, Offset(nx, ny))
+        }
+
+        // ── Texto central (sobre el Canvas) ───────────────────────────
+        Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(y = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(1.dp)
+        ) {
+            Text(level.emoji, fontSize = 18.sp)
+            AnimatedContent(
+                targetState = snap.batteryTemp,
+                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) },
+                label = "tempTxt"
+            ) { t ->
+                Text(
+                    "${t}°C",
+                    fontSize      = 42.sp,
+                    fontWeight    = FontWeight.ExtraBold,
+                    color         = accent,
+                    letterSpacing = (-1.5).sp
+                )
+            }
+            Text(
+                level.label.uppercase(),
+                fontSize      = 9.sp,
+                fontWeight    = FontWeight.Bold,
+                color         = accent.copy(alpha = 0.6f),
+                letterSpacing = 2.sp
+            )
+            Spacer(Modifier.height(4.dp))
+            RiskMiniBar(risk = riskScore.toFloat().coerceIn(0f, 100f), accent = accent)
+            Text("Riesgo ${riskScore}%", fontSize = 8.sp, color = TG.textDim)
+        }
+
+        // ── Labels 25° y 55° ──────────────────────────────────────────
+        Box(modifier = Modifier.fillMaxSize()) {
+            Text("25°", fontSize = 9.sp, color = TG.textDim,
+                modifier = Modifier.align(Alignment.BottomStart).padding(start = 20.dp, bottom = 12.dp))
+            Text("55°", fontSize = 9.sp, color = TG.red.copy(alpha = 0.7f),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 12.dp))
         }
     }
 }
+
 
 @Composable
 fun RiskMiniBar(risk: Float, accent: Color) {
