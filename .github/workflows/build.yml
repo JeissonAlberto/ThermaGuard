@@ -25,20 +25,14 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-clean-1780778001-${{ hashFiles('**/*.gradle*', '**/libs.versions.toml') }}
-          restore-keys: gradle-clean-1780778001-
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/libs.versions.toml') }}
+          restore-keys: gradle-
 
       - name: Dar permisos a gradlew
         run: chmod +x gradlew
 
       - name: Compilar APK Debug
-        run: |
-          ./gradlew assembleDebug --stacktrace 2>&1 || true
-          echo "=== KAPT STUBS ERROR FILES ===" 
-          find . -name "*.txt" -path "*/kapt*" -newer gradlew 2>/dev/null | head -5 | xargs cat 2>/dev/null || true
-          find . -name "kapt-errors.txt" 2>/dev/null | xargs cat 2>/dev/null || true
-          find build -name "*.log" 2>/dev/null | head -3 | xargs grep -l "error" 2>/dev/null | xargs cat 2>/dev/null || true
-          ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Subir APK como artefacto
         uses: actions/upload-artifact@v4
