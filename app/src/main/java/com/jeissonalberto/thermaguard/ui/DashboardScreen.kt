@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
@@ -165,6 +166,10 @@ fun DashboardScreen(
                 )
             }
 
+
+            // ── MOTOR v5 — MOORE POWER ────────────────────────────────────────
+            MoorePowerPanel(snap = snap, accent = accent)
+
             // ── PREDICCIÓN ────────────────────────────────────────────────
             uiState.prediction?.let { pred ->
                 if (pred.confidence != PredictionConfidence.LOW && pred.predictedTemp > 0f) {
@@ -207,6 +212,162 @@ fun DashboardScreen(
         }
     }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  MOTOR v5 — MOORE POWER PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun MoorePowerPanel(snap: ThermalSnapshot, accent: Color) {
+    // Estimar power score a partir del CPU (P ∝ V²·F, simplificado)
+    val f = (snap.cpuUsage / 100f).coerceIn(0f, 1f)
+    val v = 0.6f + 0.4f * f
+    val powerScore = (v * v * f * 100f).coerceIn(0f, 100f)
+
+    val powerColor = when {
+        powerScore >= 75f -> TG.red
+        powerScore >= 45f -> TG.amber
+        else              -> TG.green
+    }
+    val efficiency = if (powerScore > 0f)
+        ((snap.cpuUsage / powerScore) * 100f).coerceIn(0f, 100f) else 0f
+
+    val inf = rememberInfiniteTransition(label = "moore")
+    val pulse by inf.animateFloat(0.85f, 1f,
+        infiniteRepeatable(tween(1400, easing = EaseInOut), RepeatMode.Reverse), label = "mp")
+
+    GlassCard(modifier = Modifier.fillMaxWidth(), accent = powerColor) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .scale(if (powerScore > 70f) pulse else 1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(powerColor.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Bolt, null, tint = powerColor, modifier = Modifier.size(18.dp))
+                    }
+                    Column {
+                        Text("Motor v5 — Ley de Moore",
+                            fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                            color = TG.textPri, letterSpacing = (-0.3).sp)
+                        Text("P = V² · F · constante",
+                            fontSize = 10.sp, color = TG.textSec)
+                    }
+                }
+                Surface(shape = RoundedCornerShape(8.dp), color = powerColor.copy(alpha = 0.12f)) {
+                    Text("${powerScore.toInt()}",
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = powerColor)
+                }
+            }
+
+            // Barra de Power Score con gradiente
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Carga térmica", fontSize = 10.sp, color = TG.textSec)
+                    Text("${powerScore.toInt()} / 100", fontSize = 10.sp, color = powerColor)
+                }
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(8.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.White.copy(alpha = 0.06f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(powerScore / 100f)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(TG.green, TG.amber, TG.red)
+                                )
+                            )
+                    )
+                }
+            }
+
+            // Fila de métricas del motor
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                MooreMetric(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.ElectricBolt,
+                    label = "Potencia",
+                    value = "${powerScore.toInt()}%",
+                    color = powerColor
+                )
+                MooreMetric(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.Thermostat,
+                    label = "Tensión V",
+                    value = String.format("%.2fV", v * 1.2f),
+                    color = TG.teal
+                )
+                MooreMetric(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.Speed,
+                    label = "Eficiencia",
+                    value = "${efficiency.toInt()}%",
+                    color = when {
+                        efficiency >= 70f -> TG.green
+                        efficiency >= 40f -> TG.amber
+                        else              -> TG.red
+                    }
+                )
+            }
+
+            // Recomendación automática
+            val recommendation = when {
+                powerScore >= 80f -> "⚠️ Carga crítica — el procesador está al límite. Cerrar apps pesadas."
+                powerScore >= 60f -> "🌡️ Carga alta — vigilar temperatura. Reducir brillo y apps en segundo plano."
+                powerScore >= 35f -> "✅ Carga moderada — operación normal del motor."
+                else              -> "🟢 Carga mínima — el chip opera con máxima eficiencia."
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(powerColor.copy(alpha = 0.06f), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(recommendation, fontSize = 11.sp, color = TG.textSec, lineHeight = 16.sp,
+                    modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+fun MooreMetric(modifier: Modifier, icon: androidx.compose.ui.graphics.vector.ImageVector,
+                label: String, value: String, color: Color) {
+    Column(
+        modifier = modifier
+            .background(color.copy(alpha = 0.07f), RoundedCornerShape(10.dp))
+            .border(1.dp, color.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Icon(icon, null, tint = color, modifier = Modifier.size(16.dp))
+        Text(value, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = color)
+        Text(label, fontSize = 9.sp, color = TG.textSec, textAlign = TextAlign.Center)
+    }
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  HEADER BAR
