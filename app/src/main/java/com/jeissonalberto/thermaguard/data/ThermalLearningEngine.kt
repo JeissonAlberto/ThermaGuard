@@ -705,94 +705,6 @@ class ThermalLearningEngine(context: Context) {
         }).take(6)
     }
 
-
-    // ════════════════════════════════════════════════════════════════
-    //  MOTOR v5 — Ley de Moore: P = k·V²·F
-    //  Predice temperatura futura basada en carga actual del procesador
-    // ════════════════════════════════════════════════════════════════
-
-    /**
-     * Analiza la carga térmica actual usando el modelo de Moore y
-     * predice cuánto subirá la temperatura en los próximos 3 minutos.
-     *
-     * Sin root: usamos P ∝ V²·F donde V se estima del ratio de frecuencia.
-     * Con datos históricos: ajustamos k (constante del chip) por regresión.
-     */
-
-    // Power score basado en uso de CPU (sin acceso a /sys/cpufreq sin root)
-    private fun computePowerFromCpu(cpuUsage: Float): Float {
-        // Modelo Moore simplificado: P ∝ V²·F, aproximado con cpuUsage
-        val f = (cpuUsage / 100f).coerceIn(0f, 1f)
-        val v = 0.6f + 0.4f * f
-        return (v * v * f * 100f).coerceIn(0f, 100f)
-    }
-
-    fun analyzeMoore(snapshot: ThermalSnapshot): MoorePowerState {
-        // Calcular power score directamente (los campos se movieron fuera del @Entity)
-        val power = computePowerFromCpu(snapshot.cpuUsage)
-        val freqs = emptyList<Float>()  // sin root, frecuencias no disponibles
-        val avgF  = if (freqs.isEmpty()) 0f else freqs.average().toFloat()
-        val maxF  = freqs.maxOrNull() ?: 0f
-
-        // Constante k aprendida: cuántos °C sube por cada 10 puntos de power
-        // Se calibra con el historial: deltaTemp / deltaPower
-        val learnedK = prefs.getFloat("moore_k", 0.18f)   // default empírico para Snapdragon
-
-        // Predicción de subida en 3 min (3 ciclos de 1 min)
-        val currentTemp   = snapshot.batteryTemp
-        val expectedRise  = learnedK * power * 0.3f        // °C en ~3 min
-
-        // Actualizar k si tenemos suficientes muestras (regresión online simple)
-        val prevPower = prefs.getFloat("moore_prev_power", -1f)
-        val prevTemp  = prefs.getFloat("moore_prev_temp",  -1f)
-        if (prevPower >= 0f && prevTemp >= 0f) {
-            val deltaPower = power - prevPower
-            val deltaTemp  = currentTemp - prevTemp
-            if (kotlin.math.abs(deltaPower) > 5f && deltaTemp > 0f) {
-                val newK = (deltaTemp / (deltaPower * 0.3f)).coerceIn(0.05f, 0.8f)
-                val smoothK = learnedK * 0.85f + newK * 0.15f  // EMA para k
-                prefs.edit().putFloat("moore_k", smoothK).apply()
-            }
-        }
-        prefs.edit()
-            .putFloat("moore_prev_power", power)
-            .putFloat("moore_prev_temp", currentTemp)
-            .apply()
-
-        // Eficiencia: ¿está el chip trabajando más de lo necesario?
-        // Compara power score con cpuUsage — si power >> uso percibido, hay ineficiencia
-        val efficiencyRatio = if (power > 5f && snapshot.cpuUsage > 0f)
-            (snapshot.cpuUsage / power).coerceIn(0.1f, 2f) else 1f
-
-        // Recomendación según potencia y temperatura
-        val recommendation = when {
-            power >= 85f || currentTemp >= 48f            -> MooreAction.CRITICAL
-            power >= 70f && currentTemp >= 44f            -> MooreAction.WARN_THROTTLE
-            power >= 60f && freqs.size >= 4 && maxF > avgF * 1.4f -> MooreAction.BIG_LITTLE
-            power >= 55f || expectedRise >= 3f            -> MooreAction.REDUCE_LOAD
-            else                                          -> MooreAction.NONE
-        }
-
-        return MoorePowerState(
-            powerScore        = power,
-            freqsMHz          = freqs,
-            avgFreqMHz        = avgF,
-            maxFreqMHz        = maxF,
-            predictedTempRise = expectedRise,
-            recommendation    = recommendation,
-            efficiencyRatio   = efficiencyRatio
-        )
-    }
-
-    /** Mensaje de recomendación legible */
-    fun mooreAdvice(state: MoorePowerState): String = when (state.recommendation) {
-        MooreAction.NONE         -> "CPU eficiente · Temperatura estable"
-        MooreAction.REDUCE_LOAD  -> "Cierra apps en segundo plano para bajar carga"
-        MooreAction.BIG_LITTLE   -> "Núcleos grandes al límite · Migrar tareas livianas"
-        MooreAction.WARN_THROTTLE-> "⚠️ El sistema frenará el CPU en ~2 min"
-        MooreAction.CRITICAL     -> "🔴 Reducir uso inmediatamente"
-    }
-
     fun recordCooldown(minutes: Float) {
         avgCooldownMinutes = 0.3f * minutes + 0.7f * avgCooldownMinutes
     }
@@ -802,128 +714,62 @@ class ThermalLearningEngine(context: Context) {
     companion object {
         const val ThermalMonitorIntervalMin = 1
     }
-    // ── Variables en RAM (sin persistir cada ciclo) ─────────────────────
-    // Estas se sincronizan a disco solo en persistState()
-    @Volatile private var ramBaselineTemp: Float = -1f
-    @Volatile private var ramBaselineCpu: Float  = -1f
-    @Volatile private var ramEmaTemp: Float      = -1f
-    @Volatile private var ramEmaCpu: Float       = -1f
-    @Volatile private var ramSampleCount: Int    = 0
-    @Volatile private var ramMaxTemp: Float      = 0f
-    @Volatile private var ramRiskScore: Int      = 0
-    @Volatile private var ramConsecHot: Int      = 0
-    @Volatile private var ramConsecCool: Int     = 0
-    @Volatile private var ramDynThreshold: Float = 42f
-
-    // ── learnFast: opera 100% en RAM, sin I/O ───────────────────────────
-    fun learnFast(snapshot: ThermalSnapshot): LearnedProfile {
-        // Inicializar desde disco si es la primera vez
-        if (ramSampleCount == 0) {
-            ramBaselineTemp  = baselineTemp
-            ramBaselineCpu   = baselineCpu
-            ramEmaTemp       = emaTemp.takeIf { it > 0 } ?: snapshot.batteryTemp
-            ramEmaCpu        = emaCpu.takeIf  { it > 0 } ?: snapshot.cpuUsage
-            ramSampleCount   = sampleCount
-            ramMaxTemp       = maxRecordedTemp
-            ramDynThreshold  = dynamicThreshold
-        }
-
-        ramSampleCount++
-
-        // EMA adaptativo en RAM
-        val alphaT = emaAlpha(snapshot.batteryTemp, ramBaselineTemp.takeIf { it > 0f } ?: snapshot.batteryTemp)
-        val alphaC = emaAlpha(snapshot.cpuUsage,    ramBaselineCpu.takeIf  { it > 0f } ?: snapshot.cpuUsage)
-        ramEmaTemp = ramEmaTemp * (1f - alphaT) + snapshot.batteryTemp * alphaT
-        ramEmaCpu  = ramEmaCpu  * (1f - alphaC) + snapshot.cpuUsage   * alphaC
-
-        // Baseline: más rápido en los primeros 10 ciclos, luego más lento
-        val baseAlpha = when {
-            ramSampleCount < 5  -> 0.4f   // aprende muy rápido al inicio
-            ramSampleCount < 15 -> 0.2f
-            ramSampleCount < 50 -> 0.08f
-            else                -> 0.03f  // refinamiento lento largo plazo
-        }
-        ramBaselineTemp = ramBaselineTemp * (1f - baseAlpha) + snapshot.batteryTemp * baseAlpha
-        ramBaselineCpu  = ramBaselineCpu  * (1f - baseAlpha) + snapshot.cpuUsage   * baseAlpha
-
-        if (snapshot.batteryTemp > ramMaxTemp) ramMaxTemp = snapshot.batteryTemp
-
-        // Histéresis calor/frío en RAM
-        if (snapshot.batteryTemp >= 40f) {
-            ramConsecHot++
-            ramConsecCool = 0
-        } else {
-            ramConsecCool++
-            if (ramConsecCool >= 2) {
-                if (ramConsecHot > 0) ramConsecHot--
-            }
-        }
-
-        // Umbral dinámico en RAM
-        ramDynThreshold = if (ramSampleCount < 20) 42f
-        else (ramBaselineTemp + 8f).coerceIn(37f, 50f)
-
-        // Risk score en RAM
-        val currentTrend = when {
-            ramConsecHot >= 3 -> TempTrend.RISING_FAST
-            ramConsecHot >= 1 -> TempTrend.RISING
-            else              -> TempTrend.STABLE
-        }
-        ramRiskScore = computeRiskScore(
-            snapshot.batteryTemp, snapshot.cpuUsage,
-            snapshot.isCharging, ramConsecHot,
-            snapshot.modemTemp, currentTrend
-        )
-
-        // Detectar anomalía simple en RAM
-        val deviation = kotlin.math.abs(snapshot.batteryTemp - ramBaselineTemp)
-        val isAnomalyNow = ramSampleCount > 5 && deviation > 6f
-
-        // Construir perfil mínimo (sin acceso a disco)
-        return LearnedProfile(
-            samplesCollected     = ramSampleCount,
-            baselineTemp         = ramBaselineTemp,
-            baselineCpu          = ramBaselineCpu,
-            averageTemp          = ramEmaTemp,
-            averageCpu           = ramEmaCpu,
-            maxRecordedTemp      = ramMaxTemp,
-            minRecordedTemp      = minRecordedTemp,
-            tempAnomaly          = deviation,
-            isAnomaly            = isAnomalyNow,
-            trend                = currentTrend,
-            likelyCause          = LearnedCause.UNKNOWN,
-            personalRisk         = when {
-                ramRiskScore >= 70 -> RiskLevel.CRITICAL
-                ramRiskScore >= 40 -> RiskLevel.HIGH
-                ramRiskScore >= 20 -> RiskLevel.MEDIUM
-                else               -> RiskLevel.NORMAL
-            },
-            consecutiveHotReadings = ramConsecHot,
-            chargingHeatPct      = chargingHeatPct,
-            highCpuHeatPct       = highCpuHeatPct,
-            dynamicThreshold     = ramDynThreshold,
-            topHeatApp           = topHeatApp,
-            topHeatAppScore      = 0f,
-            hourAnomaly          = null,
-            expectedThisHour     = null,
-            heatSessionsToday    = heatSessionsToday,
-            avgCooldownMinutes   = avgCooldownMinutes,
-            riskScore            = ramRiskScore
-        )
-    }
-
-    // ── persistState: escribe todo a SharedPreferences en batch ─────────
-    fun persistState() {
-        if (ramSampleCount == 0) return
-        prefs.edit()
-            .putFloat("baseline_temp",       ramBaselineTemp)
-            .putFloat("baseline_cpu",        ramBaselineCpu)
-            .putFloat("ema_temp",            ramEmaTemp)
-            .putFloat("ema_cpu",             ramEmaCpu)
-            .putInt  ("sample_count",        ramSampleCount)
-            .putFloat("max_recorded_temp",   ramMaxTemp)
-            .putInt  ("consec_hot",          ramConsecHot)
-            .apply()  // async — no bloquea
-    }
-
 }
+
+// ========== DATA MODELS ==========
+
+data class LearnedProfile(
+    val samplesCollected: Int,
+    val baselineTemp: Float,
+    val baselineCpu: Float,
+    val averageTemp: Float,
+    val averageCpu: Float,
+    val maxRecordedTemp: Float,
+    val minRecordedTemp: Float,
+    val tempAnomaly: Float,
+    val isAnomaly: Boolean = false,
+    val trend: TempTrend,
+    val likelyCause: LearnedCause,
+    val personalRisk: RiskLevel,
+    val consecutiveHotReadings: Int,
+    val chargingHeatPct: Float,
+    val highCpuHeatPct: Float,
+    val dynamicThreshold: Float,
+    val topHeatApp: String,
+    val topHeatAppScore: Float,
+    val hourAnomaly: Float?,
+    val expectedThisHour: Float?,
+    // ---- Nuevos campos v3 ----
+    val heatSessionsToday: Int = 0,
+    val avgCooldownMinutes: Float = 5f,
+    val riskScore: Int = 0
+)
+
+data class TempPrediction(
+    val predictedTemp: Float,
+    val confidence: PredictionConfidence,
+    val trendText: String,
+    val slope: Float = 0f
+)
+
+data class BatteryHealthScore(
+    val score: Int,
+    val level: String,
+    val factors: List<String>
+)
+
+data class HourlyDataPoint(val hour: Int, val avgTemp: Float)
+
+data class SmartTip(
+    val icon: String,
+    val title: String,
+    val detail: String,
+    val priority: Int,
+    val category: TipCategory = TipCategory.INFO
+)
+
+enum class TempTrend { STABLE, RISING, RISING_FAST }
+enum class LearnedCause { UNKNOWN, CHARGING_HABIT, HIGH_CPU_APPS, BACKGROUND_DRAIN }
+enum class RiskLevel { NORMAL, LOW, MEDIUM, HIGH, CRITICAL }
+enum class PredictionConfidence { LOW, MEDIUM, HIGH }
+enum class TipCategory { INFO, WARNING, CRITICAL, PREDICTION, ANOMALY, TREND, RISK, APP_CORRELATION, LEARNED_PATTERN }
