@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import kotlin.math.cos
 import kotlin.math.sin
+import android.graphics.Color as AndroidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -317,9 +318,9 @@ fun PremiumGauge(
             // Dividido en 3 segmentos: verde→amarillo→rojo
             val seg = arcSweep / 3f
             listOf(
-                Triple(arcStart,          seg,  android.graphics.Color.parseColor("#00E676")),
-                Triple(arcStart + seg,    seg,  android.graphics.Color.parseColor("#FFD740")),
-                Triple(arcStart + seg*2f, seg,  android.graphics.Color.parseColor("#FF1744")),
+                Triple(arcStart,          seg,  AndroidColor.parseColor("#00E676")),
+                Triple(arcStart + seg,    seg,  AndroidColor.parseColor("#FFD740")),
+                Triple(arcStart + seg*2f, seg,  AndroidColor.parseColor("#FF1744")),
             ).forEach { (start, sweep, col) ->
                 val segEnd   = start + sweep
                 val progEnd  = arcStart + tempPct * arcSweep
