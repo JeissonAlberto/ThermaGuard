@@ -72,9 +72,11 @@ class SensorRepository(private val context: Context) {
             brightnessLevel  = brightness,
             ramUsageMb       = ramUsage
         )
-        snap.allZones    = allZones
-        snap.perCoreUsage = perCoreUsage
-        snap.topProcesses = topProcesses
+        snap.allZones         = allZones
+        snap.perCoreUsage     = perCoreUsage
+        snap.topProcesses     = topProcesses
+        snap.cpuFreqsMHz      = readCpuFrequenciesMHz()
+        snap.thermalPowerScore = estimateThermalPowerScore()
         snap
     }
 
