@@ -211,7 +211,9 @@ class ThermalLearningEngine(context: Context) {
         }
 
         // Correlacion app-temp
-        if (snapshot.topApp.isNotEmpty() && snapshot.batteryTemp >= 38f) {
+        val BLOCKED_APPS = setOf("thermaguard", "android", "systemui", "launcher")
+        if (snapshot.topApp.isNotEmpty() && snapshot.batteryTemp >= 38f
+            && BLOCKED_APPS.none { snapshot.topApp.lowercase().contains(it) }) {
             val prev  = getAppHeatScore(snapshot.topApp)
             val score = prev * 0.85f + snapshot.batteryTemp * 0.15f
             setAppHeatScore(snapshot.topApp, score)
