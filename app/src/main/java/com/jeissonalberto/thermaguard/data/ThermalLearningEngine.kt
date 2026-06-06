@@ -484,14 +484,33 @@ class ThermalLearningEngine(context: Context) {
         temp: Float,
         cpuUsage: Float,
         isCharging: Boolean,
-        consecutiveHot: Int
+        consecutiveHot: Int,
+        modemTemp: Float = 0f,
+        trend: TempTrend = TempTrend.STABLE
     ): Int {
-        val chargingHeat = if (isCharging) 1f else 0f
-        val raw = 0.4f * (temp / 55f) +
-                  0.3f * (cpuUsage / 100f) +
-                  0.2f * chargingHeat +
-                  0.1f * (consecutiveHot / 10f)
-        return (raw * 100f).toInt().coerceIn(0, 100)
+        // Temperatura: factor principal (0-50 pts) — escala no lineal
+        val tempPts = when {
+            temp >= 52f -> 50f
+            temp >= 48f -> 43f
+            temp >= 45f -> 36f
+            temp >= 42f -> 27f
+            temp >= 39f -> 17f
+            temp >= 36f -> 8f
+            else        -> 0f
+        }
+        // CPU: 0-20 pts
+        val cpuPts = cpuUsage / 100f * 20f
+        // Tendencia sostenida: 0-15 pts (mas peligroso que un spike puntual)
+        val trendPts = when (trend) {
+            TempTrend.RISING_FAST -> (consecutiveHot * 2.5f).coerceAtMost(15f)
+            TempTrend.RISING      -> (consecutiveHot * 1.0f).coerceAtMost(8f)
+            TempTrend.STABLE      -> 0f
+        }
+        // Carga simultanea con calor: +10 pts
+        val chargingPts = if (isCharging && temp >= 38f) 10f else 0f
+        // Modem caliente 5G/LTE: hasta +5 pts
+        val modemPts = if (modemTemp >= 45f) 5f else if (modemTemp >= 40f) 2f else 0f
+        return (tempPts + cpuPts + trendPts + chargingPts + modemPts).toInt().coerceIn(0, 100)
     }
 
     // ========== PERFIL COMPLETO ==========
