@@ -705,6 +705,84 @@ class ThermalLearningEngine(context: Context) {
         }).take(6)
     }
 
+
+    // ════════════════════════════════════════════════════════════════
+    //  MOTOR v5 — Ley de Moore: P = k·V²·F
+    //  Predice temperatura futura basada en carga actual del procesador
+    // ════════════════════════════════════════════════════════════════
+
+    /**
+     * Analiza la carga térmica actual usando el modelo de Moore y
+     * predice cuánto subirá la temperatura en los próximos 3 minutos.
+     *
+     * Sin root: usamos P ∝ V²·F donde V se estima del ratio de frecuencia.
+     * Con datos históricos: ajustamos k (constante del chip) por regresión.
+     */
+    fun analyzeMoore(snapshot: ThermalSnapshot): MoorePowerState {
+        val power = snapshot.thermalPowerScore   // 0-100, ya calculado
+        val freqs = snapshot.cpuFreqsMHz
+        val avgF  = if (freqs.isEmpty()) 0f else freqs.average().toFloat()
+        val maxF  = freqs.maxOrNull() ?: 0f
+
+        // Constante k aprendida: cuántos °C sube por cada 10 puntos de power
+        // Se calibra con el historial: deltaTemp / deltaPower
+        val learnedK = prefs.getFloat("moore_k", 0.18f)   // default empírico para Snapdragon
+
+        // Predicción de subida en 3 min (3 ciclos de 1 min)
+        val currentTemp   = snapshot.batteryTemp
+        val expectedRise  = learnedK * power * 0.3f        // °C en ~3 min
+
+        // Actualizar k si tenemos suficientes muestras (regresión online simple)
+        val prevPower = prefs.getFloat("moore_prev_power", -1f)
+        val prevTemp  = prefs.getFloat("moore_prev_temp",  -1f)
+        if (prevPower >= 0f && prevTemp >= 0f) {
+            val deltaPower = power - prevPower
+            val deltaTemp  = currentTemp - prevTemp
+            if (kotlin.math.abs(deltaPower) > 5f && deltaTemp > 0f) {
+                val newK = (deltaTemp / (deltaPower * 0.3f)).coerceIn(0.05f, 0.8f)
+                val smoothK = learnedK * 0.85f + newK * 0.15f  // EMA para k
+                prefs.edit().putFloat("moore_k", smoothK).apply()
+            }
+        }
+        prefs.edit()
+            .putFloat("moore_prev_power", power)
+            .putFloat("moore_prev_temp", currentTemp)
+            .apply()
+
+        // Eficiencia: ¿está el chip trabajando más de lo necesario?
+        // Compara power score con cpuUsage — si power >> uso percibido, hay ineficiencia
+        val efficiencyRatio = if (power > 5f && snapshot.cpuUsage > 0f)
+            (snapshot.cpuUsage / power).coerceIn(0.1f, 2f) else 1f
+
+        // Recomendación según potencia y temperatura
+        val recommendation = when {
+            power >= 85f || currentTemp >= 48f            -> MooreAction.CRITICAL
+            power >= 70f && currentTemp >= 44f            -> MooreAction.WARN_THROTTLE
+            power >= 60f && freqs.size >= 4 && maxF > avgF * 1.4f -> MooreAction.BIG_LITTLE
+            power >= 55f || expectedRise >= 3f            -> MooreAction.REDUCE_LOAD
+            else                                          -> MooreAction.NONE
+        }
+
+        return MoorePowerState(
+            powerScore        = power,
+            freqsMHz          = freqs,
+            avgFreqMHz        = avgF,
+            maxFreqMHz        = maxF,
+            predictedTempRise = expectedRise,
+            recommendation    = recommendation,
+            efficiencyRatio   = efficiencyRatio
+        )
+    }
+
+    /** Mensaje de recomendación legible */
+    fun mooreAdvice(state: MoorePowerState): String = when (state.recommendation) {
+        MooreAction.NONE         -> "CPU eficiente · Temperatura estable"
+        MooreAction.REDUCE_LOAD  -> "Cierra apps en segundo plano para bajar carga"
+        MooreAction.BIG_LITTLE   -> "Núcleos grandes al límite · Migrar tareas livianas"
+        MooreAction.WARN_THROTTLE-> "⚠️ El sistema frenará el CPU en ~2 min"
+        MooreAction.CRITICAL     -> "🔴 Reducir uso inmediatamente"
+    }
+
     fun recordCooldown(minutes: Float) {
         avgCooldownMinutes = 0.3f * minutes + 0.7f * avgCooldownMinutes
     }
