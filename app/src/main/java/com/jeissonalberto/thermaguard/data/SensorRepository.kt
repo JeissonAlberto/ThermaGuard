@@ -462,6 +462,50 @@ class SensorRepository(private val context: Context) {
             } ?: ""
     } catch (e: Exception) { "" }
 
+
+    // ── Frecuencia CPU por núcleo (kHz → MHz) ────────────────────────────────
+    fun readCpuFrequenciesMHz(): List<Float> {
+        val result = mutableListOf<Float>()
+        try {
+            val cpuDir = java.io.File("/sys/devices/system/cpu/")
+            val cores = cpuDir.listFiles { f -> f.name.matches(Regex("cpu\\d+")) }
+                ?.sortedBy { it.name.removePrefix("cpu").toIntOrNull() ?: 99 } ?: return result
+            for (core in cores) {
+                val freqFile = java.io.File(core, "cpufreq/scaling_cur_freq")
+                val maxFile  = java.io.File(core, "cpufreq/cpuinfo_max_freq")
+                if (freqFile.exists()) {
+                    val khz = freqFile.readText().trim().toLongOrNull() ?: continue
+                    result.add(khz / 1000f)  // → MHz
+                }
+            }
+        } catch (_: Exception) {}
+        return result
+    }
+
+    // ── Potencia térmica estimada por Moore: P = k·V²·F ──────────────────────
+    // Sin root no podemos leer voltaje real. Usamos modelo lineal: V ≈ 0.6 + 0.4*(F/Fmax)
+    fun estimateThermalPowerScore(): Float {
+        return try {
+            val cpuDir  = java.io.File("/sys/devices/system/cpu/")
+            val cores   = cpuDir.listFiles { f -> f.name.matches(Regex("cpu\\d+")) } ?: return 0f
+            var totalPower = 0f
+            var activeCores = 0
+            for (core in cores) {
+                val curFile = java.io.File(core, "cpufreq/scaling_cur_freq")
+                val maxFile = java.io.File(core, "cpufreq/cpuinfo_max_freq")
+                if (!curFile.exists() || !maxFile.exists()) continue
+                val cur = curFile.readText().trim().toLongOrNull() ?: continue
+                val max = maxFile.readText().trim().toLongOrNull()?.takeIf { it > 0 } ?: continue
+                val fRatio = cur.toFloat() / max.toFloat()          // 0.0 – 1.0
+                val vNorm  = 0.6f + 0.4f * fRatio                   // voltaje normalizado
+                val power  = vNorm * vNorm * fRatio                  // P ∝ V²·F
+                totalPower += power
+                activeCores++
+            }
+            if (activeCores == 0) 0f else (totalPower / activeCores * 100f).coerceIn(0f, 100f)
+        } catch (_: Exception) { 0f }
+    }
+
     fun analyzeHeatCauses(snapshot: ThermalSnapshot): List<HeatCause> {
         val causes = mutableListOf<HeatCause>()
         if (snapshot.cpuUsage > 70f) causes.add(HeatCause("CPU saturada",
