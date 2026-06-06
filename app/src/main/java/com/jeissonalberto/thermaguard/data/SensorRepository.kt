@@ -366,18 +366,39 @@ class SensorRepository(private val context: Context) {
     }
 
     private suspend fun readCpuUsage(): Float = withContext(Dispatchers.IO) {
+        // Método 1: /proc/stat (funciona en la mayoría de dispositivos)
         try {
-            val s1 = File("/proc/stat").readLines().firstOrNull { it.startsWith("cpu ") } ?: return@withContext 0f
-            delay(400L)
-            val s2 = File("/proc/stat").readLines().firstOrNull { it.startsWith("cpu ") } ?: return@withContext 0f
-            val v1 = s1.trim().split("\\s+".toRegex()).drop(1).mapNotNull { it.toLongOrNull() }
-            val v2 = s2.trim().split("\\s+".toRegex()).drop(1).mapNotNull { it.toLongOrNull() }
-            if (v1.size < 4 || v2.size < 4) return@withContext 0f
-            val totalDiff = v2.sum() - v1.sum()
-            val idleDiff  = v2[3] - v1[3]
-            if (totalDiff <= 0) 0f
-            else ((totalDiff - idleDiff).toFloat() / totalDiff.toFloat() * 100f).coerceIn(0f, 100f)
-        } catch (e: Exception) { 0f }
+            val s1 = File("/proc/stat").readLines().firstOrNull { it.startsWith("cpu ") }
+            if (s1 != null) {
+                delay(350L)
+                val s2 = File("/proc/stat").readLines().firstOrNull { it.startsWith("cpu ") } ?: return@withContext 0f
+                val v1 = s1.trim().split("\s+".toRegex()).drop(1).mapNotNull { it.toLongOrNull() }
+                val v2 = s2.trim().split("\s+".toRegex()).drop(1).mapNotNull { it.toLongOrNull() }
+                if (v1.size >= 4 && v2.size >= 4) {
+                    val totalDiff = v2.sum() - v1.sum()
+                    val idleDiff  = v2[3] - v1[3]
+                    if (totalDiff > 0) {
+                        val pct = ((totalDiff - idleDiff).toFloat() / totalDiff.toFloat() * 100f).coerceIn(0f, 100f)
+                        if (pct > 0f) return@withContext pct
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        // Método 2: /proc/loadavg (más compatible con Samsung)
+        try {
+            val load = File("/proc/loadavg").readText().trim().split(" ")[0].toFloat()
+            // load average de 1 minuto / núcleos = % aproximado
+            val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
+            return@withContext (load / cores * 100f).coerceIn(0f, 100f)
+        } catch (_: Exception) {}
+        // Método 3: ActivityManager — uso de procesos
+        try {
+            val procs = activityManager.runningAppProcesses ?: return@withContext 0f
+            val foreground = procs.count { it.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE }
+            val total = procs.size.coerceAtLeast(1)
+            return@withContext (foreground.toFloat() / total * 80f).coerceIn(5f, 85f)
+        } catch (_: Exception) {}
+        0f
     }
 
     // ============================================================
@@ -405,13 +426,29 @@ class SensorRepository(private val context: Context) {
     private fun readRamUsage(): Int = try {
         val info = ActivityManager.MemoryInfo()
         activityManager.getMemoryInfo(info)
-        ((info.totalMem - info.availMem) / 1024 / 1024).toInt()
+        // Devolver RAM LIBRE en MB (más útil para el usuario)
+        (info.availMem / 1024 / 1024).toInt()
     } catch (e: Exception) { 0 }
 
     private fun getTopApp(): String = try {
+        val ownPkg = context.packageName
+        val systemPkgs = setOf("android","com.android","com.samsung","systemui","launcher","com.google.android.gms")
         activityManager.runningAppProcesses
-            ?.firstOrNull { it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND }
-            ?.processName?.split(".")?.last() ?: ""
+            ?.filter { it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND }
+            ?.firstOrNull { proc ->
+                proc.processName != ownPkg &&
+                systemPkgs.none { sys -> proc.processName.startsWith(sys) }
+            }
+            ?.processName
+            ?.let { pkg ->
+                // Intentar obtener nombre amigable de la app
+                try {
+                    val pm = context.packageManager
+                    pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
+                } catch (e: Exception) {
+                    pkg.split(".").last().replaceFirstChar { it.uppercase() }
+                }
+            } ?: ""
     } catch (e: Exception) { "" }
 
     fun analyzeHeatCauses(snapshot: ThermalSnapshot): List<HeatCause> {
