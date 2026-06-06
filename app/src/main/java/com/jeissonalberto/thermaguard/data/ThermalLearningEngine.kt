@@ -425,7 +425,7 @@ class ThermalLearningEngine(context: Context) {
         val tips = mutableListOf<String>()
         if (hotPenalty > 5)  tips.add("Redujo por ${totalHotMinutes} min en zona caliente")
         if (critPenalty > 0) tips.add("${totalCriticalMinutes} min en zona critica registrados")
-        if (maxRecordedTemp >= 45f) tips.add("Pico de ${maxRecordedTemp.toInt()}C registrado")
+        if (sampleCount >= 10 && maxRecordedTemp >= 45f) tips.add("Pico de ${maxRecordedTemp.toInt()}C registrado")
         if (score >= 85) tips.add("Habitos de temperatura saludables")
 
         return BatteryHealthScore(score, level, tips)
@@ -493,7 +493,7 @@ class ThermalLearningEngine(context: Context) {
             else                          -> LearnedCause.UNKNOWN
         }
         val personalRisk = when {
-            maxRecordedTemp > 0f && snapshot.batteryTemp > maxRecordedTemp - 2f -> RiskLevel.CRITICAL
+            sampleCount >= 20 && maxRecordedTemp > 0f && snapshot.batteryTemp > maxRecordedTemp - 2f -> RiskLevel.CRITICAL
             tempAnomaly > 8f  -> RiskLevel.HIGH
             tempAnomaly > 4f  -> RiskLevel.MEDIUM
             tempAnomaly > 0f  -> RiskLevel.LOW
@@ -602,7 +602,7 @@ class ThermalLearningEngine(context: Context) {
                 5, TipCategory.TREND))
 
         // Record historico
-        if (profile.personalRisk == RiskLevel.CRITICAL && profile.maxRecordedTemp > 0f)
+        if (profile.personalRisk == RiskLevel.CRITICAL && profile.maxRecordedTemp > 0f && profile.samplesCollected >= 20)
             tips.add(SmartTip("🏆", "Cerca del maximo historico",
                 "Llegando al record de ${profile.maxRecordedTemp.toInt()}C. Deja el telefono en reposo ${profile.avgCooldownMinutes.toInt()} min en superficie fria.",
                 5, TipCategory.RISK))
