@@ -32,11 +32,17 @@ private val ComponentDiagnosis.heatColor: Color get() = when (status) {
     ComponentStatus.WARM     -> Color(0xFFFFD740)
     else                     -> TG.green
 }
-private val ComponentDiagnosis.heatScore: Float get() = when (status) {
-    ComponentStatus.CRITICAL -> 0.9f
-    ComponentStatus.HOT      -> 0.65f
-    ComponentStatus.WARM     -> 0.38f
-    else                     -> 0.15f
+private val ComponentDiagnosis.heatScore: Float get() {
+    // La barra refleja la temperatura real, no un valor fijo por status
+    val (minT, maxT) = when (component) {
+        ThermalComponent.CPU     -> Pair(30f, 82f)
+        ThermalComponent.GPU     -> Pair(28f, 65f)
+        ThermalComponent.DISPLAY -> Pair(25f, 62f)
+        ThermalComponent.MODEM   -> Pair(25f, 60f)
+        ThermalComponent.BATTERY -> Pair(20f, 52f)
+        else                     -> Pair(25f, 65f)
+    }
+    return ((temp - minT) / (maxT - minT)).coerceIn(0.05f, 1f)
 }
 
 @Composable
