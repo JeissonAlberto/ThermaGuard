@@ -30,7 +30,8 @@ class ThermalMonitorService : Service() {
         const val NOTIF_ID        = 1001
         const val ALERT_NOTIF_ID  = 1002
         const val ACTION_STOP     = "STOP_MONITOR"
-        const val INTERVAL_MS     = 30_000L
+        const val INTERVAL_MS     = 60_000L  // Reducido — solo actualiza notif, VM lee los datos
+        const val INTERVAL_MS_ACTIVE = 20_000L
         var isRunning = false
 
         // Estado compartido para que el VM pueda leer sin duplicar lecturas
