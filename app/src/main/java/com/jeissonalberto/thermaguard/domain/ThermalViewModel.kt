@@ -67,6 +67,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     val causes     = sensorRepo.analyzeHeatCauses(snapshot)
                     val diagnoses  = sensorRepo.diagnoseComponents(snapshot)
                     val profile    = learningEngine.learn(snapshot)
+                    val silicon    = learningEngine.analyzeSilicon(snapshot)
                     val prediction = learningEngine.predictNextTemp()
                     val health     = learningEngine.computeBatteryHealthScore()
                     val hourly     = learningEngine.getHourlyProfile()
@@ -105,6 +106,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                             alertThreshold     = dynThreshold,
                             isLoading          = false,
                             isMonitoring       = true,
+                            siliconAnalysis    = silicon,
                             gameModeState      = gameMode,
                             safeChargeState    = safeCharge,
                             isCoolingDown      = isCooling,
