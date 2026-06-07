@@ -918,7 +918,7 @@ class ThermalLearningEngine(context: Context) {
                 id = "top_app_cpu",
                 category = CoolingCategory.BACKGROUND,
                 icon = "📱",
-                title = ""${snapshot.topApp.split('.').last()}" está usando ${cpu.toInt()}% del CPU",
+                title = "${snapshot.topApp.split('.').last()} esta usando ${cpu.toInt()}% del CPU",
                 detail = "Esta app es la causa principal del calor actual. " +
                          "Ciérrala o limítala en Ajustes → Apps → Batería → Restringida.",
                 impactDegrees = silicon.moorePower / 30f, effort = 1
