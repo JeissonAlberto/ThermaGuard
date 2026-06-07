@@ -19,6 +19,7 @@ data class ThermalUiState(
     val hourlyProfile: List<HourlyDataPoint> = emptyList(),
     val componentDiagnoses: List<ComponentDiagnosis> = emptyList(),
     val autoActionsLog: List<AutoAction> = emptyList(),
+    val siliconAnalysis: SiliconAnalysis? = null,
     val isMonitoring: Boolean = false,
     val alertThreshold: Float = 43f,
     val isLoading: Boolean = true,
