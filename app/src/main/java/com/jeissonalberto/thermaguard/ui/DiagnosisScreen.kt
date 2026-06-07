@@ -25,6 +25,20 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
 
+// Nivel de calor de ComponentDiagnosis (basado en ComponentStatus)
+private val ComponentDiagnosis.heatColor: Color get() = when (status) {
+    ComponentStatus.CRITICAL -> TG.red
+    ComponentStatus.HOT      -> TG.amber
+    ComponentStatus.WARM     -> Color(0xFFFFD740)
+    else                     -> TG.green
+}
+private val ComponentDiagnosis.heatScore: Float get() = when (status) {
+    ComponentStatus.CRITICAL -> 0.9f
+    ComponentStatus.HOT      -> 0.65f
+    ComponentStatus.WARM     -> 0.38f
+    else                     -> 0.15f
+}
+
 @Composable
 fun DiagnosisScreen(uiState: ThermalUiState) {
     val scroll = rememberScrollState()
@@ -34,7 +48,6 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
     val accent = TG.accentFor(level)
 
     Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
-        // Orb radial
         Box(modifier = Modifier
             .size(350.dp).align(Alignment.TopCenter).offset(y = (-60).dp).blur(100.dp)
             .background(TG.glowFor(level).copy(alpha = 0.35f), CircleShape))
@@ -67,7 +80,6 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
                         }
                     }
                 }
-                // Temp grande en badge
                 Box(modifier = Modifier.clip(RoundedCornerShape(14.dp))
                     .background(accent.copy(alpha = 0.1f))
                     .border(1.dp, accent.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
@@ -77,16 +89,15 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
                 }
             }
 
-            // Radar visual
+            // Radar
             if (diags.isNotEmpty()) ComponentRadar(diags = diags, accent = accent)
 
-            // Estado loading
+            // Loading
             if (diags.isEmpty()) {
                 Box(modifier = Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp)).background(TG.glass)
                     .border(1.dp, TG.glassBorder, RoundedCornerShape(20.dp))
-                    .padding(40.dp),
-                    contentAlignment = Alignment.Center) {
+                    .padding(40.dp), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         CircularProgressIndicator(color = accent, modifier = Modifier.size(32.dp), strokeWidth = 2.dp)
@@ -94,11 +105,11 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
                     }
                 }
             } else {
-                // Grid 2x2 para los componentes principales
-                val mainDiags = diags.take(4)
-                val restDiags = diags.drop(4)
+                // Grid 2x2 primeros 4
+                val main = diags.take(4)
+                val rest = diags.drop(4)
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    mainDiags.chunked(2).forEach { row ->
+                    main.chunked(2).forEach { row ->
                         Row(modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             row.forEach { diag ->
@@ -107,12 +118,10 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
                             if (row.size == 1) Spacer(Modifier.weight(1f))
                         }
                     }
-                    // Resto en lista
-                    restDiags.forEach { diag -> ComponentCard(diag = diag) }
+                    rest.forEach { diag -> ComponentCard(diag = diag) }
                 }
             }
 
-            // App activa
             if (snap.topApp.isNotEmpty() && snap.cpuUsage > 30f)
                 TopAppCard(appName = snap.topApp, cpuPct = snap.cpuUsage)
 
@@ -121,26 +130,19 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  COMPONENT RADAR
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── RADAR ────────────────────────────────────────────────────────────────────
 @Composable
 fun ComponentRadar(diags: List<ComponentDiagnosis>, accent: Color) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
-            .border(1.dp, TG.glassBorder, RoundedCornerShape(20.dp))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()
+        .clip(RoundedCornerShape(20.dp)).background(TG.glass)
+        .border(1.dp, TG.glassBorder, RoundedCornerShape(20.dp))
+        .padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.Radar, null, tint = accent, modifier = Modifier.size(16.dp))
-            Text("Mapa de calor", fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold, color = TG.textPri)
+            Text("Mapa de calor", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
             Spacer(Modifier.weight(1f))
-            // Leyenda
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 LegendDot(TG.green, "OK")
                 LegendDot(TG.amber, "Cálido")
@@ -148,69 +150,54 @@ fun ComponentRadar(diags: List<ComponentDiagnosis>, accent: Color) {
             }
         }
 
-        Box(modifier = Modifier.fillMaxWidth().height(210.dp),
-            contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
             val inf = rememberInfiniteTransition(label = "radar")
             val rot by inf.animateFloat(0f, 360f,
                 infiniteRepeatable(tween(8000, easing = LinearEasing)), label = "r")
 
-            androidx.compose.foundation.Canvas(modifier = Modifier.size(185.dp)) {
-                val cx = size.width / 2f
-                val cy = size.height / 2f
-                val maxR = size.minDimension / 2f * 0.88f
+            androidx.compose.foundation.Canvas(modifier = Modifier.size(180.dp)) {
+                val cx = size.width / 2f; val cy = size.height / 2f
+                val maxR = size.minDimension / 2f * 0.85f
                 val n = diags.size.coerceAtLeast(3)
 
-                // Línea de barrido (radar scan)
+                // Barrido radar
                 val scanRad = Math.toRadians(rot.toDouble())
-                drawLine(accent.copy(alpha = 0.3f),
-                    Offset(cx, cy),
-                    Offset(cx + (maxR * cos(scanRad)).toFloat(), cy + (maxR * sin(scanRad)).toFloat()),
-                    strokeWidth = 1.5f)
-                // Halo de barrido
-                drawArc(accent.copy(alpha = 0.06f), rot - 40f, 40f, true,
+                drawLine(accent.copy(alpha = 0.28f), Offset(cx, cy),
+                    Offset(cx + (maxR * cos(scanRad)).toFloat(), cy + (maxR * sin(scanRad)).toFloat()), 1.5f)
+                drawArc(accent.copy(alpha = 0.05f), rot - 45f, 45f, true,
                     Offset(cx - maxR, cy - maxR), Size(maxR * 2, maxR * 2))
 
-                // Anillos de referencia
+                // Anillos
                 for (ring in 1..3) {
-                    val r = maxR * ring / 3f
-                    drawCircle(Color.White.copy(alpha = if (ring == 3) 0.12f else 0.05f),
-                        radius = r, center = Offset(cx, cy), style = Stroke(1.2f))
+                    drawCircle(Color.White.copy(alpha = if (ring == 3) 0.10f else 0.04f),
+                        maxR * ring / 3f, Offset(cx, cy), style = Stroke(1.2f))
                 }
 
-                // Puntos de componente
+                // Puntos de componentes
                 diags.forEachIndexed { i, d ->
-                    val angle = (2 * PI / n * i) - PI / 2
-                    val norm  = (d.score / 100f).coerceIn(0f, 1f)
-                    val r     = maxR * (0.25f + norm * 0.75f)
-                    val dx = cx + (r * cos(angle)).toFloat()
-                    val dy = cy + (r * sin(angle)).toFloat()
-                    val dotC = when {
-                        d.score >= 70 -> android.graphics.Color.parseColor("#FF5252")
-                        d.score >= 40 -> android.graphics.Color.parseColor("#FFD740")
-                        else          -> android.graphics.Color.parseColor("#00E676")
-                    }
-                    // Línea al centro
-                    drawLine(Color(dotC).copy(alpha = 0.2f), Offset(cx, cy), Offset(dx, dy), strokeWidth = 1f)
-                    // Halo
-                    drawCircle(Color(dotC).copy(alpha = 0.25f), 11f, Offset(dx, dy))
-                    // Punto
-                    drawCircle(Color(dotC), 5.5f, Offset(dx, dy))
+                    val ang  = (2 * PI / n * i) - PI / 2
+                    val norm = d.heatScore
+                    val r    = maxR * (0.22f + norm * 0.78f)
+                    val dx = cx + (r * cos(ang)).toFloat()
+                    val dy = cy + (r * sin(ang)).toFloat()
+                    val dotC = d.heatColor
+                    drawLine(dotC.copy(alpha = 0.18f), Offset(cx, cy), Offset(dx, dy), 1f)
+                    drawCircle(dotC.copy(alpha = 0.22f), 10f, Offset(dx, dy))
+                    drawCircle(dotC, 5f, Offset(dx, dy))
                 }
             }
 
-            // Labels fuera del canvas
+            // Labels
             diags.forEachIndexed { i, d ->
-                val n     = diags.size.coerceAtLeast(3)
-                val angle = (2 * PI / n * i) - PI / 2
-                val r     = 98f
-                val dx = (r * cos(angle)).dp
-                val dy = (r * sin(angle)).dp
+                val n = diags.size.coerceAtLeast(3)
+                val ang = (2 * PI / n * i) - PI / 2
+                val r = 96f
+                val dx = (r * cos(ang)).dp
+                val dy = (r * sin(ang)).dp
                 Column(modifier = Modifier.offset(dx, dy),
                     horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(d.component, fontSize = 7.sp, color = TG.textSec, textAlign = TextAlign.Center)
-                    Text("${d.temp.toInt()}°", fontSize = 8.sp, fontWeight = FontWeight.Bold,
-                        color = when {
-                            d.score >= 70 -> TG.red; d.score >= 40 -> TG.amber; else -> TG.green })
+                    Text(d.component.label, fontSize = 7.sp, color = TG.textSec, textAlign = TextAlign.Center)
+                    Text("${d.temp.toInt()}°", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = d.heatColor)
                 }
             }
         }
@@ -226,123 +213,90 @@ fun LegendDot(color: Color, label: String) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  COMPONENT CARD COMPACTO (grid 2x2)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── CARD COMPACTO (grid) ────────────────────────────────────────────────────
 @Composable
 fun ComponentCardCompact(diag: ComponentDiagnosis, modifier: Modifier = Modifier) {
-    val tempColor = when {
-        diag.score >= 70 -> TG.red
-        diag.score >= 40 -> TG.amber
-        else             -> TG.green
-    }
-    val scoreAnim by animateFloatAsState(diag.score / 100f, tween(800, easing = EaseOutCubic), label = "sc")
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(TG.glass)
-            .border(1.dp, tempColor.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    val c = diag.heatColor
+    val scoreAnim by animateFloatAsState(diag.heatScore, tween(800, easing = EaseOutCubic), label = "sc")
+    Column(modifier = modifier
+        .clip(RoundedCornerShape(16.dp)).background(TG.glass)
+        .border(1.dp, c.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+        .padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(modifier = Modifier.size(30.dp).clip(RoundedCornerShape(9.dp))
-                .background(tempColor.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center) {
-                Icon(componentIcon(diag.component), null, tint = tempColor, modifier = Modifier.size(16.dp))
+                .background(c.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+                Icon(componentIcon(diag.component), null, tint = c, modifier = Modifier.size(16.dp))
             }
             Column {
-                Text(diag.component, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TG.textPri)
-                Text(diag.status, fontSize = 9.sp, color = tempColor)
+                Text(diag.component.label, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TG.textPri)
+                Text(diag.status.label, fontSize = 9.sp, color = c)
             }
         }
-        // Temp grande
-        Text("${diag.temp.toInt()}°C", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold,
-            color = tempColor)
-        // Mini barra de score
+        Text("${diag.temp.toInt()}°C", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = c)
         Box(modifier = Modifier.fillMaxWidth().height(4.dp)
             .clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.07f))) {
             Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(scoreAnim)
-                .clip(RoundedCornerShape(2.dp)).background(tempColor))
+                .clip(RoundedCornerShape(2.dp)).background(c))
         }
-        if (diag.recommendation.isNotEmpty())
-            Text(diag.recommendation, fontSize = 9.sp, color = TG.textSec, lineHeight = 12.sp)
+        if (diag.advice.isNotEmpty())
+            Text(diag.advice, fontSize = 9.sp, color = TG.textSec, lineHeight = 12.sp)
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  COMPONENT CARD (lista)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── CARD LISTA ──────────────────────────────────────────────────────────────
 @Composable
 fun ComponentCard(diag: ComponentDiagnosis) {
-    val tempColor = when {
-        diag.score >= 70 -> TG.red
-        diag.score >= 40 -> TG.amber
-        else             -> TG.green
-    }
-    val scoreAnim by animateFloatAsState(diag.score / 100f, tween(800, easing = EaseOutCubic), label = "sca")
-    Row(
-        modifier = Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(TG.glass)
-            .border(1.dp, tempColor.copy(alpha = 0.18f), RoundedCornerShape(16.dp))
-            .padding(14.dp),
+    val c = diag.heatColor
+    val scoreAnim by animateFloatAsState(diag.heatScore, tween(800, easing = EaseOutCubic), label = "sca")
+    Row(modifier = Modifier.fillMaxWidth()
+        .clip(RoundedCornerShape(16.dp)).background(TG.glass)
+        .border(1.dp, c.copy(alpha = 0.18f), RoundedCornerShape(16.dp))
+        .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
+        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(13.dp))
-            .background(tempColor.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center) {
-            Icon(componentIcon(diag.component), null, tint = tempColor, modifier = Modifier.size(20.dp))
+            .background(c.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+            Icon(componentIcon(diag.component), null, tint = c, modifier = Modifier.size(20.dp))
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
             Row(modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(diag.component, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
-                Text("${diag.temp.toInt()}°C", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = tempColor)
+                Text(diag.component.label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                Text("${diag.temp.toInt()}°C", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = c)
             }
             Box(modifier = Modifier.fillMaxWidth().height(4.dp)
                 .clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.07f))) {
                 Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(scoreAnim)
-                    .clip(RoundedCornerShape(2.dp)).background(tempColor))
+                    .clip(RoundedCornerShape(2.dp)).background(c))
             }
             Row(modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(diag.status, fontSize = 10.sp, color = tempColor.copy(alpha = 0.8f))
-                Text("Score ${diag.score}", fontSize = 9.sp, color = TG.textDim)
+                Text(diag.status.label, fontSize = 10.sp, color = c.copy(alpha = 0.8f))
+                if (diag.cause.isNotEmpty())
+                    Text(diag.cause, fontSize = 9.sp, color = TG.textDim)
             }
-            if (diag.recommendation.isNotEmpty())
-                Text(diag.recommendation, fontSize = 10.sp, color = TG.textSec, lineHeight = 13.sp)
+            if (diag.advice.isNotEmpty())
+                Text(diag.advice, fontSize = 10.sp, color = TG.textSec, lineHeight = 13.sp)
         }
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  TOP APP CARD
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── TOP APP ─────────────────────────────────────────────────────────────────
 @Composable
 fun TopAppCard(appName: String, cpuPct: Float) {
-    val c = when {
-        cpuPct > 75f -> TG.red
-        cpuPct > 45f -> TG.amber
-        else         -> TG.teal
-    }
+    val c = when { cpuPct > 75f -> TG.red; cpuPct > 45f -> TG.amber; else -> TG.teal }
     val barAnim by animateFloatAsState(cpuPct / 100f, tween(700, easing = EaseOutCubic), label = "b")
-    Row(
-        modifier = Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(TG.glass)
-            .border(1.dp, c.copy(alpha = 0.18f), RoundedCornerShape(16.dp))
-            .padding(14.dp),
+    Row(modifier = Modifier.fillMaxWidth()
+        .clip(RoundedCornerShape(16.dp)).background(TG.glass)
+        .border(1.dp, c.copy(alpha = 0.18f), RoundedCornerShape(16.dp))
+        .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
+        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(13.dp))
-            .background(c.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center) {
+            .background(c.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
             Icon(Icons.Default.Apps, null, tint = c, modifier = Modifier.size(20.dp))
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -350,7 +304,7 @@ fun TopAppCard(appName: String, cpuPct: Float) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text("App más activa ahora", fontSize = 10.sp, color = TG.textSec, letterSpacing = 0.3.sp)
+                    Text("App más activa", fontSize = 10.sp, color = TG.textSec)
                     Text(appName, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
                 }
                 Text("${cpuPct.toInt()}%", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = c)
@@ -358,27 +312,20 @@ fun TopAppCard(appName: String, cpuPct: Float) {
             Box(modifier = Modifier.fillMaxWidth().height(4.dp)
                 .clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.07f))) {
                 Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(barAnim)
-                    .clip(RoundedCornerShape(2.dp)).background(
-                        Brush.horizontalGradient(listOf(TG.green, TG.amber, TG.red))))
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Brush.horizontalGradient(listOf(TG.green, TG.amber, TG.red))))
             }
         }
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-private fun componentIcon(name: String) = when {
-    name.contains("CPU", ignoreCase = true)     -> Icons.Default.Memory
-    name.contains("GPU", ignoreCase = true)     -> Icons.Default.ViewInAr
-    name.contains("Bat", ignoreCase = true)     -> Icons.Default.BatteryFull
-    name.contains("Piel", ignoreCase = true) ||
-    name.contains("Skin", ignoreCase = true)    -> Icons.Default.Smartphone
-    name.contains("Cam", ignoreCase = true)     -> Icons.Default.CameraAlt
-    name.contains("Modem", ignoreCase = true) ||
-    name.contains("Radio", ignoreCase = true)   -> Icons.Default.SignalCellularAlt
-    name.contains("Pantalla", ignoreCase = true)||
-    name.contains("Display", ignoreCase = true) -> Icons.Default.Tv
-    name.contains("Board", ignoreCase = true)   -> Icons.Default.DeveloperBoard
-    else                                        -> Icons.Default.Thermostat
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+private fun componentIcon(comp: ThermalComponent) = when (comp) {
+    ThermalComponent.CPU     -> Icons.Default.Memory
+    ThermalComponent.GPU     -> Icons.Default.ViewInAr
+    ThermalComponent.BATTERY -> Icons.Default.BatteryFull
+    ThermalComponent.MODEM   -> Icons.Default.SignalCellularAlt
+    ThermalComponent.DISPLAY -> Icons.Default.Tv
+    ThermalComponent.BOARD   -> Icons.Default.DeveloperBoard
+    ThermalComponent.PROCESS -> Icons.Default.Apps
 }
