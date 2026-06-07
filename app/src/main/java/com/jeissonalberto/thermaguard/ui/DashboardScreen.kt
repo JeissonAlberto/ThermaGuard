@@ -175,7 +175,7 @@ fun DashboardScreen(
                 )
             }
 
-            MoorePowerPanel(snap = snap, accent = accent)
+            SiliconPanel(snap = snap, accent = accent, silicon = uiState.siliconAnalysis)
 
             uiState.prediction?.let { pred ->
                 if (pred.confidence != PredictionConfidence.LOW && pred.predictedTemp > 0f) {
@@ -935,6 +935,161 @@ fun JasolFooter() {
 // ─────────────────────────────────────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  MOTOR v6 — PANEL DE LAS 3 LEYES DEL SILICIO
+//  Datos reales: CPU de /proc/stat, Temp de BatteryManager + /sys/class/thermal
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun SiliconPanel(snap: ThermalSnapshot, accent: Color, silicon: SiliconAnalysis?) {
+    // Fallback: si silicon es null (aún no calculado), usar Moore simple
+    val power  = silicon?.moorePower  ?: run {
+        val f = (snap.cpuUsage / 100f).coerceIn(0f, 1f)
+        val v = 0.6f + 0.4f * f
+        (v * v * f * 100f).coerceIn(0f, 100f)
+    }
+    val sev = silicon?.severity ?: if (power >= 75f) SiliconSeverity.CRITICAL
+              else if (power >= 45f) SiliconSeverity.STRESSED else SiliconSeverity.OPTIMAL
+    val panelColor = when (sev) {
+        SiliconSeverity.THERMAL_RUNAWAY, SiliconSeverity.CRITICAL -> TG.red
+        SiliconSeverity.STRESSED  -> TG.amber
+        SiliconSeverity.EFFICIENT -> Color(0xFFFFD740)
+        else                      -> TG.green
+    }
+
+    val inf = rememberInfiniteTransition(label = "silicon")
+    val pulse by inf.animateFloat(0.8f, 1f,
+        infiniteRepeatable(tween(1100, easing = EaseInOut), RepeatMode.Reverse), label = "p")
+    val moorePct by animateFloatAsState(power / 100f, tween(800, easing = EaseOutCubic), label = "mp")
+    val dennardPct by animateFloatAsState((silicon?.dennardEfficiency ?: 80f) / 100f, tween(900, easing = EaseOutCubic), label = "dp")
+    val pollackPct by animateFloatAsState((silicon?.pollackPerfPerWatt ?: 70f) / 100f, tween(1000, easing = EaseOutCubic), label = "pp")
+    val amdahlPct by animateFloatAsState((silicon?.amdahlThrottleEta ?: 80f) / 100f, tween(950, easing = EaseOutCubic), label = "ap")
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(TG.glass)
+            .border(1.dp, panelColor.copy(alpha = 0.22f), RoundedCornerShape(20.dp))
+    ) {
+        // Glow de fondo
+        Box(
+            modifier = Modifier
+                .size(130.dp).align(Alignment.TopEnd)
+                .offset(x = 30.dp, y = (-30).dp).blur(45.dp)
+                .background(panelColor.copy(alpha = if (power > 70f) pulse * 0.22f else 0.07f), CircleShape)
+        )
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+
+            // ── Header ──────────────────────────────────────────────────
+            Row(modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(modifier = Modifier.size(38.dp)
+                        .scale(if (power > 70f) pulse else 1f)
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(panelColor.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Bolt, null, tint = panelColor, modifier = Modifier.size(20.dp))
+                    }
+                    Column {
+                        Text("Motor v6  ·  3 Leyes del Silicio",
+                            fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                            color = TG.textPri, letterSpacing = (-0.2).sp)
+                        Text(silicon?.dominantLaw ?: "Moore  ·  Dennard  ·  Pollack  ·  Amdahl",
+                            fontSize = 9.sp, color = TG.textSec)
+                    }
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("${power.toInt()}",
+                        fontSize = 32.sp, fontWeight = FontWeight.ExtraBold,
+                        color = panelColor, letterSpacing = (-1).sp)
+                    Text("/ 100", fontSize = 9.sp, color = TG.textDim,
+                        modifier = Modifier.offset(y = (-4).dp))
+                }
+            }
+
+            // ── Fuente de datos reales ───────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.White.copy(alpha = 0.04f))
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                DataSourceChip("CPU", "${snap.cpuUsage.toInt()}%", TG.blue)
+                DataSourceChip("Temp bat.", "${snap.batteryTemp.toInt()}°C", panelColor)
+                DataSourceChip("CPU°", if (snap.cpuTemp > 0f) "${snap.cpuTemp.toInt()}°C" else "—", TG.teal)
+                DataSourceChip("Modem°", if (snap.modemTemp > 0f) "${snap.modemTemp.toInt()}°C" else "—", TG.purple)
+            }
+
+            // ── 4 barras de las leyes ────────────────────────────────────
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                LawBar("⚛️  Moore — P=V²·F", "Carga térmica bruta",
+                    moorePct, panelColor, "${power.toInt()}%")
+                LawBar("📐  Dennard — Escala de voltaje",
+                    if ((silicon?.dennardEfficiency ?: 80f) >= 70f) "Escalado eficiente"
+                    else "Fuga de corriente — chip caliente sin carga",
+                    dennardPct, TG.teal, "${(silicon?.dennardEfficiency ?: 80f).toInt()}%")
+                LawBar("📈  Pollack — Rendimiento real",
+                    "Perf útil = √(Potencia) — ${(silicon?.pollackWastedHeat ?: 0f).toInt()}% calor desperdiciado",
+                    pollackPct, TG.purple,
+                    "${(silicon?.pollackPerfPerWatt ?: 70f).toInt()}%")
+                LawBar("⚡  Amdahl — Margen antes de throttle",
+                    if ((silicon?.amdahlTimeToThrottle ?: 999) < 120)
+                        "Throttle en ~${(silicon?.amdahlTimeToThrottle ?: 0) / 60} min — ${silicon?.amdahlParallelScore?.toInt() ?: 8} núcleos activos"
+                    else "Sistema estable — ${silicon?.amdahlParallelScore?.toInt() ?: 8} núcleos activos",
+                    amdahlPct,
+                    if ((silicon?.amdahlTimeToThrottle ?: 999) < 120) TG.amber else TG.green,
+                    "${(silicon?.amdahlThrottleEta ?: 80f).toInt()}%")
+            }
+
+            // ── Recomendación ────────────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(panelColor.copy(alpha = 0.07f))
+                    .border(1.dp, panelColor.copy(alpha = 0.14f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(silicon?.recommendation ?: "Calculando análisis del silicio...",
+                    fontSize = 11.sp, color = TG.textSec, lineHeight = 16.sp)
+            }
+        }
+    }
+}
+
+@Composable
+fun LawBar(title: String, subtitle: String, pct: Float, color: Color, valueLabel: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                Text(subtitle, fontSize = 9.sp, color = TG.textSec, lineHeight = 12.sp)
+            }
+            Text(valueLabel, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = color,
+                modifier = Modifier.padding(start = 8.dp))
+        }
+        Box(modifier = Modifier.fillMaxWidth().height(5.dp)
+            .clip(RoundedCornerShape(3.dp)).background(Color.White.copy(alpha = 0.06f))) {
+            Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(pct.coerceIn(0f, 1f))
+                .clip(RoundedCornerShape(3.dp)).background(color))
+        }
+    }
+}
+
+@Composable
+fun DataSourceChip(label: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = color)
+        Text(label, fontSize = 8.sp, color = TG.textDim)
+    }
+}
+
 private fun cpuLabel(cpu: Float) = when {
     cpu < 1f  -> "Sin lectura"
     cpu > 75f -> "Alta"
