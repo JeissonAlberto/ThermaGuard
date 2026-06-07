@@ -64,6 +64,39 @@ data class SiliconAnalysis(
 
 enum class SiliconSeverity { OPTIMAL, EFFICIENT, STRESSED, CRITICAL, THERMAL_RUNAWAY }
 
+// ════════════════════════════════════════════════════════════════════════════
+//  MODO DE OPERACIÓN — controlado por el usuario
+// ════════════════════════════════════════════════════════════════════════════
+enum class OperationMode {
+    LEARNING,   // Solo observa y aprende — NO toma acciones automáticas
+    AUTO,       // Actúa automáticamente según lo aprendido
+    ACTIVE      // Modo máxima intervención — actúa agresivamente
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  RECOMENDACIONES DE HARDWARE Y SOFTWARE (el núcleo de la propuesta de valor)
+// ════════════════════════════════════════════════════════════════════════════
+enum class CoolingCategory {
+    DISPLAY,        // Pantalla
+    CONNECTIVITY,   // WiFi, BT, datos móviles
+    BACKGROUND,     // Apps en segundo plano
+    CHARGING,       // Carga de batería
+    PERFORMANCE,    // Rendimiento del CPU/GPU
+    ENVIRONMENT,    // Temperatura ambiente, funda, sol
+    SYSTEM          // Ajustes del sistema
+}
+
+data class CoolingRecommendation(
+    val id: String,
+    val category: CoolingCategory,
+    val title: String,
+    val detail: String,
+    val impactDegrees: Float,   // cuántos °C puede bajar aplicando esto
+    val effort: Int,            // 1=fácil, 2=medio, 3=requiere ajuste
+    val isActionable: Boolean = true,  // si el usuario puede hacerlo ahora mismo
+    val icon: String = "💡"
+)
+
 enum class ThermalLevel(val label: String, val emoji: String) {
     NORMAL("Normal", "🟢"),
     WARM("Tibio", "🟡"),
