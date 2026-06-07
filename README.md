@@ -3,10 +3,17 @@
 > **App Android de monitoreo térmico y optimización autónoma** · by [Jasol Group](https://site.zapia.com/t2ible74)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v3.4.0-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/version-v3.5.0-orange?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Android-5.0%2B-green?style=for-the-badge&logo=android" />
   <img src="https://img.shields.io/badge/Kotlin-Jetpack%20Compose-blue?style=for-the-badge&logo=kotlin" />
   <img src="https://img.shields.io/badge/Motor-v5%20Moore-red?style=for-the-badge" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/privacidad-solo%20local-brightgreen?style=flat-square" alt="Privacy" />
+  <img src="https://img.shields.io/badge/root-no%20requerido-blue?style=flat-square" alt="No Root" />
+  <img src="https://img.shields.io/badge/publicidad-ninguna-orange?style=flat-square" alt="No Ads" />
+  <img src="https://img.shields.io/badge/tama%C3%B1o-%3C10MB-lightgrey?style=flat-square" alt="Size" />
 </p>
 
 ---
@@ -15,7 +22,7 @@
 
 | Versión | Descripción | APK |
 |---|---|---|
-| **v3.4.0** *(última)* | Motor v5 — Ley de Moore | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.4.0/ThermaGuard-v3.4.0.apk) |
+| **v3.5.0** *(última)* | Motor v5 — Ley de Moore | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.5.0/ThermaGuard-v3.5.0.apk) |
 | v3.3.1 | Bugfix gauge + filtros | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.3.1/ThermaGuard-v3.3.1.apk) |
 | v3.3.0 | Gauge velocímetro 240° | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.3.0/ThermaGuard-v3.3.0.apk) |
 | v3.2.0 | Modo Juego + Stats 24h | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.2.0/ThermaGuard-v3.2.0.apk) |
@@ -143,6 +150,45 @@ app/src/main/java/com/jeissonalberto/thermaguard/
 
 ---
 
+## 📚 Documentación
+
+- [Arquitectura del Motor v5](docs/ARCHITECTURE.md)
+- [Política de Privacidad](docs/PRIVACY.md)
+- [Ficha Play Store](docs/PLAY_STORE.md)
+- [Landing Page](https://site.zapia.com/t2ible74)
+
+---
+
+## 🤝 Contribuir
+
+¡Las contribuciones son bienvenidas! Sigue estos pasos para colaborar:
+
+1. **Fork** este repositorio haciendo clic en el botón "Fork" de GitHub.
+2. **Clona** tu fork en tu máquina local:
+   ```bash
+   git clone https://github.com/TU_USUARIO/ThermaGuard.git
+   cd ThermaGuard
+   ```
+3. **Abre el proyecto en Android Studio** (versión Hedgehog o superior recomendada). Espera a que Gradle sincronice las dependencias.
+4. **Crea una rama** para tu mejora o corrección:
+   ```bash
+   git checkout -b feature/mi-mejora
+   ```
+5. **Realiza tus cambios**, asegurándote de que el proyecto compila y los tests pasan.
+6. **Haz commit** con un mensaje descriptivo:
+   ```bash
+   git commit -m "feat: descripción breve del cambio"
+   ```
+7. **Empuja** tu rama a GitHub:
+   ```bash
+   git push origin feature/mi-mejora
+   ```
+8. **Abre un Pull Request** desde tu fork hacia la rama `main` de este repositorio, describiendo qué cambiaste y por qué.
+
+> Para cambios grandes, abre primero un **Issue** para discutir la propuesta.
+
+---
+
 ## 👤 Autor
 
 **Ing. Jeisson Alberto Sarmiento Cabrera**  
@@ -160,5 +206,6 @@ MIT License © 2025 Jasol Group
 ---
 
 <p align="center">
-  Hecho con ❤️ desde Saravena, Arauca, Colombia 🇨🇴
+  Hecho con ❤️ desde Saravena, Arauca, Colombia 🇨🇴<br/>
+  <sub>Motor v5 — ThermaGuard v3.5.0</sub>
 </p>
