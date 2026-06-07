@@ -433,32 +433,30 @@ fun HeaderBar(uiState: ThermalUiState, accent: Color) {
 //  AUTO BADGE
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
-fun AutoBadge(accent: Color, isMonitoring: Boolean = true) {
+fun ModeBadge(mode: OperationMode, accent: Color) {
+    val (label, color) = when (mode) {
+        OperationMode.LEARNING -> Pair("APRENDIENDO", Color(0xFF4FC3F7))
+        OperationMode.AUTO     -> Pair("AUTO",        accent)
+        OperationMode.ACTIVE   -> Pair("ACTIVO",      Color(0xFFFF5252))
+    }
     val pulse = rememberInfiniteTransition(label = "badge")
-    val a by pulse.animateFloat(0.25f, 1f,
-        infiniteRepeatable(tween(950), RepeatMode.Reverse), label = "a")
+    val a by pulse.animateFloat(0.3f, 1f,
+        infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "a")
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(accent.copy(alpha = 0.09f))
-            .border(1.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(20.dp))
-            .padding(horizontal = 12.dp, vertical = 7.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .background(color.copy(alpha = 0.09f))
+            .border(1.dp, color.copy(alpha = 0.25f), RoundedCornerShape(20.dp))
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        Box(modifier = Modifier.size(7.dp).clip(CircleShape)
-            .background(if (isMonitoring) accent.copy(alpha = a) else TG.textDim))
-        Text(
-            if (isMonitoring) "AUTO" else "OFF",
-            fontSize = 10.sp, fontWeight = FontWeight.ExtraBold,
-            color = if (isMonitoring) accent else TG.textDim, letterSpacing = 1.8.sp
-        )
+        Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(color.copy(alpha = a)))
+        Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = color,
+            letterSpacing = 0.5.sp)
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  METRIC TILE
-// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun MetricTile(
     modifier: Modifier,
