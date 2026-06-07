@@ -67,6 +67,20 @@ enum class SiliconSeverity { OPTIMAL, EFFICIENT, STRESSED, CRITICAL, THERMAL_RUN
 // ════════════════════════════════════════════════════════════════════════════
 //  MODO DE OPERACIÓN — controlado por el usuario
 // ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+//  SENSOR LOG — entrada de log con timestamp y fuente
+// ════════════════════════════════════════════════════════════════════════════
+data class SensorLog(
+    val timestamp: Long = System.currentTimeMillis(),
+    val tag: String,         // THERMAL / CPU / RAM / BATTERY / SENSOR
+    val source: String,      // /proc/stat, /sys/class/thermal/..., API
+    val field: String,       // nombre del campo
+    val rawValue: String,    // valor crudo leído
+    val parsedValue: String, // valor interpretado
+    val unit: String = "",
+    val isEstimated: Boolean = false  // true si no pudo leer y usó fallback
+)
+
 enum class OperationMode {
     LEARNING,   // Solo observa y aprende — NO toma acciones automáticas
     AUTO,       // Actúa automáticamente según lo aprendido
