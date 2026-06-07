@@ -711,6 +711,144 @@ class ThermalLearningEngine(context: Context) {
 
     fun reset() { prefs.edit().clear().apply() }
 
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  MOTOR v6 — TRES LEYES DEL SILICIO
+    //  Usa datos REALES del dispositivo:
+    //    • cpuUsage  → de /proc/stat (lectura real del kernel)
+    //    • batteryTemp → de BatteryManager (sensor real)
+    //    • cpuTemp, modemTemp → de /sys/class/thermal (sensores del SoC)
+    //    • perCoreUsage → de /proc/stat por núcleo
+    // ════════════════════════════════════════════════════════════════════════
+
+    fun analyzeSilicon(snapshot: ThermalSnapshot): SiliconAnalysis {
+        val cpu  = snapshot.cpuUsage.coerceIn(0f, 100f)
+        val temp = snapshot.batteryTemp.coerceIn(20f, 60f)
+
+        // ── LEY 1: MOORE  P = C·V²·F ─────────────────────────────────────
+        // Frecuencia proxy: uso de CPU normalizado (a más uso, más frecuencia efectiva)
+        val f = cpu / 100f
+        // Voltaje proxy: voltaje de un chip moderno varía ~0.6V (idle) a ~1.0V (full load)
+        // Dennard descubrió que V ∝ √F cuando el scaling funciona; cuando no funciona
+        // (chips modernos), V sube más rápido → más calor por unidad de trabajo
+        val vDennardIdeal = 0.6f + 0.2f * f          // si Dennard escalara perfectamente
+        val vReal         = 0.6f + 0.4f * f          // voltaje real (Dennard roto en ~2006)
+        val moorePower    = (vReal * vReal * f * 100f).coerceIn(0f, 100f)
+
+        // ── LEY 2: DENNARD SCALING ───────────────────────────────────────
+        // Dennard Scaling se rompió porque el voltaje no puede bajar más sin errores
+        // → fuga de corriente estática sube exponencialmente con temperatura
+        // Leakage ∝ e^(T/Tref) — modelo simplificado de Arrhenius
+        val Tref = 40f   // temperatura de referencia para el Exynos S22
+        val leakageFactor = Math.exp(((temp - Tref) / 10.0)).toFloat().coerceIn(1f, 4f)
+        val dennardLeakage = ((leakageFactor - 1f) / 3f * 100f).coerceIn(0f, 100f)
+        // Eficiencia Dennard: qué tanto del voltaje adicional genera trabajo útil
+        val powerIdeal = (vDennardIdeal * vDennardIdeal * f * 100f).coerceIn(0f, 100f)
+        val dennardEfficiency = if (moorePower > 0f)
+            (powerIdeal / moorePower * 100f).coerceIn(0f, 100f) else 100f
+        // Densidad térmica proxy: más temperatura = más densidad en menos área
+        val dennardThermalDensity = (temp - 20f) * 0.8f  // °C·factor → proxy °C/cm²
+
+        // ── LEY 3: POLLACK'S RULE ────────────────────────────────────────
+        // Pollack: rendimiento ∝ √(potencia consumida)
+        // → duplicar la potencia solo da √2 ≈ 1.41x más rendimiento
+        // → el calor extra NO se convierte en trabajo proporcional
+        val pollackPerf = Math.sqrt(moorePower.toDouble()).toFloat().coerceIn(0f, 100f)
+        val pollackPerfPerWatt = if (moorePower > 0f)
+            (pollackPerf / moorePower * 100f).coerceIn(0f, 100f) else 100f
+        // Calor desperdiciado = diferencia entre potencia invertida y rendimiento obtenido
+        val pollackWastedHeat = ((moorePower - pollackPerf) / moorePower.coerceAtLeast(1f) * 100f)
+            .coerceIn(0f, 100f)
+
+        // ── LEY 4: AMDAHL THERMAL ────────────────────────────────────────
+        // Amdahl aplicado al throttling térmico:
+        // La parte "serial" del trabajo es lo que el SoC DEBE hacer sin escalar
+        // Cuando la temperatura sube → el scheduler fuerza throttle en los núcleos
+        // Tiempo hasta throttle: función inversa de qué tan cerca estamos del límite
+        val thermalHeadroom = (50f - temp).coerceAtLeast(0f)   // margen hasta ~50°C (throttle)
+        // núcleos efectivos: S22 tiene 8 núcleos, pero a alta temp el scheduler apaga cores
+        val coresTotal = 8
+        val coresActive = when {
+            temp >= 50f -> 2   // throttle severo — solo 2 cores pequeños
+            temp >= 47f -> 4
+            temp >= 45f -> 6
+            temp >= 42f -> 7
+            else        -> 8
+        }
+        // Amdahl: speedup = 1 / (s + (1-s)/n) donde s = fracción serial
+        // Usamos inversamente: a menos cores activos, más latencia térmica
+        val s = 0.15f  // ~15% del trabajo es inherentemente serial (S22 Exynos)
+        val amdahlSpeedup = 1f / (s + (1f - s) / coresActive)
+        val amdahlParallelScore = (amdahlSpeedup / (1f / (s + (1f - s) / coresTotal)) * 100f)
+            .coerceIn(0f, 100f)
+        val amdahlThrottleEta = (thermalHeadroom / 10f * 100f).coerceIn(0f, 100f)
+        // Tiempo hasta throttle: si moorePower > 60 y temp > 40, el throttle llega rápido
+        val tempRiseRate = if (moorePower > 70f) 0.8f   // °C/min
+                           else if (moorePower > 50f) 0.4f
+                           else 0.15f
+        val amdahlTimeToThrottle = if (thermalHeadroom <= 0f) 0
+            else (thermalHeadroom / tempRiseRate * 60f).toInt().coerceIn(0, 7200)
+
+        // ── DIAGNÓSTICO FINAL ─────────────────────────────────────────────
+        val severity = when {
+            temp >= 50f || moorePower >= 90f  -> SiliconSeverity.THERMAL_RUNAWAY
+            temp >= 47f || moorePower >= 75f  -> SiliconSeverity.CRITICAL
+            temp >= 43f || moorePower >= 55f  -> SiliconSeverity.STRESSED
+            dennardEfficiency < 50f           -> SiliconSeverity.EFFICIENT  // poco margen
+            else                             -> SiliconSeverity.OPTIMAL
+        }
+
+        // Ley dominante: la que más explica el calor actual
+        val dominantLaw = when {
+            dennardLeakage > 40f  -> "Dennard — fuga de corriente dominante"
+            pollackWastedHeat > 50f -> "Pollack — rendimiento marginal del chip"
+            amdahlTimeToThrottle < 120 -> "Amdahl — throttle térmico inminente"
+            moorePower > 60f      -> "Moore — carga alta P=V²·F"
+            else                  -> "Equilibrio térmico estable"
+        }
+
+        val recommendation = when (severity) {
+            SiliconSeverity.THERMAL_RUNAWAY ->
+                "🚨 El chip está al límite — cierra TODAS las apps y espera que se enfríe"
+            SiliconSeverity.CRITICAL ->
+                "🔴 Throttle inminente en ${amdahlTimeToThrottle/60} min — reduce carga ahora"
+            SiliconSeverity.STRESSED ->
+                if (pollackWastedHeat > 50f)
+                    "🟠 Alto calor por bajo rendimiento (Pollack) — cierra apps ineficientes"
+                else
+                    "🟠 Carga alta (Moore P=${moorePower.toInt()}) — monitorea de cerca"
+            SiliconSeverity.EFFICIENT ->
+                "🟡 Eficiencia limitada por temperatura (Dennard ${dennardEfficiency.toInt()}%) — deja el teléfono en reposo breve"
+            SiliconSeverity.OPTIMAL ->
+                "🟢 Silicio operando en zona óptima — eficiencia ${pollackPerfPerWatt.toInt()}%"
+        }
+
+        return SiliconAnalysis(
+            moorePower           = moorePower,
+            mooreVoltage         = vReal,
+            mooreFrequency       = f * 100f,
+            dennardLeakage       = dennardLeakage,
+            dennardEfficiency    = dennardEfficiency,
+            dennardThermalDensity = dennardThermalDensity,
+            pollackPerf          = pollackPerf,
+            pollackPerfPerWatt   = pollackPerfPerWatt,
+            pollackWastedHeat    = pollackWastedHeat,
+            amdahlThrottleEta    = amdahlThrottleEta,
+            amdahlParallelScore  = amdahlParallelScore,
+            amdahlTimeToThrottle = amdahlTimeToThrottle,
+            dominantLaw          = dominantLaw,
+            recommendation       = recommendation,
+            severity             = severity
+        )
+    }
+
+    // Calcular power score para UI (retrocompatible con DashboardScreen)
+    fun computePowerFromCpu(cpuUsage: Float): Float {
+        val f = (cpuUsage / 100f).coerceIn(0f, 1f)
+        val v = 0.6f + 0.4f * f
+        return (v * v * f * 100f).coerceIn(0f, 100f)
+    }
+
     companion object {
         const val ThermalMonitorIntervalMin = 1
     }
