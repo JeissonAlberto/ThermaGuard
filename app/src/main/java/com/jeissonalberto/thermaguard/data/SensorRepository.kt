@@ -133,12 +133,22 @@ class SensorRepository(private val context: Context) {
 
         // --- CPU ---
         val cpuTemp = snapshot.cpuTemp.takeIf { it > 0f } ?: snapshot.batteryTemp
-        val cpuStatus = when {
+        // Status por temperatura Y uso — el que sea más grave gana
+        val cpuStatusByTemp = when {
+            cpuTemp >= 70f -> ComponentStatus.CRITICAL
+            cpuTemp >= 60f -> ComponentStatus.HOT
+            cpuTemp >= 48f -> ComponentStatus.WARM
+            else           -> ComponentStatus.NORMAL
+        }
+        val cpuStatusByUsage = when {
             snapshot.cpuUsage >= 90f -> ComponentStatus.CRITICAL
             snapshot.cpuUsage >= 70f -> ComponentStatus.HOT
-            snapshot.cpuUsage >= 40f -> ComponentStatus.WARM
+            snapshot.cpuUsage >= 45f -> ComponentStatus.WARM
             else                     -> ComponentStatus.NORMAL
         }
+        // Tomar el peor de los dos (mayor ordinal = más grave)
+        val cpuStatus = if (cpuStatusByTemp.ordinal >= cpuStatusByUsage.ordinal)
+            cpuStatusByTemp else cpuStatusByUsage
         val cpuCause = buildCpuCause(snapshot)
         diagnoses.add(ComponentDiagnosis(
             component   = ThermalComponent.CPU,
@@ -153,9 +163,9 @@ class SensorRepository(private val context: Context) {
         // --- GPU ---
         if (snapshot.gpuTemp > 0f) {
             val gpuStatus = when {
-                snapshot.gpuTemp >= 55f -> ComponentStatus.CRITICAL
-                snapshot.gpuTemp >= 48f -> ComponentStatus.HOT
-                snapshot.gpuTemp >= 42f -> ComponentStatus.WARM
+                snapshot.gpuTemp >= 52f -> ComponentStatus.CRITICAL
+                snapshot.gpuTemp >= 46f -> ComponentStatus.HOT
+                snapshot.gpuTemp >= 40f -> ComponentStatus.WARM
                 else                    -> ComponentStatus.NORMAL
             }
             diagnoses.add(ComponentDiagnosis(
@@ -198,9 +208,9 @@ class SensorRepository(private val context: Context) {
         // --- MODEM / RADIO ---
         if (snapshot.modemTemp > 0f) {
             val modStatus = when {
-                snapshot.modemTemp >= 55f -> ComponentStatus.CRITICAL
-                snapshot.modemTemp >= 48f -> ComponentStatus.HOT
-                snapshot.modemTemp >= 42f -> ComponentStatus.WARM
+                snapshot.modemTemp >= 50f -> ComponentStatus.CRITICAL
+                snapshot.modemTemp >= 45f -> ComponentStatus.HOT
+                snapshot.modemTemp >= 39f -> ComponentStatus.WARM
                 else                      -> ComponentStatus.NORMAL
             }
             diagnoses.add(ComponentDiagnosis(
@@ -217,6 +227,7 @@ class SensorRepository(private val context: Context) {
         // --- PANTALLA / DISPLAY ---
         if (snapshot.displayTemp > 0f) {
             val dispStatus = when {
+                snapshot.displayTemp >= 52f -> ComponentStatus.CRITICAL
                 snapshot.displayTemp >= 45f -> ComponentStatus.HOT
                 snapshot.displayTemp >= 38f -> ComponentStatus.WARM
                 else                        -> ComponentStatus.NORMAL
