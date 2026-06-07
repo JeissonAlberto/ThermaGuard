@@ -421,11 +421,11 @@ fun HeaderBar(uiState: ThermalUiState, accent: Color) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(modifier = Modifier.size(5.dp).clip(CircleShape).background(accent))
-                Text("Jasol Group  ·  Motor v5", fontSize = 10.sp,
+                Text("Jasol Group  ·  Motor v6", fontSize = 10.sp,
                     color = TG.textDim, letterSpacing = 0.3.sp)
             }
         }
-        AutoBadge(accent = accent, isMonitoring = uiState.isMonitoring)
+        ModeBadge(mode = uiState.operationMode, accent = accent)
     }
 }
 
@@ -745,7 +745,7 @@ fun JasolFooter() {
         Box(modifier = Modifier.size(4.dp).clip(CircleShape)
             .background(TG.textDim.copy(alpha = 0.5f)))
         Spacer(Modifier.width(6.dp))
-        Text("Jasol Group  ·  Motor v5", fontSize = 9.sp,
+        Text("Jasol Group  ·  Motor v6", fontSize = 9.sp,
             color = TG.textDim, letterSpacing = 0.6.sp)
         Spacer(Modifier.width(6.dp))
         Box(modifier = Modifier.size(4.dp).clip(CircleShape)
@@ -823,8 +823,8 @@ fun SiliconPanel(snap: ThermalSnapshot, accent: Color, silicon: SiliconAnalysis?
                     }
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("${power.toInt()}",
-                        fontSize = 32.sp, fontWeight = FontWeight.ExtraBold,
+                    Text("${power.toInt()}%",
+                        fontSize = 28.sp, fontWeight = FontWeight.ExtraBold,
                         color = panelColor, letterSpacing = (-1).sp)
                     Text("/ 100", fontSize = 9.sp, color = TG.textDim,
                         modifier = Modifier.offset(y = (-4).dp))
@@ -944,9 +944,11 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
             horizontalArrangement = Arrangement.SpaceBetween) {
             Text("Modo de operación", fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                 color = TG.textPri)
-            Text(modeDesc, fontSize = 9.sp, color = TG.textSec,
-                modifier = Modifier.weight(1f).padding(start = 8.dp),
-                textAlign = TextAlign.End)
+            Text(when (mode) {
+                OperationMode.LEARNING -> "🧠 Aprendizaje"
+                OperationMode.AUTO     -> "⚙️ Automático"
+                OperationMode.ACTIVE   -> "🔥 Activo"
+            }, fontSize = 10.sp, color = modeColor, fontWeight = FontWeight.SemiBold)
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             modes.forEach { (m, label, icon) ->
@@ -977,6 +979,16 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
                     }
                 }
             }
+        }
+        // Descripción del modo activo — debajo de los botones, legible
+        Box(
+            modifier = Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(modeColor.copy(alpha = 0.07f))
+                .padding(horizontal = 10.dp, vertical = 6.dp)
+        ) {
+            Text(modeDesc, fontSize = 10.sp, color = TG.textSec,
+                modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         }
     }
 }
