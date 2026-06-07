@@ -17,6 +17,19 @@ import java.io.File
 
 class SensorRepository(private val context: Context) {
 
+    // Cola de logs — últimas 500 entradas (circular)
+    private val _sensorLogs = ArrayDeque<SensorLog>(500)
+    val sensorLogs: List<SensorLog> get() = _sensorLogs.toList()
+
+    private fun log(tag: String, source: String, field: String,
+                    raw: String, parsed: String, unit: String = "", estimated: Boolean = false) {
+        val entry = SensorLog(tag = tag, source = source, field = field,
+            rawValue = raw, parsedValue = parsed, unit = unit, isEstimated = estimated)
+        if (_sensorLogs.size >= 500) _sensorLogs.removeFirst()
+        _sensorLogs.addLast(entry)
+    }
+
+
     private val powerManager       = context.getSystemService(Context.POWER_SERVICE) as PowerManager
     private val activityManager    = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     private val connectivityManager= context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -64,6 +77,45 @@ class SensorRepository(private val context: Context) {
         snap.allZones    = allZones
         snap.perCoreUsage = perCoreUsage
         snap.topProcesses = topProcesses
+
+        // ── Emitir logs de trazabilidad ─────────────────────────────────
+        val ts = System.currentTimeMillis()
+        log("THERMAL", "BatteryManager.EXTRA_TEMPERATURE", "batteryTemp",
+            "${(batteryTemp * 10).toInt()}", "${batteryTemp}", "°C")
+        log("THERMAL", "/sys/class/thermal → cpu", "cpuTemp",
+            "${(allZones["cpu"] ?: 0f)}", "${snap.cpuTemp}", "°C",
+            estimated = snap.cpuTemp == 0f)
+        log("THERMAL", "/sys/class/thermal → gpu", "gpuTemp",
+            "${(allZones["gpu"] ?: 0f)}", "${snap.gpuTemp}", "°C",
+            estimated = snap.gpuTemp == 0f)
+        log("THERMAL", "/sys/class/thermal → skin", "skinTemp",
+            "${(allZones["skin"] ?: allZones["surface"] ?: 0f)}", "${snap.skinTemp}", "°C",
+            estimated = snap.skinTemp == 0f)
+        log("THERMAL", "/sys/class/thermal → modem", "modemTemp",
+            "${(allZones["modem"] ?: allZones["wlan"] ?: 0f)}", "${snap.modemTemp}", "°C",
+            estimated = snap.modemTemp == 0f)
+        log("THERMAL", "/sys/class/thermal → display", "displayTemp",
+            "${(allZones["display"] ?: 0f)}", "${snap.displayTemp}", "°C",
+            estimated = snap.displayTemp == 0f)
+        log("CPU", "/proc/stat (EMA 800ms)", "cpuUsage",
+            "raw_diff", "${snap.cpuUsage}",  "%",
+            estimated = snap.cpuUsage == 15f)
+        log("CPU", "/proc/stat cpu[0..N]", "perCoreUsage",
+            "${snap.perCoreUsage.size} cores", snap.perCoreUsage.joinToString { "${it.toInt()}%" }, "%")
+        log("BATTERY", "BatteryManager", "batteryLevel", "${snap.batteryLevel}", "${snap.batteryLevel}", "%")
+        log("BATTERY", "BatteryManager", "isCharging", "${snap.isCharging}", "${snap.isCharging}")
+        log("RAM", "ActivityManager.MemoryInfo", "ramFreeMb",
+            "${snap.ramUsageMb}", "${snap.ramUsageMb}", "MB")
+        log("SENSOR", "Settings.System.SCREEN_BRIGHTNESS", "brightness",
+            "${snap.brightnessLevel}", "${(snap.brightnessLevel / 255f * 100).toInt()}", "%")
+        log("SENSOR", "ConnectivityManager", "wifiActive", "${snap.wifiActive}", "${snap.wifiActive}")
+        log("SENSOR", "BluetoothManager", "bluetoothActive", "${snap.bluetoothActive}", "${snap.bluetoothActive}")
+        // Zonas raw completas
+        allZones.filter { it.key.startsWith("raw_") }.forEach { (k, v) ->
+            log("RAW", "/sys/class/thermal/${k.removePrefix("raw_")}", "zone_temp",
+                "${(v * 1000).toInt()}", "${v}", "°C")
+        }
+
         snap
     }
 
