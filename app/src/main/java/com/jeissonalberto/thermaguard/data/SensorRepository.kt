@@ -357,7 +357,7 @@ class SensorRepository(private val context: Context) {
             File("/proc/stat").readLines()
                 .filter { it.startsWith("cpu") && it.length > 4 && it[3].isDigit() }
                 .map { line ->
-                    val parts = line.trim().split("\\s+".toRegex()).drop(1).mapNotNull { it.toLongOrNull() }
+                    val parts = line.trim().split(" ").filter { it.isNotEmpty() }.drop(1).mapNotNull { it.toLongOrNull() }
                     val total = parts.sum()
                     val idle  = if (parts.size > 3) parts[3] else 0L
                     Pair(total, idle)
@@ -376,7 +376,7 @@ class SensorRepository(private val context: Context) {
             fun parseStat(): Pair<Long, Long>? {
                 val line = File("/proc/stat").readLines()
                     .firstOrNull { it.startsWith("cpu ") } ?: return null
-                val parts = line.trim().split("\s+".toRegex()).drop(1)
+                val parts = line.trim().split(" ").filter { it.isNotEmpty() }.drop(1)
                     .mapNotNull { it.toLongOrNull() }
                 if (parts.size < 5) return null
                 val total = parts.sum()
