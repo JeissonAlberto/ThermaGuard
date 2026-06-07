@@ -3,7 +3,7 @@
 > **App Android de monitoreo térmico y optimización autónoma** · by [Jasol Group](https://site.zapia.com/t2ible74)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v3.5.0-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/version-v3.7.0-orange?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Android-5.0%2B-green?style=for-the-badge&logo=android" />
   <img src="https://img.shields.io/badge/Kotlin-Jetpack%20Compose-blue?style=for-the-badge&logo=kotlin" />
   <img src="https://img.shields.io/badge/Motor-v5%20Moore-red?style=for-the-badge" />
@@ -22,7 +22,7 @@
 
 | Versión | Descripción | APK |
 |---|---|---|
-| **v3.5.0** *(última)* | Motor v5 — Ley de Moore | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.5.0/ThermaGuard-v3.5.0.apk) |
+| **v3.7.0** *(última)* | Motor v5 — Ley de Moore | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.5.0/ThermaGuard-v3.5.0.apk) |
 | v3.3.1 | Bugfix gauge + filtros | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.3.1/ThermaGuard-v3.3.1.apk) |
 | v3.3.0 | Gauge velocímetro 240° | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.3.0/ThermaGuard-v3.3.0.apk) |
 | v3.2.0 | Modo Juego + Stats 24h | [Descargar](https://github.com/JeissonAlberto/ThermaGuard/releases/download/v3.2.0/ThermaGuard-v3.2.0.apk) |
