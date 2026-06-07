@@ -723,7 +723,9 @@ class ThermalLearningEngine(context: Context) {
 
     fun analyzeSilicon(snapshot: ThermalSnapshot): SiliconAnalysis {
         val cpu  = snapshot.cpuUsage.coerceIn(0f, 100f)
-        val temp = snapshot.batteryTemp.coerceIn(20f, 60f)
+        // Usar cpuTemp si el sensor lo lee (SoC Exynos), sino batteryTemp
+        val rawTemp = if (snapshot.cpuTemp > 20f) snapshot.cpuTemp else snapshot.batteryTemp
+        val temp = rawTemp.coerceIn(20f, 65f)
 
         // ── LEY 1: MOORE  P = C·V²·F ─────────────────────────────────────
         // Frecuencia proxy: uso de CPU normalizado (a más uso, más frecuencia efectiva)
