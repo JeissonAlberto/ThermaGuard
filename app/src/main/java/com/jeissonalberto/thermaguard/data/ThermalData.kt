@@ -32,6 +32,38 @@ data class ThermalSnapshot(
     @Ignore var topProcesses: List<ProcessInfo> = emptyList()
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+//  MOTOR v6 — TRES LEYES DEL SILICIO
+//  Moore  : P = C·V²·F       → carga térmica bruta del chip
+//  Dennard: ΔP/ΔT ∝ V·I·α   → eficiencia de escala (fuga de corriente)
+//  Pollack: Perf ∝ √Power    → rendimiento real vs calor generado
+//  Amdahl : T_throttle = 1/(s + (1-s)/n) → cuánto aguanta antes de throttle
+// ════════════════════════════════════════════════════════════════════════════
+data class SiliconAnalysis(
+    // ── Moore P = C·V²·F ─────────────────────────────────────────────────
+    val moorePower: Float,          // 0-100: carga térmica estimada del chip
+    val mooreVoltage: Float,        // voltaje proxy (0.6–1.0 V normalizado)
+    val mooreFrequency: Float,      // frecuencia proxy (0.0–1.0)
+    // ── Dennard Scaling ──────────────────────────────────────────────────
+    val dennardLeakage: Float,      // 0-100: fuga de corriente (calor "gratis" inevitable)
+    val dennardEfficiency: Float,   // 0-100: qué tan bien escala la potencia
+    val dennardThermalDensity: Float, // °C/cm² estimado
+    // ── Pollack's Rule ───────────────────────────────────────────────────
+    val pollackPerf: Float,         // rendimiento real 0-100
+    val pollackPerfPerWatt: Float,  // eficiencia: rendimiento / potencia
+    val pollackWastedHeat: Float,   // calor generado sin rendimiento útil (%)
+    // ── Amdahl Thermal ───────────────────────────────────────────────────
+    val amdahlThrottleEta: Float,   // 0-100: % de carga hasta throttle
+    val amdahlParallelScore: Float, // cuántos núcleos están activos efectivamente
+    val amdahlTimeToThrottle: Int,  // segundos estimados hasta throttle (0 = ya throttleando)
+    // ── Diagnóstico final ────────────────────────────────────────────────
+    val dominantLaw: String,        // qué ley explica mejor el calor ahora
+    val recommendation: String,
+    val severity: SiliconSeverity
+)
+
+enum class SiliconSeverity { OPTIMAL, EFFICIENT, STRESSED, CRITICAL, THERMAL_RUNAWAY }
+
 enum class ThermalLevel(val label: String, val emoji: String) {
     NORMAL("Normal", "🟢"),
     WARM("Tibio", "🟡"),
