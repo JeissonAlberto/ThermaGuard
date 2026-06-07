@@ -1,13 +1,17 @@
 package com.jeissonalberto.thermaguard.ui
 
 import android.content.Intent
-import androidx.compose.animation.*
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,67 +28,62 @@ import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.data.SensorLog
 import com.jeissonalberto.thermaguard.data.ThermalUiState
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun LogsScreen(uiState: ThermalUiState) {
-    val logs = uiState.sensorLogs.reversed()  // más reciente primero
+    val allLogs: List<SensorLog> = uiState.sensorLogs.reversed()
     val clipboard = LocalClipboardManager.current
-    val context = LocalContext.current
+    val context   = LocalContext.current
 
     var filterTag by remember { mutableStateOf("ALL") }
     var showRaw   by remember { mutableStateOf(false) }
     val tags = listOf("ALL", "THERMAL", "CPU", "BATTERY", "RAM", "SENSOR", "RAW")
 
-    val filtered = if (filterTag == "ALL") logs
-        else logs.filter { it.tag == filterTag }
+    val filtered: List<SensorLog> = if (filterTag == "ALL") allLogs
+        else allLogs.filter { log: SensorLog -> log.tag == filterTag }
 
-    // Texto plano para exportar — formato legible + copiable
-    val exportText = remember(filtered) {
-        buildString {
-            appendLine("═══════════════════════════════════════════════════")
-            appendLine("  ThermaGuard — Sensor Log Export")
-            appendLine("  ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}")
-            appendLine("  Entradas: ${filtered.size}")
-            appendLine("═══════════════════════════════════════════════════")
+    val fmt = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
+    val fmtFull = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+
+    val exportText: String = buildString {
+        appendLine("===================================================")
+        appendLine("  ThermaGuard - Sensor Log Export")
+        appendLine("  ${fmtFull.format(Date())}")
+        appendLine("  Entradas: ${filtered.size}")
+        appendLine("===================================================")
+        appendLine()
+        filtered.forEach { log: SensorLog ->
+            val ts = fmt.format(Date(log.timestamp))
+            appendLine("[$ts] [${log.tag}]")
+            appendLine("  campo   : ${log.field}")
+            appendLine("  fuente  : ${log.source}")
+            appendLine("  raw     : ${log.rawValue}")
+            appendLine("  valor   : ${log.parsedValue} ${log.unit}")
+            if (log.isEstimated) appendLine("  ESTIMADO - sensor no disponible")
             appendLine()
-            filtered.forEach { log ->
-                val ts = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(log.timestamp))
-                appendLine("[$ts] [${log.tag}]")
-                appendLine("  campo   : ${log.field}")
-                appendLine("  fuente  : ${log.source}")
-                appendLine("  raw     : ${log.rawValue}")
-                appendLine("  valor   : ${log.parsedValue} ${log.unit}")
-                if (log.isEstimated) appendLine("  ⚠ ESTIMADO — sensor no disponible")
-                appendLine()
-            }
         }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // ── Header ───────────────────────────────────────────────────
+
+            // Header
             Row(
-                modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Sensor Logs", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold,
-                        color = TG.textPri)
-                    Text("${filtered.size} lecturas reales del hardware",
-                        fontSize = 10.sp, color = TG.textDim)
+                    Text("Sensor Logs", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = TG.textPri)
+                    Text("${filtered.size} lecturas reales del hardware", fontSize = 10.sp, color = TG.textDim)
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Copiar al portapapeles
-                    IconButton(onClick = {
-                        clipboard.setText(AnnotatedString(exportText))
-                    }) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    IconButton(onClick = { clipboard.setText(AnnotatedString(exportText)) }) {
                         Icon(Icons.Default.ContentCopy, "Copiar", tint = TG.teal,
                             modifier = Modifier.size(22.dp))
                     }
-                    // Compartir como .txt
                     IconButton(onClick = {
                         val share = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
@@ -99,72 +98,80 @@ fun LogsScreen(uiState: ThermalUiState) {
                 }
             }
 
-            // ── Filtros de tag ────────────────────────────────────────────
+            // Filtros
             LazyRow(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                items(tags) { tag ->
+                items(tags) { tag: String ->
                     val sel = tag == filterTag
-                    val tagColor = tagColor(tag)
+                    val tagCol = logTagColor(tag)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(if (sel) tagColor.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.05f))
+                            .background(if (sel) tagCol.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.05f))
                             .border(1.dp,
-                                if (sel) tagColor.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.08f),
+                                if (sel) tagCol.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.08f),
                                 RoundedCornerShape(20.dp))
                             .clickable { filterTag = tag }
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Text(tag, fontSize = 10.sp, fontWeight = FontWeight.Bold,
-                            color = if (sel) tagColor else TG.textDim)
+                            color = if (sel) tagCol else TG.textDim)
                     }
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
 
-            // ── Toggle raw zones ─────────────────────────────────────────
+            // Toggle raw
             Row(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Switch(checked = showRaw, onCheckedChange = { showRaw = it },
-                    colors = SwitchDefaults.colors(checkedThumbColor = TG.teal,
-                        checkedTrackColor = TG.teal.copy(alpha = 0.3f)))
-                Text("Mostrar zonas RAW del kernel",
-                    fontSize = 10.sp, color = TG.textSec)
+                Switch(
+                    checked = showRaw,
+                    onCheckedChange = { v: Boolean -> showRaw = v },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = TG.teal,
+                        checkedTrackColor = TG.teal.copy(alpha = 0.3f)
+                    )
+                )
+                Text("Mostrar zonas RAW del kernel", fontSize = 10.sp, color = TG.textSec)
             }
 
             Spacer(Modifier.height(6.dp))
 
-            // ── Lista de logs ─────────────────────────────────────────────
+            // Lista
+            val display: List<SensorLog> = if (showRaw) filtered
+                else filtered.filter { log: SensorLog -> log.tag != "RAW" }
+
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                val display = if (showRaw) filtered else filtered.filter { it.tag != "RAW" }
-
                 if (display.isEmpty()) {
                     item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
-                            contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 Text("📡", fontSize = 40.sp)
-                                Text("Sin lecturas aún", color = TG.textDim, fontSize = 13.sp)
-                                Text("El motor de sensores leerá en el próximo ciclo",
+                                Text("Sin lecturas aun", color = TG.textDim, fontSize = 13.sp)
+                                Text("El motor leerá en el próximo ciclo",
                                     color = TG.textDim, fontSize = 10.sp)
                             }
                         }
                     }
                 }
-
-                items(display, key = { it.hashCode() }) { log ->
-                    LogEntryCard(log = log)
+                items(display) { log: SensorLog ->
+                    LogEntryCard(log = log, fmt = fmt)
                 }
             }
         }
@@ -172,10 +179,9 @@ fun LogsScreen(uiState: ThermalUiState) {
 }
 
 @Composable
-fun LogEntryCard(log: SensorLog) {
-    val color = tagColor(log.tag)
-    val ts = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(log.timestamp))
-
+fun LogEntryCard(log: SensorLog, fmt: SimpleDateFormat) {
+    val color = logTagColor(log.tag)
+    val ts = fmt.format(Date(log.timestamp))
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -186,7 +192,6 @@ fun LogEntryCard(log: SensorLog) {
                 RoundedCornerShape(12.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        // Header de la entrada
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -200,18 +205,15 @@ fun LogEntryCard(log: SensorLog) {
                         .background(color.copy(alpha = 0.15f))
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    Text(log.tag, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = color,
-                        letterSpacing = 0.5.sp)
+                    Text(log.tag, fontSize = 8.sp, fontWeight = FontWeight.Bold,
+                        color = color, letterSpacing = 0.5.sp)
                 }
                 Text(log.field, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
-                if (log.isEstimated) {
-                    Text("⚠ estimado", fontSize = 8.sp, color = TG.amber)
-                }
+                if (log.isEstimated) Text("⚠ estimado", fontSize = 8.sp, color = TG.amber)
             }
             Text(ts, fontSize = 9.sp, color = TG.textDim, fontFamily = FontFamily.Monospace)
         }
         Spacer(Modifier.height(4.dp))
-        // Valor en formato código
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -222,9 +224,11 @@ fun LogEntryCard(log: SensorLog) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("${log.parsedValue} ${log.unit}",
+                Text(
+                    "${log.parsedValue} ${log.unit}",
                     fontSize = 14.sp, fontWeight = FontWeight.ExtraBold,
-                    color = color, fontFamily = FontFamily.Monospace)
+                    color = color, fontFamily = FontFamily.Monospace
+                )
                 Text(log.source, fontSize = 8.sp, color = TG.textDim,
                     fontFamily = FontFamily.Monospace)
             }
@@ -236,7 +240,7 @@ fun LogEntryCard(log: SensorLog) {
     }
 }
 
-private fun tagColor(tag: String): Color = when (tag) {
+fun logTagColor(tag: String): Color = when (tag) {
     "THERMAL"  -> Color(0xFFFF5252)
     "CPU"      -> Color(0xFF448AFF)
     "BATTERY"  -> Color(0xFF69F0AE)
