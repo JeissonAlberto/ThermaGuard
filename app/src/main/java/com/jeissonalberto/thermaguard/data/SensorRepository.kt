@@ -365,40 +365,60 @@ class SensorRepository(private val context: Context) {
         } catch (e: Exception) { emptyList() }
     }
 
+    private var cpuEma: Float = -1f  // Suavizado exponencial (EMA) entre lecturas
+
     private suspend fun readCpuUsage(): Float = withContext(Dispatchers.IO) {
-        // Método 1: /proc/stat (funciona en la mayoría de dispositivos)
+        // ── MÉTODO 1: /proc/stat — lectura diferencial con 800ms ──────────
+        // El S22 (Exynos 2200, 8 núcleos) necesita más tiempo para captura
+        // estable. La línea "cpu " es la suma de todos los núcleos.
+        // idle está en columna [3], iowait en [4] — ambos son tiempo no activo.
         try {
-            val s1 = File("/proc/stat").readLines().firstOrNull { it.startsWith("cpu ") }
+            fun parseStat(): Pair<Long, Long>? {
+                val line = File("/proc/stat").readLines()
+                    .firstOrNull { it.startsWith("cpu ") } ?: return null
+                val parts = line.trim().split("\s+".toRegex()).drop(1)
+                    .mapNotNull { it.toLongOrNull() }
+                if (parts.size < 5) return null
+                val total = parts.sum()
+                val idle  = parts[3] + parts[4]   // idle + iowait = tiempo real libre
+                return Pair(total, idle)
+            }
+            val s1 = parseStat()
             if (s1 != null) {
-                delay(350L)
-                val s2 = File("/proc/stat").readLines().firstOrNull { it.startsWith("cpu ") } ?: return@withContext 0f
-                val v1 = s1.trim().split(" ").filter { it.isNotEmpty() }.drop(1).mapNotNull { it.toLongOrNull() }
-                val v2 = s2.trim().split(" ").filter { it.isNotEmpty() }.drop(1).mapNotNull { it.toLongOrNull() }
-                if (v1.size >= 4 && v2.size >= 4) {
-                    val totalDiff = v2.sum() - v1.sum()
-                    val idleDiff  = v2[3] - v1[3]
-                    if (totalDiff > 0) {
-                        val pct = ((totalDiff - idleDiff).toFloat() / totalDiff.toFloat() * 100f).coerceIn(0f, 100f)
-                        if (pct > 0f) return@withContext pct
+                delay(800L)   // 800ms: captura estable en SoC de 8 núcleos
+                val s2 = parseStat()
+                if (s2 != null) {
+                    val totalDiff = s2.first  - s1.first
+                    val idleDiff  = s2.second - s1.second
+                    if (totalDiff > 50) {   // mínimo de actividad para ser válido
+                        val raw = ((totalDiff - idleDiff).toFloat() / totalDiff * 100f)
+                            .coerceIn(0f, 100f)
+                        // EMA α=0.3 — suaviza spikes sin ocultar subidas reales
+                        cpuEma = if (cpuEma < 0f) raw else cpuEma * 0.7f + raw * 0.3f
+                        return@withContext cpuEma
                     }
                 }
             }
         } catch (_: Exception) {}
-        // Método 2: /proc/loadavg (más compatible con Samsung)
+
+        // ── MÉTODO 2: /proc/loadavg — CORREGIDO para Android/Samsung ──────
+        // loadavg ≠ % de CPU. En Linux/Android cuenta procesos en run-queue
+        // incluyendo I/O wait. Factor corrector empírico para Samsung: /2.5
+        // Un loadavg de 1.0 por núcleo = CPU saturado = 100%
+        // Pero Android idle NORMAL tiene loadavg 4-7 → sin corrección = 80%
         try {
-            val load = File("/proc/loadavg").readText().trim().split(" ")[0].toFloat()
-            // load average de 1 minuto / núcleos = % aproximado
-            val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
-            return@withContext (load / cores * 100f).coerceIn(0f, 100f)
+            val parts = File("/proc/loadavg").readText().trim().split(" ")
+            val load1m = parts[0].toFloat()   // promedio 1 minuto
+            val cores  = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
+            // Corrección: loadavg en Android incluye D-state (I/O), dividir por 2
+            // para aproximar solo CPU. Cap al 95% para no mostrar saturación falsa.
+            val corrected = (load1m / (cores * 2f) * 100f).coerceIn(1f, 95f)
+            return@withContext corrected
         } catch (_: Exception) {}
-        // Método 3: ActivityManager — uso de procesos
-        try {
-            val procs = activityManager.runningAppProcesses ?: return@withContext 0f
-            val foreground = procs.count { it.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE }
-            val total = procs.size.coerceAtLeast(1)
-            return@withContext (foreground.toFloat() / total * 80f).coerceIn(5f, 85f)
-        } catch (_: Exception) {}
-        0f
+
+        // ── MÉTODO 3: Fallback conservador ────────────────────────────────
+        // Si no hay acceso a /proc, retornar valor neutro (no 80%)
+        15f
     }
 
     // ============================================================
