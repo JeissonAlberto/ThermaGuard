@@ -849,6 +849,155 @@ class ThermalLearningEngine(context: Context) {
         return (v * v * f * 100f).coerceIn(0f, 100f)
     }
 
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  GENERADOR DE RECOMENDACIONES DE ENFRIAMIENTO
+    //  Usa datos REALES del hardware para dar consejos precisos y priorizados
+    // ════════════════════════════════════════════════════════════════════════
+    fun generateCoolingRecommendations(
+        snapshot: ThermalSnapshot,
+        silicon: SiliconAnalysis,
+        mode: OperationMode
+    ): List<CoolingRecommendation> {
+
+        val temp   = snapshot.batteryTemp
+        val cpu    = snapshot.cpuUsage
+        val recs   = mutableListOf<CoolingRecommendation>()
+
+        // ── PANTALLA (mayor fuente de calor en smartphones) ──────────────
+        if (snapshot.brightnessLevel > 180) {
+            recs.add(CoolingRecommendation(
+                id = "display_brightness",
+                category = CoolingCategory.DISPLAY,
+                icon = "☀️",
+                title = "Reduce el brillo de pantalla",
+                detail = "El panel AMOLED del S22 genera calor proporcional al brillo. " +
+                         "Bajar de ${snapshot.brightnessLevel}/255 a 120 puede reducir hasta 2-3°C.",
+                impactDegrees = 2.5f, effort = 1
+            ))
+        }
+        if (snapshot.displayTemp > 36f) {
+            recs.add(CoolingRecommendation(
+                id = "display_timeout",
+                category = CoolingCategory.DISPLAY,
+                icon = "📴",
+                title = "Activa el timeout de pantalla corto",
+                detail = "La pantalla activa es el mayor consumidor térmico del S22. " +
+                         "Configura apagado en 30s cuando no la uses activamente.",
+                impactDegrees = 3f, effort = 1
+            ))
+        }
+
+        // ── CONECTIVIDAD ─────────────────────────────────────────────────
+        if (snapshot.bluetoothActive && temp > 38f) {
+            recs.add(CoolingRecommendation(
+                id = "bluetooth_off",
+                category = CoolingCategory.CONNECTIVITY,
+                icon = "🔵",
+                title = "Desactiva Bluetooth si no lo usas",
+                detail = "El chip Bluetooth/WiFi comparte disipador con el modem. " +
+                         "Temperatura del modem: ${snapshot.modemTemp.toInt()}°C.",
+                impactDegrees = 1f, effort = 1
+            ))
+        }
+        if (snapshot.modemTemp > 40f) {
+            recs.add(CoolingRecommendation(
+                id = "modem_heat",
+                category = CoolingCategory.CONNECTIVITY,
+                icon = "📡",
+                title = "El modem está caliente — revisa señal",
+                detail = "A baja señal el modem amplifica más para conectarse, generando más calor. " +
+                         "Modem: ${snapshot.modemTemp.toInt()}°C. Activa modo avión brevemente para resetear.",
+                impactDegrees = 2f, effort = 1
+            ))
+        }
+
+        // ── APPS EN SEGUNDO PLANO ────────────────────────────────────────
+        if (cpu > 35f && snapshot.topApp.isNotEmpty()) {
+            recs.add(CoolingRecommendation(
+                id = "top_app_cpu",
+                category = CoolingCategory.BACKGROUND,
+                icon = "📱",
+                title = ""${snapshot.topApp.split('.').last()}" está usando ${cpu.toInt()}% del CPU",
+                detail = "Esta app es la causa principal del calor actual. " +
+                         "Ciérrala o limítala en Ajustes → Apps → Batería → Restringida.",
+                impactDegrees = silicon.moorePower / 30f, effort = 1
+            ))
+        }
+        if (snapshot.ramUsageMb in 1..500) {
+            recs.add(CoolingRecommendation(
+                id = "ram_pressure",
+                category = CoolingCategory.BACKGROUND,
+                icon = "🧠",
+                title = "RAM crítica — el sistema trabaja de más",
+                detail = "Con solo ${snapshot.ramUsageMb}MB libre, el sistema hace swap y " +
+                         "el Exynos 2200 genera calor extra gestionando la memoria. " +
+                         "Cierra apps que no uses.",
+                impactDegrees = 1.5f, effort = 1
+            ))
+        }
+
+        // ── CARGA DE BATERÍA ─────────────────────────────────────────────
+        if (snapshot.isCharging && temp > 38f) {
+            recs.add(CoolingRecommendation(
+                id = "charging_heat",
+                category = CoolingCategory.CHARGING,
+                icon = "⚡",
+                title = "Cargando y caliente — riesgo para la batería",
+                detail = "Cargar con el teléfono caliente degrada la batería más rápido. " +
+                         "Desconéctalo unos minutos, deja que baje de 36°C y vuelve a cargar. " +
+                         "Evita usar apps pesadas mientras carga.",
+                impactDegrees = 3.5f, effort = 1
+            ))
+        }
+
+        // ── HARDWARE FÍSICO ──────────────────────────────────────────────
+        if (temp > 40f) {
+            recs.add(CoolingRecommendation(
+                id = "remove_case",
+                category = CoolingCategory.ENVIRONMENT,
+                icon = "🧳",
+                title = "Retira la funda del teléfono",
+                detail = "Las fundas de plástico o silicona actúan como aislante térmico. " +
+                         "Sin funda, la carcasa de aluminio del S22 actúa como disipador y " +
+                         "puede bajar 3-5°C rápidamente.",
+                impactDegrees = 3.5f, effort = 1
+            ))
+        }
+
+        // ── THROTTLE INMINENTE (Amdahl) ──────────────────────────────────
+        if (silicon.amdahlTimeToThrottle in 1..180) {
+            val mins = silicon.amdahlTimeToThrottle / 60
+            recs.add(CoolingRecommendation(
+                id = "throttle_warning",
+                category = CoolingCategory.PERFORMANCE,
+                icon = "⚠️",
+                title = "Throttle térmico en ~${mins} min — Amdahl",
+                detail = "El scheduler del S22 va a reducir la frecuencia del CPU para enfriar. " +
+                         "Solo quedan ${silicon.amdahlParallelScore.toInt()}/8 núcleos activos. " +
+                         "Reduce la carga ahora para evitar la desaceleración.",
+                impactDegrees = 4f, effort = 2
+            ))
+        }
+
+        // ── DENNARD LEAKAGE (calor sin trabajo) ──────────────────────────
+        if (silicon.dennardLeakage > 35f) {
+            recs.add(CoolingRecommendation(
+                id = "dennard_leakage",
+                category = CoolingCategory.SYSTEM,
+                icon = "🔬",
+                title = "Fuga de corriente elevada — Dennard",
+                detail = "El chip genera ${silicon.dennardLeakage.toInt()}% de calor de fondo " +
+                         "aunque no esté procesando (corriente de fuga del Exynos 2200). " +
+                         "Reiniciar el dispositivo puede reducirla temporalmente.",
+                impactDegrees = 2f, effort = 2
+            ))
+        }
+
+        // Ordenar por impacto descendente
+        return recs.sortedByDescending { it.impactDegrees }
+    }
+
     companion object {
         const val ThermalMonitorIntervalMin = 1
     }
