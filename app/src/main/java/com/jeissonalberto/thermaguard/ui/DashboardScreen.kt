@@ -84,7 +84,8 @@ fun GlassCard(
 fun DashboardScreen(
     uiState: ThermalUiState,
     onToggleMonitor: () -> Unit,
-    onToggleAutoMode: () -> Unit
+    onToggleAutoMode: () -> Unit,
+    onSetMode: (OperationMode) -> Unit = {}
 ) {
     val snap   = uiState.latest
     val level  = snap.batteryTemp.toThermalLevel()
@@ -125,6 +126,7 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             HeaderBar(uiState = uiState, accent = accent)
+            ModeSelector(mode = uiState.operationMode, onSetMode = onSetMode, accent = accent)
 
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 PremiumGauge(snap = snap, level = level, accent = accent, uiState = uiState)
@@ -191,6 +193,8 @@ fun DashboardScreen(
             if (uiState.safeChargeState.isCharging) SafeChargeBanner(safeCharge = uiState.safeChargeState)
             if (uiState.isCoolingDown) CoolingAnimation()
 
+            if (uiState.coolingRecs.isNotEmpty())
+                CoolingRecsCard(recs = uiState.coolingRecs)
             JasolFooter()
             Spacer(Modifier.height(8.dp))
         }
@@ -1087,6 +1091,154 @@ fun DataSourceChip(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = color)
         Text(label, fontSize = 8.sp, color = TG.textDim)
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  SELECTOR DE MODO (LEARNING / AUTO / ACTIVE)
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent: Color) {
+    val modes = listOf(
+        Triple(OperationMode.LEARNING, "Aprendizaje", "🧠"),
+        Triple(OperationMode.AUTO,     "Automático",  "⚙️"),
+        Triple(OperationMode.ACTIVE,   "Activo",      "🔥")
+    )
+    val modeColor = when (mode) {
+        OperationMode.LEARNING -> TG.blue
+        OperationMode.AUTO     -> TG.green
+        OperationMode.ACTIVE   -> TG.red
+    }
+    val modeDesc = when (mode) {
+        OperationMode.LEARNING -> "Solo observa y aprende · lecturas cada 60s · bajo consumo"
+        OperationMode.AUTO     -> "Actúa según lo aprendido · lecturas cada 30s"
+        OperationMode.ACTIVE   -> "Intervención máxima · lecturas cada 15s"
+    }
+    Column(
+        modifier = Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(TG.glass)
+            .border(1.dp, modeColor.copy(alpha = 0.22f), RoundedCornerShape(16.dp))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Modo de operación", fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                color = TG.textPri)
+            Text(modeDesc, fontSize = 9.sp, color = TG.textSec,
+                modifier = Modifier.weight(1f).padding(start = 8.dp),
+                textAlign = TextAlign.End)
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            modes.forEach { (m, label, icon) ->
+                val isSelected = m == mode
+                val btnColor = when (m) {
+                    OperationMode.LEARNING -> TG.blue
+                    OperationMode.AUTO     -> TG.green
+                    OperationMode.ACTIVE   -> TG.red
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isSelected) btnColor.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f))
+                        .border(1.dp,
+                            if (isSelected) btnColor.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.08f),
+                            RoundedCornerShape(12.dp))
+                        .clickable { onSetMode(m) }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text(icon, fontSize = 16.sp)
+                        Text(label, fontSize = 10.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) btnColor else TG.textSec)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  RECOMENDACIONES DE ENFRIAMIENTO
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun CoolingRecsCard(recs: List<CoolingRecommendation>) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(TG.glass)
+            .border(1.dp, TG.teal.copy(alpha = 0.22f), RoundedCornerShape(20.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Default.AcUnit, null, tint = TG.teal, modifier = Modifier.size(16.dp))
+            Text("Recomendaciones para enfriar", fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold, color = TG.textPri)
+            Spacer(Modifier.weight(1f))
+            Text("${recs.size} acciones", fontSize = 10.sp, color = TG.textSec)
+        }
+        recs.take(4).forEach { rec ->
+            val impactColor = when {
+                rec.impactDegrees >= 3.5f -> TG.green
+                rec.impactDegrees >= 2f   -> TG.amber
+                else                      -> TG.teal
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(impactColor.copy(alpha = 0.06f))
+                    .border(1.dp, impactColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(rec.icon, fontSize = 20.sp, modifier = Modifier.padding(top = 1.dp))
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(rec.title, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                            color = TG.textPri, modifier = Modifier.weight(1f))
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Icon(Icons.Default.ArrowDownward, null,
+                                tint = impactColor, modifier = Modifier.size(11.dp))
+                            Text("${rec.impactDegrees}°C", fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold, color = impactColor)
+                        }
+                    }
+                    Text(rec.detail, fontSize = 10.sp, color = TG.textSec, lineHeight = 14.sp)
+                    // Effort indicator
+                    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                        repeat(rec.effort) {
+                            Box(modifier = Modifier.size(width = 12.dp, height = 3.dp)
+                                .clip(RoundedCornerShape(2.dp)).background(impactColor))
+                        }
+                        repeat(3 - rec.effort) {
+                            Box(modifier = Modifier.size(width = 12.dp, height = 3.dp)
+                                .clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.1f)))
+                        }
+                        Spacer(Modifier.width(4.dp))
+                        Text(when (rec.effort) { 1 -> "Fácil"; 2 -> "Medio"; else -> "Ajuste" },
+                            fontSize = 8.sp, color = TG.textDim)
+                    }
+                }
+            }
+        }
+        if (recs.size > 4) {
+            Text("+ ${recs.size - 4} acciones más disponibles",
+                fontSize = 10.sp, color = TG.textDim,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center)
+        }
     }
 }
 
