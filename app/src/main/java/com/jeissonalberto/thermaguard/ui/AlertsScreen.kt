@@ -59,7 +59,7 @@ fun AlertsScreen(
                         color = TG.textPri, letterSpacing = (-0.5).sp)
                     Text("Motor autónomo — siempre activo", fontSize = 12.sp, color = TG.green)
                 }
-                AutoBadge(accent = TG.green)
+                ModeBadge(mode = uiState.operationMode, accent = accent)
             }
             Spacer(Modifier.height(16.dp))
 
