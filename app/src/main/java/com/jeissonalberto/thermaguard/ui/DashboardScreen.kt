@@ -88,115 +88,296 @@ fun DashboardScreen(
     onSetMode: (OperationMode) -> Unit = {}
 ) {
     val snap   = uiState.latest
-    val level  = snap.batteryTemp.toThermalLevel()
+    // Temperatura principal: usar cpuTemp si está disponible, sino batteryTemp
+    val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
+    val level  = mainTemp.toThermalLevel()
     val accent = TG.accentFor(level)
     val glow   = TG.glowFor(level)
     val scroll = rememberScrollState()
+    var showSilicon by remember { mutableStateOf(false) }
 
     val inf = rememberInfiniteTransition(label = "bg")
-    val orbAlpha by inf.animateFloat(0.5f, 0.9f,
-        infiniteRepeatable(tween(2800, easing = EaseInOut), RepeatMode.Reverse), label = "oa")
-    val orb2Alpha by inf.animateFloat(0.3f, 0.7f,
-        infiniteRepeatable(tween(3400, easing = EaseInOut), RepeatMode.Reverse), label = "ob")
+    val orbAlpha by inf.animateFloat(0.4f, 0.85f,
+        infiniteRepeatable(tween(3000, easing = EaseInOut), RepeatMode.Reverse), label = "oa")
 
     Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
-        // Orb principal
-        Box(
-            modifier = Modifier
-                .size(420.dp)
-                .offset(x = (-60).dp, y = (-80).dp)
-                .blur(100.dp)
-                .background(glow.copy(alpha = orbAlpha * 0.5f), CircleShape)
-        )
-        // Orb secundario (fondo derecho)
-        Box(
-            modifier = Modifier
-                .size(280.dp)
-                .align(Alignment.BottomEnd)
-                .offset(x = 60.dp, y = 60.dp)
-                .blur(80.dp)
-                .background(accent.copy(alpha = orb2Alpha * 0.08f), CircleShape)
-        )
+        // Orb de fondo reactivo a temperatura
+        Box(modifier = Modifier
+            .size(400.dp).align(Alignment.TopCenter).offset(y = (-80).dp).blur(110.dp)
+            .background(glow.copy(alpha = orbAlpha * 0.45f), CircleShape))
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scroll)
-                .padding(horizontal = 18.dp, vertical = 16.dp),
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // ── HEADER: logo + badge de modo ─────────────────────────────
             HeaderBar(uiState = uiState, accent = accent)
+
+            // ── HERO: temperatura grande + estado ────────────────────────
+            TempHeroCard(snap = snap, mainTemp = mainTemp, level = level, accent = accent, uiState = uiState)
+
+            // ── FILA DE MÉTRICAS CLAVE (adaptativas al hardware) ─────────
+            HardwareMetricsRow(snap = snap, accent = accent)
+
+            // ── MODO DE OPERACIÓN ────────────────────────────────────────
             ModeSelector(mode = uiState.operationMode, onSetMode = onSetMode, accent = accent)
 
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                PremiumGauge(snap = snap, level = level, accent = accent, uiState = uiState)
-            }
-
-            QuickStatusBar(snap = snap, level = level, accent = accent)
-
-            // Métricas 3 en fila
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                MetricTile(
-                    modifier = Modifier.weight(1f),
-                    label    = "CPU",
-                    value    = if (snap.cpuUsage < 1f) "—" else "${snap.cpuUsage.toInt()}%",
-                    icon     = Icons.Default.Speed,
-                    color    = when {
-                        snap.cpuUsage > 75 -> TG.red
-                        snap.cpuUsage > 45 -> TG.amber
-                        else               -> TG.green
-                    },
-                    sublabel = cpuLabel(snap.cpuUsage)
-                )
-                MetricTile(
-                    modifier = Modifier.weight(1f),
-                    label    = "Batería",
-                    value    = "${snap.batteryLevel}%",
-                    icon     = if (snap.isCharging) Icons.Default.BatteryChargingFull else Icons.Default.BatteryFull,
-                    color    = when {
-                        snap.batteryLevel < 15 -> TG.red
-                        snap.isCharging        -> TG.amber
-                        else                   -> TG.green
-                    },
-                    sublabel = if (snap.isCharging) "Cargando ⚡" else "Normal"
-                )
-                MetricTile(
-                    modifier = Modifier.weight(1f),
-                    label    = "RAM libre",
-                    value    = if (snap.ramUsageMb > 0) "${snap.ramUsageMb}MB" else "—",
-                    icon     = Icons.Default.Memory,
-                    color    = when {
-                        snap.ramUsageMb in 1..399   -> TG.red
-                        snap.ramUsageMb in 400..899 -> TG.amber
-                        else                        -> TG.green
-                    },
-                    sublabel = ramLabel(snap.ramUsageMb)
-                )
-            }
-
-            SiliconPanel(snap = snap, accent = accent, silicon = uiState.siliconAnalysis)
-
-            uiState.prediction?.let { pred ->
-                if (pred.confidence != PredictionConfidence.LOW && pred.predictedTemp > 0f) {
-                    PredictionCard(pred = pred, accent = accent)
-                }
-            }
-
-            if (uiState.causes.isNotEmpty()) HeatCausesCard(causes = uiState.causes)
-            if (uiState.autoActionsLog.isNotEmpty()) AutoActionBanner(action = uiState.autoActionsLog.first())
-            val tips = uiState.smartTips.take(2)
-            if (tips.isNotEmpty()) SmartTipsCard(tips = tips)
+            // ── ALERTAS ACTIVAS (solo si hay algo urgente) ───────────────
             if (uiState.gameModeState.isActive) GameModeBanner(gameMode = uiState.gameModeState)
             if (uiState.safeChargeState.isCharging) SafeChargeBanner(safeCharge = uiState.safeChargeState)
             if (uiState.isCoolingDown) CoolingAnimation()
+            if (uiState.autoActionsLog.isNotEmpty()) AutoActionBanner(action = uiState.autoActionsLog.first())
 
-            if (uiState.coolingRecs.isNotEmpty())
-                CoolingRecsCard(recs = uiState.coolingRecs)
+            // ── CAUSAS DEL CALOR ─────────────────────────────────────────
+            if (uiState.causes.isNotEmpty()) HeatCausesCard(causes = uiState.causes)
+
+            // ── RECOMENDACIONES PARA ENFRIAR ────────────────────────────
+            if (uiState.coolingRecs.isNotEmpty()) CoolingRecsCard(recs = uiState.coolingRecs)
+
+            // ── PREDICCIÓN ───────────────────────────────────────────────
+            uiState.prediction?.let { pred ->
+                if (pred.confidence != PredictionConfidence.LOW && pred.predictedTemp > 0f)
+                    PredictionCard(pred = pred, accent = accent)
+            }
+
+            // ── TIPS INTELIGENTES ────────────────────────────────────────
+            val tips = uiState.smartTips.take(2)
+            if (tips.isNotEmpty()) SmartTipsCard(tips = tips)
+
+            // ── MOTOR v6 (colapsable — para quien quiera el detalle) ─────
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(TG.glass)
+                    .border(1.dp, accent.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                    .clickable { showSilicon = !showSilicon }
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("🔬", fontSize = 16.sp)
+                        Column {
+                            Text("Motor v6 — Análisis del silicio",
+                                fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                            Text("Dennard · Pollack · Amdahl · Moore",
+                                fontSize = 9.sp, color = TG.textDim)
+                        }
+                    }
+                    Icon(
+                        if (showSilicon) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        null, tint = TG.textDim, modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+            if (showSilicon) {
+                SiliconPanel(snap = snap, accent = accent, silicon = uiState.siliconAnalysis)
+            }
+
             JasolFooter()
             Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  HERO CARD — temperatura principal, estado del dispositivo
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun TempHeroCard(
+    snap: ThermalSnapshot,
+    mainTemp: Float,
+    level: ThermalLevel,
+    accent: Color,
+    uiState: ThermalUiState
+) {
+    val tempAnim by animateFloatAsState(mainTemp, tween(1000, easing = EaseOutCubic), label = "t")
+    val riskScore = uiState.profile?.riskScore ?: 0
+
+    val statusText = when (level) {
+        ThermalLevel.NORMAL    -> "Todo bajo control 🟢"
+        ThermalLevel.WARM      -> "Calentando un poco 🟡"
+        ThermalLevel.HOT       -> "Temperatura alta ⚠️"
+        ThermalLevel.CRITICAL  -> "Temperatura crítica 🔴"
+        ThermalLevel.EMERGENCY -> "¡Emergencia térmica! 🚨"
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(TG.glass)
+            .border(1.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(24.dp))
+            .padding(20.dp)
+    ) {
+        // Glow interior
+        Box(modifier = Modifier
+            .size(200.dp).align(Alignment.TopEnd).offset(x = 40.dp, y = (-40).dp).blur(60.dp)
+            .background(accent.copy(alpha = 0.12f), CircleShape))
+
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            // Temperatura grande
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        "${tempAnim.toInt()}°C",
+                        fontSize = 64.sp,
+                        fontWeight = FontWeight.Black,
+                        color = accent,
+                        letterSpacing = (-2).sp
+                    )
+                    Text(statusText, fontSize = 13.sp, color = TG.textSec,
+                        fontWeight = FontWeight.Medium)
+                }
+                // Riesgo circular
+                Box(
+                    modifier = Modifier.size(72.dp)
+                        .clip(CircleShape)
+                        .background(accent.copy(alpha = 0.1f))
+                        .border(2.dp, accent.copy(alpha = 0.3f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$riskScore", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = accent)
+                        Text("riesgo", fontSize = 8.sp, color = TG.textDim)
+                    }
+                }
+            }
+
+            // Mini-barra de riesgo
+            RiskMiniBar(risk = riskScore.toFloat(), accent = accent)
+
+            // Chip de app activa (si hay)
+            if (snap.topApp.isNotEmpty()) {
+                val appName = snap.topApp.split(".").last().replaceFirstChar { it.uppercase() }
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White.copy(alpha = 0.05f))
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Default.PhoneAndroid, null, tint = TG.textDim, modifier = Modifier.size(12.dp))
+                    Text("App activa: $appName", fontSize = 10.sp, color = TG.textSec)
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  FILA DE MÉTRICAS ADAPTATIVAS — solo muestra lo que el hardware reporta
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun HardwareMetricsRow(snap: ThermalSnapshot, accent: Color) {
+    // Construir métricas disponibles dinámicamente
+    data class Metric(val label: String, val value: String, val sub: String, val color: Color)
+
+    val metrics = buildList {
+        // CPU — siempre disponible
+        add(Metric(
+            label = "CPU",
+            value = if (snap.cpuUsage >= 1f) "${snap.cpuUsage.toInt()}%" else "—",
+            sub = when {
+                snap.cpuUsage > 75f -> "Alta carga"
+                snap.cpuUsage > 40f -> "Moderado"
+                snap.cpuUsage >= 1f -> "Normal"
+                else               -> "Sin datos"
+            },
+            color = when {
+                snap.cpuUsage > 75f -> TG.red
+                snap.cpuUsage > 40f -> TG.amber
+                else               -> TG.green
+            }
+        ))
+        // Batería — siempre disponible
+        add(Metric(
+            label = "Batería",
+            value = "${snap.batteryLevel}%",
+            sub = if (snap.isCharging) "Cargando ⚡" else if (snap.batteryLevel < 20) "Baja" else "OK",
+            color = when {
+                snap.batteryLevel < 15 -> TG.red
+                snap.isCharging        -> TG.amber
+                else                   -> TG.green
+            }
+        ))
+        // RAM — si el hardware la reporta
+        if (snap.ramUsageMb > 0) {
+            add(Metric(
+                label = "RAM libre",
+                value = "${snap.ramUsageMb}MB",
+                sub = when {
+                    snap.ramUsageMb < 400 -> "Crítica"
+                    snap.ramUsageMb < 900 -> "Ajustada"
+                    else                  -> "Holgada"
+                },
+                color = when {
+                    snap.ramUsageMb < 400 -> TG.red
+                    snap.ramUsageMb < 900 -> TG.amber
+                    else                  -> TG.green
+                }
+            ))
+        }
+        // GPU temp — si el sensor existe
+        if (snap.gpuTemp > 20f) {
+            add(Metric(
+                label = "GPU",
+                value = "${snap.gpuTemp.toInt()}°C",
+                sub = if (snap.gpuTemp > 50f) "Caliente" else "Normal",
+                color = if (snap.gpuTemp > 50f) TG.amber else TG.green
+            ))
+        }
+        // Modem — si el sensor existe
+        if (snap.modemTemp > 20f) {
+            add(Metric(
+                label = "Modem",
+                value = "${snap.modemTemp.toInt()}°C",
+                sub = if (snap.modemTemp > 45f) "Caliente" else "Normal",
+                color = if (snap.modemTemp > 45f) TG.amber else TG.green
+            ))
+        }
+    }
+
+    // Mostrar en filas de 3
+    val chunks = metrics.chunked(3)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        chunks.forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                row.forEach { m ->
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(TG.glass)
+                            .border(1.dp, m.color.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
+                            .padding(horizontal = 10.dp, vertical = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(m.label, fontSize = 9.sp, color = TG.textDim,
+                            fontWeight = FontWeight.Medium, letterSpacing = 0.3.sp)
+                        Text(m.value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = m.color)
+                        Text(m.sub, fontSize = 9.sp, color = TG.textSec)
+                    }
+                }
+                // Rellenar si la fila tiene menos de 3
+                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+            }
         }
     }
 }
