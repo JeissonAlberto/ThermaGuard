@@ -119,6 +119,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         it.copy(
                             latest             = snapshot,
                             causes             = causes,
+                            causes             = causes,
                             profile            = profile,
                             prediction         = prediction,
                             batteryHealth      = health,
