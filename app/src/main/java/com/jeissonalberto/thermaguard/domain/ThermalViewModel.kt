@@ -20,6 +20,8 @@ data class ThermalUiState(
     val componentDiagnoses: List<ComponentDiagnosis> = emptyList(),
     val autoActionsLog: List<AutoAction> = emptyList(),
     val siliconAnalysis: SiliconAnalysis? = null,
+    val operationMode: OperationMode = OperationMode.LEARNING,
+    val coolingRecs: List<CoolingRecommendation> = emptyList(),
     val isMonitoring: Boolean = false,
     val alertThreshold: Float = 43f,
     val isLoading: Boolean = true,
@@ -53,6 +55,21 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private var lastAutoTime    = 0L
     private var wasHot          = false
 
+    // Modo de operación — persiste entre sesiones
+    private var _operationMode = OperationMode.LEARNING
+
+    fun setOperationMode(mode: OperationMode) {
+        _operationMode = mode
+        _uiState.update { it.copy(operationMode = mode) }
+    }
+
+    // Intervalo adaptativo: LEARNING=60s(bajo consumo), AUTO=30s, ACTIVE=15s
+    private val intervalMs: Long get() = when (_operationMode) {
+        OperationMode.LEARNING -> 60_000L
+        OperationMode.AUTO     -> 30_000L
+        OperationMode.ACTIVE   -> 15_000L
+    }
+
     init {
         observeHistory()
         startLiveReading()
@@ -64,10 +81,15 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             while (true) {
                 try {
                     val snapshot   = sensorRepo.readSnapshot()
-                    val causes     = sensorRepo.analyzeHeatCauses(snapshot)
+                    // En modo LEARNING con temp normal: saltar análisis pesados
+                    val isLowImpact = _operationMode == OperationMode.LEARNING && snapshot.batteryTemp < 38f
+                    val causes     = if (isLowImpact) emptyList() else sensorRepo.analyzeHeatCauses(snapshot)
                     val diagnoses  = sensorRepo.diagnoseComponents(snapshot)
                     val profile    = learningEngine.learn(snapshot)
                     val silicon    = learningEngine.analyzeSilicon(snapshot)
+                    val coolingRecs = if (_operationMode != OperationMode.LEARNING || snapshot.batteryTemp > 40f)
+                        learningEngine.generateCoolingRecommendations(snapshot, silicon, _operationMode)
+                    else emptyList()
                     val prediction = learningEngine.predictNextTemp()
                     val health     = learningEngine.computeBatteryHealthScore()
                     val hourly     = learningEngine.getHourlyProfile()
@@ -107,6 +129,8 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                             isLoading          = false,
                             isMonitoring       = true,
                             siliconAnalysis    = silicon,
+                            operationMode      = _operationMode,
+                            coolingRecs        = coolingRecs,
                             gameModeState      = gameMode,
                             safeChargeState    = safeCharge,
                             isCoolingDown      = isCooling,
@@ -118,7 +142,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
                 } catch (_: Exception) { }
 
-                delay(30_000L)
+                delay(intervalMs)
             }
         }
     }
