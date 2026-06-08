@@ -197,6 +197,7 @@ fun LogsScreen(uiState: ThermalUiState) {
                     LogEntryCard(log = log, fmt = fmt)
                 }
             }
+            } // end else
         }
     }
 }
