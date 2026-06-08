@@ -117,6 +117,10 @@ fun DashboardScreen(
             // ── HEADER: logo + badge de modo ─────────────────────────────
             HeaderBar(uiState = uiState, accent = accent)
 
+            // ── AVATAR INTERACTIVO ───────────────────────────────────────
+            AvatarCard(level = level, temp = mainTemp,
+                modifier = Modifier.fillMaxWidth())
+
             // ── HERO: temperatura grande + estado ────────────────────────
             TempHeroCard(snap = snap, mainTemp = mainTemp, level = level, accent = accent, uiState = uiState)
 
