@@ -50,7 +50,8 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
     val scroll = rememberScrollState()
     val snap   = uiState.latest
     val diags  = uiState.componentDiagnoses
-    val level  = snap.batteryTemp.toThermalLevel()
+    val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
+    val level  = mainTemp.toThermalLevel()
     val accent = TG.accentFor(level)
 
     Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
