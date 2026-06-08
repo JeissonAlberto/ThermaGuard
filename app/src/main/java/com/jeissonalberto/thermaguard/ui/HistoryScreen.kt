@@ -32,7 +32,48 @@ fun HistoryScreen(history: List<ThermalSnapshot>) {
             fontWeight = FontWeight.Bold
         )
 
-        if (history.isEmpty()) {
+        // Resumen de la sesión
+    if (history.isNotEmpty()) {
+        val maxT = history.maxOf { it.batteryTemp }
+        val minT = history.minOf { it.batteryTemp }
+        val avgT = history.map { it.batteryTemp }.average().toFloat()
+        val maxColor = when {
+            maxT >= 50f -> TG.red
+            maxT >= 43f -> Color(0xFFFF6D00)
+            maxT >= 38f -> TG.amber
+            else        -> TG.green
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(TG.glass)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Max", fontSize = 10.sp, color = TG.textDim)
+                Text("${maxT.toInt()}°C", fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold, color = maxColor)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Min", fontSize = 10.sp, color = TG.textDim)
+                Text("${minT.toInt()}°C", fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold, color = TG.green)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Prom", fontSize = 10.sp, color = TG.textDim)
+                Text("${avgT.toInt()}°C", fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold, color = TG.textPri)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Lecturas", fontSize = 10.sp, color = TG.textDim)
+                Text("${history.size}", fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold, color = TG.textPri)
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+    }
+    if (history.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = "Sin datos aún. Activa el monitor.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
