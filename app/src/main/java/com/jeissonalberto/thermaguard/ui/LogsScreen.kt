@@ -261,7 +261,6 @@ fun LogEntryCard(log: SensorLog, fmt: SimpleDateFormat) {
                     fontFamily = FontFamily.Monospace)
             }
         }
-            }
     }
 }
 
