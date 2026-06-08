@@ -33,7 +33,8 @@ fun AlertsScreen(
     onClearLog: () -> Unit
 ) {
     val snap   = uiState.latest
-    val level  = snap.batteryTemp.toThermalLevel()
+    val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
+    val level  = mainTemp.toThermalLevel()
     val accent = TG.accentFor(level)
 
     Box(
