@@ -80,7 +80,7 @@ fun AboutScreen() {
                     letterSpacing = (-0.5).sp
                 )
                 Text(
-                    "v3.4.0",
+                    "v3.7.6",
                     fontSize = 12.sp,
                     color    = Color(0xFF00E5FF).copy(alpha = 0.6f),
                     modifier = Modifier.padding(top = 2.dp)
