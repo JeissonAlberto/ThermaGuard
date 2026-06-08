@@ -60,6 +60,7 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
         NavItem("Diagnóstico", Icons.Default.Science),
         NavItem("Stats",       Icons.Default.BarChart),
         NavItem("Alertas",     Icons.Default.Notifications),
+        NavItem("Optimizar",   Icons.Default.Tune),
         NavItem("Logs",        Icons.Default.Terminal),
         NavItem("Acerca",      Icons.Default.Info),
     )
@@ -196,7 +197,8 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                         2 -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
                         3 -> AlertsScreen(uiState = uiState, onThresholdChange = viewModel::setAlertThreshold, onClearLog = viewModel::clearAutoLog)
                         4 -> AboutScreen()
-                        4 -> LogsScreen(uiState = uiState)
+                        4 -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) })
+                        5 -> LogsScreen(uiState = uiState)
                         else -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) })
                     }
                 }
