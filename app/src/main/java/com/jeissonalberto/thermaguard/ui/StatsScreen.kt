@@ -157,6 +157,22 @@ fun StatMini(label: String, value: String, color: Color, modifier: Modifier) {
 // ── Gráfico temperatura 24h ────────────────────────────────────────────────
 @Composable
 fun TempChart24h(history: List<ThermalSnapshot>, accent: Color) {
+    if (history.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxWidth().height(120.dp)
+                .clip(RoundedCornerShape(16.dp)).background(TG.glass),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("El historial aparecera cuando el motor lleve activo unos minutos",
+                    fontSize = 11.sp, color = TG.textDim,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp))
+            }
+        }
+        return
+    }
     val cutoff = System.currentTimeMillis() - 24 * 3600 * 1000L
     val data   = history.filter { it.timestamp >= cutoff }.takeLast(60)
     if (data.size < 3) return
@@ -236,6 +252,19 @@ fun TempChart24h(history: List<ThermalSnapshot>, accent: Color) {
 // ── Ranking de apps ────────────────────────────────────────────────────────
 @Composable
 fun AppRankingCard(ranking: List<Pair<String, Float>>) {
+    if (ranking.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp)).background(TG.glass)
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Sin datos de apps aun — monitorea por unos minutos",
+                fontSize = 11.sp, color = TG.textDim,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        }
+        return
+    }
     if (ranking.isEmpty()) return
     val maxScore = ranking.first().second.coerceAtLeast(35f)
     Column(
