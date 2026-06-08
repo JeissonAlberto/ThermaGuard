@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jeissonalberto.thermaguard.data.*
+import com.jeissonalberto.thermaguard.service.ThermalMonitorService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -115,6 +116,10 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         learningEngine.recordCooldown(cooldownMin)
                     }
                     wasHot = isHotNow
+
+                    // Publicar en el Service para que no repita la lectura
+                    ThermalMonitorService.lastSnapshot = snapshot
+                    ThermalMonitorService.lastProfile  = profile
 
                     _uiState.update {
                         it.copy(
