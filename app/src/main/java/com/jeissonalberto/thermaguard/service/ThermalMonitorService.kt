@@ -37,6 +37,9 @@ class ThermalMonitorService : Service() {
         // Estado compartido para que el VM pueda leer sin duplicar lecturas
         @Volatile var lastRiskScore: Int = 0
         @Volatile var lastLevel: ThermalLevel = ThermalLevel.NORMAL
+        // Snapshot publicado por el ViewModel — el Service lo consume en lugar de leer de nuevo
+        @Volatile var lastSnapshot: ThermalSnapshot? = null
+        @Volatile var lastProfile: LearnedProfile? = null
     }
 
     override fun onCreate() {
@@ -70,8 +73,10 @@ class ThermalMonitorService : Service() {
 
         while (true) {
             try {
-                val snap    = sensorRepo.readSnapshot()
-                val profile = learningEngine.learn(snap)
+                // Usar el snapshot ya calculado por el ViewModel (evita doble lectura)
+                // Si el VM aún no ha publicado nada, leer directamente (arranque en frío)
+                val snap    = lastSnapshot ?: sensorRepo.readSnapshot()
+                val profile = lastProfile  ?: learningEngine.learn(snap)
 
                 // Guardar en DB
                 db.thermalDao().insert(snap)
