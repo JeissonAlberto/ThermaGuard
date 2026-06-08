@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.data.SensorLog
-import com.jeissonalberto.thermaguard.data.ThermalUiState
+import com.jeissonalberto.thermaguard.domain.ThermalUiState
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
