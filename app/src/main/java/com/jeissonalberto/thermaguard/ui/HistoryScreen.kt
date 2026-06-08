@@ -15,6 +15,9 @@ import com.jeissonalberto.thermaguard.data.ThermalSnapshot
 import com.jeissonalberto.thermaguard.data.toThermalLevel
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import com.jeissonalberto.thermaguard.ui.TG
 
 @Composable
 fun HistoryScreen(history: List<ThermalSnapshot>) {
