@@ -26,8 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jeissonalberto.thermaguard.data.SensorLog
+import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
+import com.jeissonalberto.thermaguard.ui.TG
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -37,10 +38,6 @@ fun LogsScreen(uiState: ThermalUiState) {
     val allLogs: List<SensorLog> = uiState.sensorLogs.reversed()
     val clipboard = LocalClipboardManager.current
     val context   = LocalContext.current
-    val snap   = uiState.latest
-    val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
-    val level  = mainTemp.toThermalLevel()
-    val accent = TG.accentFor(level)
 
     var filterTag by remember { mutableStateOf("ALL") }
     var showRaw   by remember { mutableStateOf(false) }
