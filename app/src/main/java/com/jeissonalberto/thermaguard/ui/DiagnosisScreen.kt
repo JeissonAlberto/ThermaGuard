@@ -97,7 +97,32 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
             }
 
             // Radar
+            val alertCount = diags.count {
+                it.status == ComponentStatus.HOT || it.status == ComponentStatus.CRITICAL
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(TG.glass)
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("${diags.size} componentes monitoreados",
+                    fontSize = 11.sp, color = TG.textSec)
+                if (alertCount > 0)
+                    Text("$alertCount en alerta", fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold, color = TG.red)
+                else
+                    Text("Todo normal", fontSize = 10.sp, color = TG.green)
+            }
             if (diags.isNotEmpty()) ComponentRadar(diags = diags, accent = accent)
+            else {
+                Box(modifier = Modifier.fillMaxWidth().height(100.dp),
+                    contentAlignment = Alignment.Center) {
+                    Text("Monitoreando...", fontSize = 13.sp, color = TG.textDim)
+                }
+            }
 
             // Loading
             if (diags.isEmpty()) {
