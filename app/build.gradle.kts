@@ -46,6 +46,12 @@ android {
     }
 
     bundle {
+        language { enableSplit = false }
+        density  { enableSplit = true }
+        abi      { enableSplit = true }
+    }
+
+    bundle {
         language {
             enableSplit = false
         }
