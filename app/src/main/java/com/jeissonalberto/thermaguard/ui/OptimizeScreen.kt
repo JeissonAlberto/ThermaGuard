@@ -32,7 +32,7 @@ fun OptimizeScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
         Box(modifier = Modifier.size(300.dp).align(Alignment.TopEnd).offset(x=60.dp,y=(-60).dp)
-            .blur(80.dp).background(accent.copy(alpha=0.1f), androidx.compose.foundation.shape.CircleShape))
+            .background(accent.copy(alpha=0.1f), androidx.compose.foundation.shape.CircleShape))
 
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(scroll)
