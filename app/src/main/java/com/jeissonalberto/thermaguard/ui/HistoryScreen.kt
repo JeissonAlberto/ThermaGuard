@@ -18,6 +18,7 @@ import java.util.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import com.jeissonalberto.thermaguard.ui.TG
+import androidx.compose.foundation.background
 
 @Composable
 fun HistoryScreen(history: List<ThermalSnapshot>) {
