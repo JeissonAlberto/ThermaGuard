@@ -29,7 +29,8 @@ import kotlin.math.roundToInt
 fun StatsScreen(uiState: ThermalUiState, onResetLearning: () -> Unit) {
     val context = LocalContext.current
     val scroll  = rememberScrollState()
-    val level   = uiState.latest.batteryTemp.toThermalLevel()
+    val mainTemp = if (uiState.latest.cpuTemp > 20f) uiState.latest.cpuTemp else uiState.latest.batteryTemp
+    val level   = mainTemp.toThermalLevel()
     val accent  = TG.accentFor(level)
     val profile = uiState.profile
 
@@ -439,6 +440,13 @@ fun RiskScoreCard(profile: LearnedProfile, accent: Color) {
         score >= 40 -> TG.amber
         else        -> TG.green
     }
+    val interpText = when {
+        score <= 25 -> "Excelente — dispositivo frio y eficiente"
+        score <= 50 -> "Normal — uso moderado"
+        score <= 75 -> "Atencion — temperatura elevada"
+        else        -> "Critico — intervencion recomendada"
+    }
+    val interpColor = scoreColor
     Row(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
