@@ -152,6 +152,27 @@ fun LogsScreen(uiState: ThermalUiState) {
             val display: List<SensorLog> = if (showRaw) filtered
                 else filtered.filter { log: SensorLog -> log.tag != "RAW" }
 
+            if (filtered.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("📋", fontSize = 36.sp)
+                        Text("Sin registros", fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                        Text(
+                            if (filterTag == "ALL") "Los logs aparecerán cuando el motor esté activo"
+                            else "Sin entradas con el filtro $filterTag",
+                            fontSize = 11.sp, color = TG.textDim,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
+            } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -242,6 +263,7 @@ fun LogEntryCard(log: SensorLog, fmt: SimpleDateFormat) {
                     fontFamily = FontFamily.Monospace)
             }
         }
+            }
     }
 }
 
