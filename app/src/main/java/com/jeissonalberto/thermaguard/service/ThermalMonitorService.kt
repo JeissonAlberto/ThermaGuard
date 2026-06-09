@@ -104,9 +104,12 @@ class ThermalMonitorService : Service() {
                     sendAlert(snap, profile)
                 }
 
-                // ── MODO GAMER: acción anti-throttle si supera 43°C ──────────
-                if (lastGamerMode && mainTemp >= 43f) {
-                    triggerGamerCooling(snap)
+                // ── MODO BESTIA: intervención escalonada según temperatura ─────
+                if (lastGamerMode) {
+                    // Nivel 1 (>40°C): prevención temprana
+                    // Nivel 2 (>43°C): intervención media
+                    // Nivel 3 (>46°C): intervención máxima
+                    if (mainTemp >= 40f) triggerGamerCooling(snap)
                 }
 
                 // Limpiar historial antiguo — solo 1 vez por hora aprox (no cada ciclo)
@@ -211,24 +214,27 @@ class ThermalMonitorService : Service() {
     var lastGamerMode: Boolean = false
 
     private fun triggerGamerCooling(snap: ThermalSnapshot) {
-        // 1. Bajar brillo al 30% si está alto
-        try {
-            val cr = contentResolver
-            val currentBrightness = android.provider.Settings.System.getInt(cr,
-                android.provider.Settings.System.SCREEN_BRIGHTNESS, 255)
-            if (currentBrightness > 80) {
-                android.provider.Settings.System.putInt(cr,
-                    android.provider.Settings.System.SCREEN_BRIGHTNESS, 75)
-            }
-        } catch (_: Exception) {}
+        val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
 
-        // 2. Notificación de alerta gamer
+        // Ejecutar todas las intervenciones del motor de física
+        com.jeissonalberto.thermaguard.domain.BeastCoolingEngine.executeAll(
+            this, mainTemp, snap
+        )
+
+        // Notificación con intervenciones activas
+        val interventions = com.jeissonalberto.thermaguard.domain.BeastCoolingEngine
+            .getActiveInterventions(mainTemp, snap)
+        val summary = interventions.take(2).joinToString(" · ")
+
         val nm = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
         val alertNotif = android.app.Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setContentTitle("🎮 Modo Gamer — Temperatura ${snap.cpuTemp.toInt()}°C")
-            .setContentText("Reduciendo consumo para proteger el rendimiento")
+            .setContentTitle("⚡ Modo Bestia — ${mainTemp.toInt()}°C · ${interventions.size} intervenciones")
+            .setContentText(summary)
             .setOnlyAlertOnce(true)
+            .setStyle(android.app.Notification.BigTextStyle().bigText(
+                interventions.joinToString("\n")
+            ))
             .build()
         nm.notify(NOTIF_ID + 1, alertNotif)
     }
