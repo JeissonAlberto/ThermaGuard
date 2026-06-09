@@ -34,7 +34,11 @@
             </intent-filter>
         </activity>
 
-        <service
+          <service
+            android:name=".service.FloatingWidgetService"
+            android:exported="false" />
+
+              <service
             android:name=".service.ThermalMonitorService"
             android:enabled="true"
             android:exported="false"
