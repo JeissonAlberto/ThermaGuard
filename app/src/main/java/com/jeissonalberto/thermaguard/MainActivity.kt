@@ -39,7 +39,6 @@ class MainActivity : ComponentActivity() {
             })
         }
     }
-    } // ThermaGuardTheme
 }
 
 data class NavItem(val label: String, val icon: ImageVector)
