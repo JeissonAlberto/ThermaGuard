@@ -92,24 +92,24 @@ fun OptimizeScreen(
             val effectiveRecs = uiState.coolingRecs.ifEmpty {
                 when {
                     mainTemp >= 55f -> listOf(
-                        CoolingRecommendation("opt1", CoolingCategory.APP_MANAGEMENT,
+                        CoolingRecommendation("opt1", CoolingCategory.BACKGROUND,
                             "Cierra apps en segundo plano", "Hay procesos activos elevando la temperatura. Cierra las apps que no estés usando.",
                             3f, 1, true, "📱"),
-                        CoolingRecommendation("opt2", CoolingCategory.SYSTEM_SETTINGS,
+                        CoolingRecommendation("opt2", CoolingCategory.PERFORMANCE,
                             "Reduce el brillo de pantalla", "La pantalla al máximo genera calor adicional.",
                             1.5f, 1, true, "☀️"),
                         CoolingRecommendation("opt3", CoolingCategory.ENVIRONMENT,
                             "Deja el teléfono en reposo", "Pausa el uso intensivo unos minutos para permitir enfriamiento.",
                             4f, 1, true, "⏸️"),
-                        CoolingRecommendation("opt4", CoolingCategory.SYSTEM_SETTINGS,
+                        CoolingRecommendation("opt4", CoolingCategory.PERFORMANCE,
                             "Activa el modo Activo", "Cambia el motor a modo Activo para que ThermaGuard intervenga automáticamente.",
                             2f, 1, true, "🔥")
                     )
                     mainTemp >= 43f -> listOf(
-                        CoolingRecommendation("opt1", CoolingCategory.APP_MANAGEMENT,
+                        CoolingRecommendation("opt1", CoolingCategory.BACKGROUND,
                             "Revisa apps con alto consumo", "Algunos procesos están usando CPU de forma sostenida.",
                             2f, 1, true, "📊"),
-                        CoolingRecommendation("opt2", CoolingCategory.SYSTEM_SETTINGS,
+                        CoolingRecommendation("opt2", CoolingCategory.PERFORMANCE,
                             "Considera modo Automático", "El motor puede gestionar esto de forma autónoma.",
                             1.5f, 1, true, "⚙️")
                     )
