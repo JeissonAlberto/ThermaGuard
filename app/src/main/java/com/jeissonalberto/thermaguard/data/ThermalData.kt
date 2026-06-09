@@ -120,11 +120,11 @@ enum class ThermalLevel(val label: String, val emoji: String) {
 }
 
 fun Float.toThermalLevel(): ThermalLevel = when {
-    this < 35f -> ThermalLevel.NORMAL
-    this < 40f -> ThermalLevel.WARM
-    this < 45f -> ThermalLevel.HOT
-    this < 50f -> ThermalLevel.CRITICAL
-    else       -> ThermalLevel.EMERGENCY
+    this < 40f -> ThermalLevel.NORMAL    // frío / temperatura ambiente
+    this < 47f -> ThermalLevel.WARM      // carga normal — esperado en uso
+    this < 55f -> ThermalLevel.HOT       // carga alta — vigilar
+    this < 65f -> ThermalLevel.CRITICAL  // temperatura peligrosa
+    else       -> ThermalLevel.EMERGENCY // emergencia térmica
 }
 
 data class HeatCause(
