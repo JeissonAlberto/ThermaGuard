@@ -84,7 +84,8 @@ data class SensorLog(
 enum class OperationMode {
     LEARNING,   // Solo observa y aprende — NO toma acciones automáticas
     AUTO,       // Actúa automáticamente según lo aprendido
-    ACTIVE      // Modo máxima intervención — actúa agresivamente
+    ACTIVE      // Modo máxima intervención — actúa agresivamente,
+    GAMER       // Modo gamer agresivo anti-throttle — 10s, intervencion maxima
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -207,3 +208,16 @@ data class SmartAlert(
     val priority: Int,  // 1=info, 2=warning, 3=critical
     val suppressUntil: Long = 0L  // no molestar hasta este timestamp
 )
+
+// ── TEMA DE LA APP ───────────────────────────────────────────────────────────
+enum class AppTheme {
+    SYSTEM,   // Sigue el sistema
+    LIGHT,    // Siempre claro
+    DARK      // Siempre oscuro
+}
+
+// ── IDIOMA DE LA APP ─────────────────────────────────────────────────────────
+enum class AppLanguage(val code: String, val label: String) {
+    SPANISH("es", "Español"),
+    ENGLISH("en", "English")
+}
