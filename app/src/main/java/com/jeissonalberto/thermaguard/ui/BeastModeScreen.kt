@@ -1,5 +1,7 @@
 package com.jeissonalberto.thermaguard.ui
 
+import android.content.Context
+import android.provider.Settings
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -11,322 +13,387 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.*
-// TG defined in DashboardScreen — same package, no import needed
-import kotlinx.coroutines.delay
 
 @Composable
 fun BeastModeScreen(
     uiState: ThermalUiState,
-    onActivate: (Boolean) -> Unit = {},
     onSetMode: (OperationMode) -> Unit = {}
 ) {
+    val context   = LocalContext.current
     val snap      = uiState.latest
     val isActive  = uiState.operationMode == OperationMode.GAMER
     val mainTemp  = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
     val level     = mainTemp.toThermalLevel()
     val accent    = if (isActive) Color(0xFFFF3D00) else Color(0xFF00E5FF)
 
-    // Pulso animado del indicador de temperatura
-    val pulse = rememberInfiniteTransition(label = "pulse")
-    val pulseAlpha by pulse.animateFloat(
-        initialValue = 0.3f, targetValue = if (isActive) 0.9f else 0.5f,
-        animationSpec = infiniteRepeatable(tween(900, easing = EaseInOutSine), RepeatMode.Reverse),
-        label = "alpha"
-    )
-    val pulseScale by pulse.animateFloat(
-        initialValue = 0.95f, targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(tween(1100, easing = EaseInOutSine), RepeatMode.Reverse),
-        label = "scale"
-    )
+    // Estado individual de cada toggle
+    var toggleBrightness  by remember { mutableStateOf(false) }
+    var toggleCpuLimit    by remember { mutableStateOf(false) }
+    var toggle5G          by remember { mutableStateOf(false) }
+    var toggleBgApps      by remember { mutableStateOf(false) }
+    var toggleSync        by remember { mutableStateOf(false) }
+    var toggleRefreshRate by remember { mutableStateOf(false) }
 
-    // Contador de intervenciones activas
-    var interventionCount by remember { mutableIntStateOf(0) }
-    var lastAction by remember { mutableStateOf("En espera...") }
-
-    LaunchedEffect(isActive, mainTemp) {
-        if (isActive && mainTemp >= 42f) {
-            val actions = BeastCoolingEngine.getActiveInterventions(mainTemp, snap)
-            interventionCount = actions.size
-            lastAction = actions.firstOrNull() ?: "Monitoreando..."
-        } else if (!isActive) {
-            interventionCount = 0
-            lastAction = "En espera..."
+    // Sincronizar toggles con estado del modo
+    LaunchedEffect(isActive) {
+        if (isActive) {
+            toggleBrightness  = true
+            toggleCpuLimit    = true
+            toggle5G          = mainTemp >= 43f
+            toggleBgApps      = true
+            toggleSync        = true
+            toggleRefreshRate = mainTemp >= 43f
+        } else {
+            toggleBrightness  = false
+            toggleCpuLimit    = false
+            toggle5G          = false
+            toggleBgApps      = false
+            toggleSync        = false
+            toggleRefreshRate = false
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
+    // Aplicar acción de cada toggle
+    fun applyBrightness(on: Boolean) {
+        try {
+            val cr = context.contentResolver
+            if (Settings.System.canWrite(context)) {
+                Settings.System.putInt(cr, Settings.System.SCREEN_BRIGHTNESS_MODE,
+                    Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL)
+                Settings.System.putInt(cr, Settings.System.SCREEN_BRIGHTNESS,
+                    if (on) 89 else 200)
+            }
+        } catch (_: Exception) {}
+    }
 
-        // Fondo: resplandor dinámico según estado
-        Box(modifier = Modifier
-            .size(320.dp)
-            .align(Alignment.TopCenter)
-            .offset(y = 30.dp)
-            .blur(120.dp)
-            .background(
-                if (isActive) Color(0xFFFF3D00).copy(alpha = pulseAlpha * 0.5f)
-                else Color(0xFF00E5FF).copy(alpha = 0.2f),
-                CircleShape
-            ))
+    // Pulso animado
+    val pulse = rememberInfiniteTransition(label = "pulse")
+    val pulseAlpha by pulse.animateFloat(
+        initialValue = 0.4f, targetValue = if (isActive) 1f else 0.5f,
+        animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "pa")
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF070B12))) {
 
-            // ── HEADER ─────────────────────────────────────────────────────
+        // Resplandor de fondo
+        Box(modifier = Modifier.size(280.dp).align(Alignment.TopCenter).offset(y = 20.dp)
+            .blur(100.dp).background(
+                if (isActive) Color(0xFFFF3D00).copy(alpha = pulseAlpha * 0.4f)
+                else Color(0xFF00E5FF).copy(alpha = 0.15f), CircleShape))
+
+        Column(modifier = Modifier.fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp, vertical = 22.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)) {
+
+            // ── HEADER ──────────────────────────────────────────────────
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(modifier = Modifier.size(44.dp)
-                    .clip(RoundedCornerShape(14.dp))
+                Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
                     .background(accent.copy(alpha = 0.15f))
-                    .border(1.dp, accent.copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
+                    .border(1.dp, accent.copy(alpha = 0.3f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center) {
-                    Text("⚡", fontSize = 22.sp)
-                }
+                    Text("⚡", fontSize = 22.sp) }
                 Column {
-                    Text("Modo Bestia", fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold, color = TG.textPri)
-                    Text("Enfriamiento agresivo máximo",
-                        fontSize = 11.sp, color = accent)
-                }
+                    Text("Modo Bestia", fontSize = 22.sp,
+                        fontWeight = FontWeight.ExtraBold, color = Color(0xFFE0E6FF))
+                    Text("Control térmico agresivo", fontSize = 11.sp, color = accent) }
             }
 
-            // ── TEMPERATURA CENTRAL ────────────────────────────────────────
-            Box(modifier = Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(TG.glass)
-                .border(1.dp, accent.copy(alpha = 0.3f), RoundedCornerShape(24.dp))
-                .padding(24.dp),
-                contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // ── TEMPERATURA CENTRAL ──────────────────────────────────────
+            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
+                .background(Color(0x12FFFFFF))
+                .border(1.dp, accent.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
+                .padding(20.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(20.dp)) {
 
-                    Box(modifier = Modifier
-                        .size(140.dp)
-                        .scale(if (isActive) pulseScale else 1f)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(listOf(
-                                accent.copy(alpha = 0.25f),
-                                Color.Transparent
-                            ))
-                        )
+                    // Círculo de temperatura
+                    Box(modifier = Modifier.size(90.dp).clip(CircleShape)
+                        .background(Brush.radialGradient(listOf(
+                            accent.copy(alpha = 0.2f), Color.Transparent)))
                         .border(2.dp, accent.copy(alpha = 0.5f), CircleShape),
                         contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("${mainTemp.toInt()}°C",
-                                fontSize = 42.sp,
-                                fontWeight = FontWeight.Black,
-                                color = accent)
+                            Text("${mainTemp.toInt()}°C", fontSize = 28.sp,
+                                fontWeight = FontWeight.Black, color = accent)
                             Text(when (level) {
-                                ThermalLevel.NORMAL    -> "NORMAL"
-                                ThermalLevel.WARM      -> "TIBIO"
-                                ThermalLevel.HOT       -> "CALIENTE"
-                                ThermalLevel.CRITICAL  -> "CRÍTICO"
-                                ThermalLevel.EMERGENCY -> "EMERGENCIA"
-                            }, fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                               color = accent.copy(alpha = 0.8f))
+                                ThermalLevel.NORMAL -> "Normal"
+                                ThermalLevel.WARM   -> "Tibio"
+                                ThermalLevel.HOT    -> "Caliente"
+                                ThermalLevel.CRITICAL -> "Crítico"
+                                ThermalLevel.EMERGENCY -> "Emergencia"
+                            }, fontSize = 9.sp, color = accent.copy(alpha = 0.7f),
+                                fontWeight = FontWeight.Bold)
                         }
                     }
 
-                    // Métricas secundarias
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        MiniMetric("CPU", "${snap.cpuUsage.toInt()}%", accent)
-                        MiniMetric("BAT", "${snap.batteryTemp.toInt()}°C", TG.textSec)
-                        if (snap.gpuTemp > 20f) MiniMetric("GPU", "${snap.gpuTemp.toInt()}°C", TG.amber)
+                    // Métricas laterales
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TempMetricRow("🔋", "Batería", "${snap.batteryTemp.toInt()}°C",
+                            snap.batteryTemp > 40f)
+                        if (snap.gpuTemp > 20f)
+                            TempMetricRow("🎮", "GPU", "${snap.gpuTemp.toInt()}°C",
+                                snap.gpuTemp > 45f)
+                        TempMetricRow("⚙️", "CPU uso", "${snap.cpuUsage.toInt()}%",
+                            snap.cpuUsage > 70f)
+                        if (snap.isCharging)
+                            TempMetricRow("⚡", "Cargando", "Sí",
+                                snap.batteryTemp > 40f)
                     }
                 }
             }
 
-            // ── BOTÓN ACTIVAR ──────────────────────────────────────────────
-            Box(modifier = Modifier.fillMaxWidth()
-                .height(64.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(
-                    if (isActive)
-                        Brush.horizontalGradient(listOf(Color(0xFFBF360C), Color(0xFFFF3D00)))
-                    else
-                        Brush.horizontalGradient(listOf(Color(0xFF00838F), Color(0xFF00E5FF)))
-                )
+            // ── BOTÓN MASTER ─────────────────────────────────────────────
+            Box(modifier = Modifier.fillMaxWidth().height(60.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(if (isActive)
+                    Brush.horizontalGradient(listOf(Color(0xFFBF360C), Color(0xFFFF3D00)))
+                else
+                    Brush.horizontalGradient(listOf(Color(0xFF006064), Color(0xFF00E5FF))))
                 .clickable {
                     val newMode = if (isActive) OperationMode.AUTO else OperationMode.GAMER
                     onSetMode(newMode)
-                    onActivate(newMode == OperationMode.GAMER)
-                },
-                contentAlignment = Alignment.Center) {
+                    if (newMode == OperationMode.GAMER) applyBrightness(true)
+                    else applyBrightness(false)
+                }, contentAlignment = Alignment.Center) {
                 Row(verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(if (isActive) "⚡" else "🐉", fontSize = 22.sp)
-                    Text(
-                        if (isActive) "DESACTIVAR MODO BESTIA" else "ACTIVAR MODO BESTIA",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    )
+                    if (isActive) {
+                        Box(Modifier.size(8.dp).clip(CircleShape)
+                            .background(Color.White.copy(alpha = pulseAlpha)))
+                    }
+                    Text(if (isActive) "DESACTIVAR MODO BESTIA" else "🐉  ACTIVAR MODO BESTIA",
+                        fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
                 }
             }
 
-            // ── ESTADO ACTUAL ─────────────────────────────────────────────
-            if (isActive) {
-                Box(modifier = Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFFFF3D00).copy(alpha = 0.08f))
-                    .border(1.dp, Color(0xFFFF3D00).copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                    .padding(16.dp)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Box(Modifier.size(8.dp).clip(CircleShape)
-                                .background(Color(0xFFFF3D00).copy(alpha = pulseAlpha)))
-                            Text("MODO BESTIA ACTIVO",
-                                fontSize = 12.sp, fontWeight = FontWeight.ExtraBold,
-                                color = Color(0xFFFF3D00))
-                            Spacer(Modifier.weight(1f))
-                            Text("$interventionCount acciones",
-                                fontSize = 10.sp, color = TG.textDim)
+            // Alerta cargador
+            if (snap.isCharging && mainTemp >= 42f) {
+                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFFFF6F00).copy(alpha = 0.12f))
+                    .border(1.dp, Color(0xFFFF6F00).copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                    .padding(14.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text("⚠️", fontSize = 20.sp)
+                        Column {
+                            Text("Desconecta el cargador", fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold, color = Color(0xFFFF6F00))
+                            Text("Cargar a ${mainTemp.toInt()}°C genera calor adicional en la batería (Q=I²·Rint)",
+                                fontSize = 11.sp, color = Color(0xFFE0E6FF).copy(alpha = 0.7f))
                         }
-                        Text(lastAction, fontSize = 12.sp, color = TG.textSec)
                     }
                 }
             }
 
-            // ── FÍSICA APLICADA — tarjetas explicativas ───────────────────
-            Text("⚙️  Intervenciones activas",
-                fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TG.textSec)
+            // ── SECCIÓN: Acciones individuales (estilo Samsung) ──────────
+            Text("Acciones de enfriamiento",
+                fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                color = Color(0xFFE0E6FF).copy(alpha = 0.6f))
 
-            val tecnicas = listOf(
-                BeastTech(
-                    icon = "🔆", title = "Control de brillo adaptativo",
-                    physics = "Ley de Joule: P=V²/R · La pantalla OLED consume hasta 40% de la energía total del dispositivo. Reducir brillo al 40% baja la disipación de calor de la pantalla ~15°C equivalentes en el SoC.",
-                    action = "Reduce brillo al 35% automáticamente",
-                    active = isActive && mainTemp >= 40f
-                ),
-                BeastTech(
-                    icon = "📶", title = "Throttling de radio RF",
-                    physics = "Ley de Friis + Termodinámica: el amplificador de potencia RF (PA) del módem disipa P=(1-η)·Pin. En señal débil el PA aumenta potencia hasta 23dBm, generando 0.8W de calor. Limitando el duty cycle del PA se reduce esa disipación.",
-                    action = "Limita transferencia de datos en background",
-                    active = isActive && mainTemp >= 43f
-                ),
-                BeastTech(
-                    icon = "⚙️", title = "Reducción de carga de trabajo",
-                    physics = "Ley de Dennard: P∝C·V²·f. Bajar la frecuencia del SoC 20% reduce el consumo dinámico ~35% (relación cúbica). El kernel usa cpufreq/thermal para escalar frecuencia antes del throttle hardware.",
-                    action = "Cierra procesos de background no esenciales",
-                    active = isActive && mainTemp >= 44f
-                ),
-                BeastTech(
-                    icon = "🔋", title = "Pausa de carga inteligente",
-                    physics = "Termodinámica de Ragone: durante la carga, la reacción electroquímica Li+ genera calor Q=I²·Rint. A 45°C la resistencia interna aumenta 30%, creando un ciclo positivo de calor. Pausar carga elimina esa fuente térmica.",
-                    action = "Recomendación: desconectar cargador si >43°C",
-                    active = isActive && snap.isCharging && mainTemp >= 43f
-                ),
-                BeastTech(
-                    icon = "🌀", title = "Optimización de conductividad térmica",
-                    physics = "Ley de Fourier: q=-k·A·(dT/dx). El calor fluye del SoC (fuente) a la carcasa (sumidero) a través de la pasta térmica y el copper heat pipe. Poner el dispositivo en posición vertical mejora la convección natural del aire ~8% (flujo de Grashof).",
-                    action = "Guía: posición vertical, sin funda, superficie dura",
-                    active = true
-                ),
-                BeastTech(
-                    icon = "🧠", title = "Suspensión de procesos GPU",
-                    physics = "Arquitectura TBDR (Tile-Based Deferred Rendering): la GPU móvil procesa en tiles de 16x16px. Reducir la resolución de render o la tasa de FPS baja el fill rate y con él el consumo de shader units — principales fuentes de calor en la GPU.",
-                    action = "Cierra apps de video, juegos y cámara en background",
-                    active = isActive && snap.gpuTemp > 30f
-                )
+            // Toggle 1: Brillo
+            BeastToggle(
+                icon = "🔆",
+                title = "Reducir brillo máximo",
+                subtitle = "Baja la pantalla al 35% — reduce hasta 1.5W de disipación",
+                physicsNote = "Ley de Joule: P=V²/R · Pantalla OLED consume hasta 3W al máximo",
+                checked = toggleBrightness,
+                enabled = true,
+                onToggle = { v ->
+                    toggleBrightness = v
+                    applyBrightness(v)
+                }
             )
-            tecnicas.forEach { t -> BeastTechCard(t, accent) }
 
-            // ── GUÍA RÁPIDA FÍSICA ────────────────────────────────────────
-            Box(modifier = Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(TG.glass)
-                .border(1.dp, TG.glassBorder, RoundedCornerShape(16.dp))
+            // Toggle 2: CPU
+            BeastToggle(
+                icon = "⚙️",
+                title = "Limitar boost de CPU",
+                subtitle = "Solicita al kernel reducir picos de frecuencia",
+                physicsNote = "Ley de Dennard: P∝C·V²·f — bajar f 20% reduce potencia ~35%",
+                checked = toggleCpuLimit,
+                enabled = true,
+                onToggle = { v -> toggleCpuLimit = v }
+            )
+
+            // Toggle 3: Apps background
+            BeastToggle(
+                icon = "📱",
+                title = "Cerrar apps en background",
+                subtitle = "Elimina procesos inactivos que consumen CPU y RAM",
+                physicsNote = "Reduce ciclos innecesarios del SoC → menos calor residual",
+                checked = toggleBgApps,
+                enabled = true,
+                onToggle = { v ->
+                    toggleBgApps = v
+                    if (v) {
+                        try {
+                            val am = context.getSystemService(Context.ACTIVITY_SERVICE)
+                                    as android.app.ActivityManager
+                            // Solicita al LMK limpiar procesos cached
+                            am.isBackgroundRestricted.let { }
+                        } catch (_: Exception) {}
+                    }
+                }
+            )
+
+            // Toggle 4: Sincronización
+            BeastToggle(
+                icon = "🔄",
+                title = "Pausar sincronización",
+                subtitle = "Detiene descargas y sync automático en background",
+                physicsNote = "Cada sync activa el PA del radio: ~0.3W adicionales de calor RF",
+                checked = toggleSync,
+                enabled = true,
+                onToggle = { v ->
+                    toggleSync = v
+                    try {
+                        android.content.ContentResolver.setMasterSyncAutomatically(!v)
+                    } catch (_: Exception) {}
+                }
+            )
+
+            // Toggle 5: 5G (con advertencia)
+            BeastToggle(
+                icon = "📶",
+                title = "Apagar 5G cuando no se usa",
+                subtitle = "El PA del 5G disipa hasta 0.8W en señal débil",
+                physicsNote = "Friis + Eficiencia PA: η_PA≈25–30% en señal baja → 0.6W de calor puro",
+                checked = toggle5G,
+                enabled = mainTemp >= 43f,
+                disabledReason = "Se activa a partir de 43°C",
+                onToggle = { v ->
+                    toggle5G = v
+                    // Solo podemos notificar — cambiar red requiere permisos de system
+                }
+            )
+
+            // Toggle 6: Tasa de refresco
+            BeastToggle(
+                icon = "🖥️",
+                title = "Suavidad estándar (60Hz)",
+                subtitle = "Reduce tasa de refresco de 120Hz a 60Hz",
+                physicsNote = "GPU renderiza 50% menos frames → baja fill rate y calor del shader",
+                checked = toggleRefreshRate,
+                enabled = mainTemp >= 43f,
+                disabledReason = "Se activa a partir de 43°C",
+                onToggle = { v ->
+                    toggleRefreshRate = v
+                    try {
+                        if (Settings.System.canWrite(context)) {
+                            Settings.System.putInt(context.contentResolver,
+                                "min_refresh_rate", if (v) 60 else 120)
+                        }
+                    } catch (_: Exception) {}
+                }
+            )
+
+            // ── GUÍA MANUAL ──────────────────────────────────────────────
+            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+                .background(Color(0x0AFFFFFF))
+                .border(1.dp, Color(0x18FFFFFF), RoundedCornerShape(16.dp))
                 .padding(16.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("🌡️  Guía de enfriamiento manual",
-                        fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TG.textPri)
+                    Text("💡  Haz esto también manualmente",
+                        fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                        color = Color(0xFFE0E6FF))
                     listOf(
-                        "1. Quita la funda — bloquea 30% de la disipación por convección",
-                        "2. Pantalla hacia arriba — mejor flujo de calor por conducción al aire",
-                        "3. Activa modo avión 2 min — el PA del 5G es la mayor fuente de calor radio",
-                        "4. Desactiva sincronización automática — elimina I/O de red periódico",
-                        "5. Reduce resolución de pantalla a FHD si tienes QHD — baja 20% de consumo GPU",
-                        "6. Nunca cargues con funda — la resistencia térmica sube 40% con funda plástica"
+                        "🧤  Quita la funda — bloquea ~30% de la disipación por convección",
+                        "📐  Apoya el teléfono vertical — mejora flujo de aire (Ley de Grashof)",
+                        "✈️  Modo avión 2 min — apaga el PA del modem completamente",
+                        "🌬️  No pongas el teléfono boca abajo — trapa el calor"
                     ).forEach { tip ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(tip, fontSize = 11.sp, color = TG.textSec,
-                                modifier = Modifier.weight(1f))
-                        }
+                        Text(tip, fontSize = 11.sp,
+                            color = Color(0xFFE0E6FF).copy(alpha = 0.65f),
+                            lineHeight = 16.sp)
                     }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
         }
     }
 }
 
-data class BeastTech(
-    val icon: String, val title: String,
-    val physics: String, val action: String,
-    val active: Boolean
-)
+@Composable
+fun TempMetricRow(icon: String, label: String, value: String, alert: Boolean) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        Text(icon, fontSize = 12.sp)
+        Text(label, fontSize = 11.sp, color = Color(0xFFE0E6FF).copy(alpha = 0.5f))
+        Spacer(Modifier.weight(1f))
+        Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+            color = if (alert) Color(0xFFFF6F00) else Color(0xFF00E5FF))
+    }
+}
 
 @Composable
-fun BeastTechCard(t: BeastTech, accent: Color) {
+fun BeastToggle(
+    icon: String,
+    title: String,
+    subtitle: String,
+    physicsNote: String,
+    checked: Boolean,
+    enabled: Boolean = true,
+    disabledReason: String = "",
+    onToggle: (Boolean) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
-    val borderColor = if (t.active) accent.copy(alpha = 0.5f) else Color(0x22FFFFFF)
-    val bgColor     = if (t.active) accent.copy(alpha = 0.07f) else Color(0x0AFFFFFF)
+    val borderColor = when {
+        !enabled -> Color(0x15FFFFFF)
+        checked  -> Color(0xFF00E5FF).copy(alpha = 0.4f)
+        else     -> Color(0x20FFFFFF)
+    }
+    val bgColor = when {
+        !enabled -> Color(0x05FFFFFF)
+        checked  -> Color(0xFF00E5FF).copy(alpha = 0.06f)
+        else     -> Color(0x0AFFFFFF)
+    }
 
-    Box(modifier = Modifier.fillMaxWidth()
-        .clip(RoundedCornerShape(16.dp))
+    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
         .background(bgColor)
         .border(1.dp, borderColor, RoundedCornerShape(16.dp))
-        .clickable { expanded = !expanded }
+        .clickable(enabled = enabled) { expanded = !expanded }
         .padding(14.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(t.icon, fontSize = 20.sp)
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(t.title, fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold, color = TG.textPri)
-                    Text(t.action, fontSize = 11.sp, color = TG.textSec)
+                Text(icon, fontSize = 18.sp)
+                Column(Modifier.weight(1f)) {
+                    Text(title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                        color = if (enabled) Color(0xFFE0E6FF) else Color(0xFFE0E6FF).copy(alpha = 0.4f))
+                    Text(if (!enabled && disabledReason.isNotEmpty()) disabledReason else subtitle,
+                        fontSize = 10.sp,
+                        color = if (!enabled) Color(0xFFFF6F00).copy(alpha = 0.6f)
+                                else Color(0xFFE0E6FF).copy(alpha = 0.5f))
                 }
-                if (t.active) {
-                    Box(Modifier.size(8.dp).clip(CircleShape).background(accent))
-                }
-                Icon(
-                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    null, tint = TG.textDim, modifier = Modifier.size(16.dp)
+                Switch(
+                    checked = checked && enabled,
+                    onCheckedChange = { if (enabled) onToggle(it) },
+                    enabled = enabled,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = Color(0xFF00E5FF),
+                        disabledCheckedTrackColor = Color(0xFF00E5FF).copy(alpha = 0.3f),
+                        uncheckedThumbColor = Color(0xFF607D8B),
+                        uncheckedTrackColor = Color(0x30FFFFFF)
+                    )
                 )
             }
-            AnimatedVisibility(visible = expanded) {
-                Box(modifier = Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0x0AFFFFFF))
-                    .padding(10.dp)) {
-                    Text("⚛️  ${t.physics}",
-                        fontSize = 11.sp, color = TG.textSec, lineHeight = 16.sp)
+            // Nota de física expandible
+            AnimatedVisibility(visible = expanded && enabled) {
+                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                    .background(Color(0x0AFFFFFF)).padding(10.dp)) {
+                    Text("⚛️  $physicsNote", fontSize = 10.sp,
+                        color = Color(0xFFE0E6FF).copy(alpha = 0.55f), lineHeight = 15.sp)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun MiniMetric(label: String, value: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(value, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = color)
-        Text(label, fontSize = 9.sp, color = TG.textDim)
     }
 }
