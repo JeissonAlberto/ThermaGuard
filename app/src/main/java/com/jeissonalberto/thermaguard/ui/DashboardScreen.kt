@@ -623,6 +623,7 @@ fun ModeBadge(mode: OperationMode, accent: Color) {
         OperationMode.LEARNING -> Pair("APRENDIENDO", Color(0xFF4FC3F7))
         OperationMode.AUTO     -> Pair("AUTO",        accent)
         OperationMode.ACTIVE   -> Pair("ACTIVO",      Color(0xFFFF5252))
+        OperationMode.GAMER    -> Pair("ACTIVO",      Color(0xFFFF5252))  // igual que ACTIVE
     }
     val pulse = rememberInfiniteTransition(label = "badge")
     val a by pulse.animateFloat(0.3f, 1f,
@@ -1108,11 +1109,13 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
         OperationMode.LEARNING -> TG.blue
         OperationMode.AUTO     -> TG.green
         OperationMode.ACTIVE   -> TG.red
+        OperationMode.GAMER    -> TG.red  // igual que ACTIVE
     }
     val modeDesc = when (mode) {
         OperationMode.LEARNING -> "Solo observa y aprende · lecturas cada 60s · bajo consumo"
         OperationMode.AUTO     -> "Actúa según lo aprendido · lecturas cada 30s"
         OperationMode.ACTIVE   -> "Intervención máxima · lecturas cada 15s"
+        OperationMode.GAMER    -> "Intervención máxima · lecturas cada 15s"  // igual que ACTIVE
     }
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -1131,6 +1134,7 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
                 OperationMode.LEARNING -> "🧠 Aprendizaje"
                 OperationMode.AUTO     -> "⚙️ Automático"
                 OperationMode.ACTIVE   -> "🔥 Activo"
+                OperationMode.GAMER    -> "🔥 Activo"  // igual que ACTIVE
             }, fontSize = 10.sp, color = modeColor, fontWeight = FontWeight.SemiBold)
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1140,6 +1144,7 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
                     OperationMode.LEARNING -> TG.blue
                     OperationMode.AUTO     -> TG.green
                     OperationMode.ACTIVE   -> TG.red
+                    OperationMode.GAMER    -> TG.red  // igual que ACTIVE
                 }
                 Box(
                     modifier = Modifier
