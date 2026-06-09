@@ -360,4 +360,5 @@ private fun componentIcon(comp: ThermalComponent) = when (comp) {
     ThermalComponent.DISPLAY -> Icons.Default.Tv
     ThermalComponent.BOARD   -> Icons.Default.DeveloperBoard
     ThermalComponent.PROCESS -> Icons.Default.Apps
+    ThermalComponent.SKIN    -> Icons.Default.TouchApp
 }
