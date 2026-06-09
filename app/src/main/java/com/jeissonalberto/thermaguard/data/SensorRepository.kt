@@ -246,7 +246,7 @@ modemTemp        = run {
     //  DIAGNOSTICO DE COMPONENTES
     // ============================================================
 
-(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
+fun diagnoseComponents(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
         val diagnoses = mutableListOf<ComponentDiagnosis>()
 
         // --- CPU ---
