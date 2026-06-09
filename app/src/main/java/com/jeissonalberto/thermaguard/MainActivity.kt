@@ -33,14 +33,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ThermaGuardTheme {
-                ThermaGuardApp(onStartService = {
-                    try { startForegroundService(Intent(this, ThermalMonitorService::class.java)) }
-                    catch (e: Exception) { }
-                })
-            }
+            ThermaGuardApp(onStartService = {
+                try { startForegroundService(Intent(this, ThermalMonitorService::class.java)) }
+                catch (e: Exception) { }
+            })
         }
     }
+    } // ThermaGuardTheme
 }
 
 data class NavItem(val label: String, val icon: ImageVector)
@@ -49,6 +48,7 @@ data class NavItem(val label: String, val icon: ImageVector)
 fun ThermaGuardApp(onStartService: () -> Unit) {
     val viewModel: ThermalViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
+    ThermaGuardTheme(appTheme = uiState.appTheme) {
 
     // Estados de navegación
     var showSplash by remember { mutableStateOf(true) }
@@ -62,6 +62,7 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
         NavItem("Alertas",     Icons.Default.Notifications),
         NavItem("Optimizar",   Icons.Default.Tune),
         NavItem("Logs",        Icons.Default.Terminal),
+        NavItem("Ajustes",      Icons.Default.Settings),
         NavItem("Acerca",      Icons.Default.Info),
     )
 
@@ -198,7 +199,12 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                         3 -> AlertsScreen(uiState = uiState, onThresholdChange = viewModel::setAlertThreshold, onClearLog = viewModel::clearAutoLog)
                         4 -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) })
                         5 -> LogsScreen(uiState = uiState)
-                        6 -> AboutScreen()
+                        6 -> SettingsScreen(
+                            uiState = uiState,
+                            onSetTheme = { viewModel.setAppTheme(it) },
+                            onSetLanguage = { viewModel.setAppLanguage(it) }
+                        )
+                        7 -> AboutScreen()
                         else -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) })
                     }
                 }
