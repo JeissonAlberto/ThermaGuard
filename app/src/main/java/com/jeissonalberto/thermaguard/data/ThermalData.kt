@@ -143,7 +143,8 @@ enum class ThermalComponent(val label: String, val icon: String) {
     MODEM("Modem / Radio", "📡"),
     DISPLAY("Pantalla", "📱"),
     BOARD("Placa base", "🔧"),
-    PROCESS("Proceso activo", "⚙️")
+    PROCESS("Proceso activo", "⚙️"),
+    SKIN("Carcasa / Piel", "🖐️")
 }
 
 enum class ComponentStatus(val label: String, val color: Long) {
