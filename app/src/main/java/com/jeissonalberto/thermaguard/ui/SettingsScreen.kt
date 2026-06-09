@@ -20,8 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jeissonalberto.thermaguard.data.AppLanguage
-import com.jeissonalberto.thermaguard.data.AppTheme
+import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
 
 @Composable
@@ -31,10 +30,7 @@ fun SettingsScreen(
     onSetLanguage: (AppLanguage) -> Unit = {},
     onToggleWidget: (Boolean) -> Unit = {}
 ) {
-    val accent = TG.accentFor(
-        if (uiState.latest.cpuTemp > 20f) uiState.latest.cpuTemp.toThermalLevel()
-        else uiState.latest.batteryTemp.toThermalLevel()
-    )
+    val accent = TG.blue
     val scroll = rememberScrollState()
     var widgetEnabled by remember { mutableStateOf(false) }
 
