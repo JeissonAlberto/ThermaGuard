@@ -84,7 +84,7 @@ data class SensorLog(
 enum class OperationMode {
     LEARNING,   // Solo observa y aprende — NO toma acciones automáticas
     AUTO,       // Actúa automáticamente según lo aprendido
-    ACTIVE      // Modo máxima intervención — actúa agresivamente,
+    ACTIVE,     // Modo máxima intervención — actúa agresivamente
     GAMER       // Modo gamer agresivo anti-throttle — 10s, intervencion maxima
 }
 
