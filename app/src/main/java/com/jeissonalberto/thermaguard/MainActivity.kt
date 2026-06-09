@@ -179,9 +179,9 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                 }
 
                 // ── Botón "Más" ──────────────────────────────────────────
-                Box(modifier = Modifier.weight(1f)) {
-                    IconButton(onClick = { showMoreMenu = !showMoreMenu },
-                        modifier = Modifier.fillMaxWidth()) {
+                Box(modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center) {
+                    IconButton(onClick = { showMoreMenu = !showMoreMenu }) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Icon(Icons.Default.MoreHoriz, null,
@@ -196,7 +196,6 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                         expanded = showMoreMenu,
                         onDismissRequest = { showMoreMenu = false },
                         modifier = Modifier.background(Color(0xFF0D1520))
-                            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(12.dp))
                     ) {
                         listOf(
                             Triple(5, "Stats",   Icons.Default.BarChart),
