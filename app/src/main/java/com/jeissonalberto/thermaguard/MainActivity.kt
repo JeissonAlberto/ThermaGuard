@@ -60,8 +60,9 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
         NavItem("Stats",       Icons.Default.BarChart),
         NavItem("Alertas",     Icons.Default.Notifications),
         NavItem("Optimizar",   Icons.Default.Tune),
+        NavItem("Bestia",      Icons.Default.Bolt),
         NavItem("Logs",        Icons.Default.Terminal),
-        NavItem("Ajustes",      Icons.Default.Settings),
+        NavItem("Ajustes",     Icons.Default.Settings),
         NavItem("Acerca",      Icons.Default.Info),
     )
 
@@ -118,7 +119,8 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                             val selected   = selectedTab == idx
                             val itemAccent = if (selected) accent else Color.Transparent
                             val iconTint   = if (selected) accent else TG.textSec
-                            val showBadge  = idx == 3 && uiState.autoActionsLog.isNotEmpty()
+                            val showBadge  = (idx == 3 && uiState.autoActionsLog.isNotEmpty()) ||
+                                          (idx == 5 && uiState.operationMode == com.jeissonalberto.thermaguard.data.OperationMode.GAMER)
 
                             IconButton(
                                 onClick  = { selectedTab = idx },
@@ -197,13 +199,17 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                         2 -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
                         3 -> AlertsScreen(uiState = uiState, onThresholdChange = viewModel::setAlertThreshold, onClearLog = viewModel::clearAutoLog)
                         4 -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) })
-                        5 -> LogsScreen(uiState = uiState)
-                        6 -> SettingsScreen(
+                        5 -> BeastModeScreen(
+                            uiState = uiState,
+                            onSetMode = { viewModel.setOperationMode(it) }
+                        )
+                        6 -> LogsScreen(uiState = uiState)
+                        7 -> SettingsScreen(
                             uiState = uiState,
                             onSetTheme = { viewModel.setAppTheme(it) },
                             onSetLanguage = { viewModel.setAppLanguage(it) }
                         )
-                        7 -> AboutScreen()
+                        8 -> AboutScreen()
                         else -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) })
                     }
                 }
