@@ -32,7 +32,11 @@ data class ThermalUiState(
     val safeChargeState: SafeChargeState = SafeChargeState(),
     val isCoolingDown: Boolean = false,         // animación de enfriamiento
     val appHeatRanking: List<Pair<String,Float>> = emptyList(),  // ranking apps
-    val smartAlerts: List<SmartAlert> = emptyList()
+    val smartAlerts: List<SmartAlert> = emptyList(),
+    // v3.9 — tema e idioma
+    val appTheme: AppTheme = AppTheme.DARK,
+    val appLanguage: AppLanguage = AppLanguage.SPANISH,
+    val isGamerMode: Boolean = false
 )
 
 data class AutoAction(
@@ -67,9 +71,10 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     // Intervalo adaptativo: LEARNING=60s(bajo consumo), AUTO=30s, ACTIVE=15s
     private val intervalMs: Long get() = when (_operationMode) {
-        OperationMode.LEARNING -> 60_000L
-        OperationMode.AUTO     -> 30_000L
-        OperationMode.ACTIVE   -> 15_000L
+        OperationMode.LEARNING -> 60_000L  // Bajo consumo
+        OperationMode.AUTO     -> 30_000L  // Balanceado
+        OperationMode.ACTIVE   -> 15_000L  // Alto seguimiento
+        OperationMode.GAMER    -> 10_000L  // Máxima reactividad anti-throttle
     }
 
     init {
@@ -298,5 +303,25 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     }
 
 
+
+    // ── TEMA ────────────────────────────────────────────────────────────────
+    fun setAppTheme(theme: AppTheme) {
+        _uiState.update { it.copy(appTheme = theme) }
+    }
+
+    // ── IDIOMA ───────────────────────────────────────────────────────────────
+    fun setAppLanguage(lang: AppLanguage) {
+        _uiState.update { it.copy(appLanguage = lang) }
+    }
+
+    // ── MODO GAMER ────────────────────────────────────────────────────────────
+    fun enableGamerMode() {
+        _operationMode = OperationMode.GAMER
+        _uiState.update { it.copy(operationMode = OperationMode.GAMER, isGamerMode = true) }
+    }
+    fun disableGamerMode() {
+        _operationMode = OperationMode.AUTO
+        _uiState.update { it.copy(operationMode = OperationMode.AUTO, isGamerMode = false) }
+    }
 
 }
