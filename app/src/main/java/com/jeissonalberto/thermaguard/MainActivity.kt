@@ -179,8 +179,7 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                 }
 
                 // ── Botón "Más" ──────────────────────────────────────────
-                Box(modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center) {
+                Box(contentAlignment = Alignment.Center) {
                     IconButton(onClick = { showMoreMenu = !showMoreMenu }) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(3.dp)) {
