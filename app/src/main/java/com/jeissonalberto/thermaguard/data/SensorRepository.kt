@@ -60,13 +60,17 @@ class SensorRepository(private val context: Context) {
             batteryTemp      = batteryTemp,
 cpuTemp          = run {
                 val raw = allZones["cpu"] ?: 0f
-                val gpu = allZones["gpu"] ?: 0f
-                val bat = batteryTemp
-                // Sanity check: si cpu es >70°C pero batería<50°C y GPU<60°C → outlier, usar promedio
-                if (raw > 70f && bat < 50f && (gpu < 60f || gpu == 0f)) {
-                    // Temperatura irreal — usar promedio de zonas conocidas
-                    listOf(gpu.takeIf { it > 20f }, bat.takeIf { it > 20f })
-                        .filterNotNull().average().toFloat().takeIf { it > 0f } ?: raw
+                // Límite duro: ningún SoC de gama media reporta >65°C en uso normal
+                // Si supera ese límite, la zona es de control del kernel → ignorar
+                if (raw > 65f) {
+                    // Fallback: usar GPU temp o batería * factor
+                    val gpu = allZones["gpu"] ?: 0f
+                    val bat = batteryTemp
+                    when {
+                        gpu in 20f..65f -> gpu + 2f   // GPU suele estar ~2°C más fría que CPU
+                        bat in 20f..50f -> bat * 1.25f // batería ~80% de la temp del SoC
+                        else -> 0f
+                    }
                 } else raw
             },
             gpuTemp          = allZones["gpu"]  ?: 0f,
@@ -182,29 +186,41 @@ cpuTemp          = run {
                         // Extraer número de zona
                         val zoneNum = zone.name.removePrefix("thermal_zone").toIntOrNull()
 
-                        // Clasificar: primero override por número, luego por tipo
+                        // Clasificar:
+                        // REGLA DE ORO: para CPU/GPU/Modem solo aceptar zonas del ZONE_OVERRIDE
+                        // Las zonas clasificadas por nombre de tipo pueden ser zonas de control
+                        // del kernel (ej: "cpu-1-0" con valor 75°C = límite de throttle, NO temp real)
                         val key = if (zoneNum != null && ZONE_OVERRIDE.containsKey(zoneNum)) {
-                            ZONE_OVERRIDE[zoneNum]!!
+                            val mappedKey = ZONE_OVERRIDE[zoneNum]!!
+                            // Para zonas conocidas: rechazar valores > 65°C (son límites de throttle)
+                            if (temp > 65f) {
+                                result["raw_${zone.name}"] = temp  // guardar para diagnóstico
+                                return@forEach  // ignorar para el cálculo
+                            }
+                            mappedKey
                         } else if (typeFile.exists()) {
                             val type = typeFile.readText().trim().lowercase()
-                            classifyZone(type)
+                            val classified = classifyZone(type)
+                            // Zonas NO mapeadas que sean CPU/GPU/Modem: ignorar si > 65°C
+                            // (muy probable que sean zonas de control del kernel)
+                            if (classified in listOf("cpu", "gpu", "modem") && temp > 65f) {
+                                result["raw_${zone.name}"] = temp
+                                return@forEach
+                            }
+                            classified
                         } else {
                             "unknown"
                         }
 
-                        // Ignorar zonas marcadas explícitamente
-                        if (key == "ignore" || key == "ambient") {
+                        // Ignorar zonas marcadas explícitamente o desconocidas
+                        if (key == "ignore" || key == "ambient" || key == "unknown") {
                             result["raw_${zone.name}"] = temp
                             return@forEach
                         }
 
-                        // Acumular valores para calcular mediana después
-                        // (evita que zonas de control del kernel como "78°C límite" falseen la lectura)
-                        val listKey = "list_$key"
-                        val existing = result[listKey]
-                        // Usamos un truco: guardamos sum en result["list_cpu"] y count en result["count_cpu"]
-                        val sumKey   = "sum_$key"
-                        val cntKey   = "cnt_$key"
+                        // Para zonas múltiples del mismo tipo: guardar el PROMEDIO acumulado
+                        val sumKey = "sum_$key"
+                        val cntKey = "cnt_$key"
                         result[sumKey] = (result[sumKey] ?: 0f) + temp
                         result[cntKey] = (result[cntKey] ?: 0f) + 1f
 
@@ -213,39 +229,11 @@ cpuTemp          = run {
 
                     } catch (e: Exception) { }
                 }
-            // Calcular promedio truncado (sin outliers) para cada tipo de componente
-            // Esto elimina valores de control del kernel (ej: 78°C = límite de throttle)
+            // Calcular promedio simple de zonas válidas para cada componente
             listOf("cpu", "gpu", "modem", "skin", "display", "battery_zone", "board").forEach { key ->
                 val sum = result.remove("sum_$key") ?: return@forEach
                 val cnt = result.remove("cnt_$key") ?: return@forEach
-                if (cnt <= 0f) return@forEach
-                val avg = sum / cnt
-
-                // Filtro: si el promedio es razonable (20-70°C), usarlo
-                // Si el promedio está muy alto (>70°C) probablemente incluye zonas de control
-                // En ese caso, filtrar outliers (valores >avg+10) y recalcular
-                val rawVals = result.entries
-                    .filter { it.key.startsWith("raw_") }
-                    .mapNotNull { entry ->
-                        // Solo zonas que contribuirían a este key
-                        val zNum = entry.key.removePrefix("raw_thermal_zone").toIntOrNull()
-                        if (zNum != null && ZONE_OVERRIDE[zNum] == key) entry.value else null
-                    }
-
-                val filtered = if (avg > 65f && rawVals.isNotEmpty()) {
-                    // Hay posibles outliers — usar solo valores ≤ avg*0.85 o ≤ 65°C
-                    val threshold = minOf(avg * 0.85f, 65f)
-                    rawVals.filter { it <= threshold }.takeIf { it.isNotEmpty() } ?: rawVals
-                } else {
-                    rawVals.ifEmpty { listOf(avg) }
-                }
-
-                result[key] = filtered.sorted().let { sorted ->
-                    // Mediana
-                    if (sorted.size % 2 == 0)
-                        (sorted[sorted.size/2 - 1] + sorted[sorted.size/2]) / 2f
-                    else sorted[sorted.size/2]
-                }
+                if (cnt > 0f) result[key] = sum / cnt
             }
 
             result
