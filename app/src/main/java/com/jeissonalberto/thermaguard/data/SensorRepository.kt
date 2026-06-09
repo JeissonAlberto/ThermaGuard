@@ -59,24 +59,25 @@ class SensorRepository(private val context: Context) {
         val snap = ThermalSnapshot(
             batteryTemp      = batteryTemp,
 cpuTemp          = run {
-                val raw = allZones["cpu"] ?: 0f
-                // Límite duro: ningún SoC de gama media reporta >65°C en uso normal
-                // Si supera ese límite, la zona es de control del kernel → ignorar
-                if (raw > 65f) {
-                    // Fallback: usar GPU temp o batería * factor
-                    val gpu = allZones["gpu"] ?: 0f
-                    val bat = batteryTemp
-                    when {
-                        gpu in 20f..65f -> gpu + 2f   // GPU suele estar ~2°C más fría que CPU
-                        bat in 20f..50f -> bat * 1.25f // batería ~80% de la temp del SoC
-                        else -> 0f
-                    }
-                } else raw
+                // Orden de confianza: cpu > skin > gpu > (batería escalada)
+                val cpu  = allZones["cpu"]  ?.takeIf { it in 25f..65f }
+                val skin = allZones["skin"] ?.takeIf { it in 25f..65f }
+                val gpu  = allZones["gpu"]  ?.takeIf { it in 25f..65f }
+                val bat  = batteryTemp.takeIf { it in 20f..50f }
+                cpu ?: skin ?: gpu ?: (bat?.let { it * 1.25f }) ?: 0f
             },
-            gpuTemp          = allZones["gpu"]  ?: 0f,
+gpuTemp          = run {
+                val gpu  = allZones["gpu"]  ?.takeIf { it in 25f..65f }
+                val npu  = allZones["npu"]  ?.takeIf { it in 25f..65f }
+                gpu ?: npu ?: 0f
+            },
             skinTemp         = allZones["skin"] ?: allZones["surface"] ?: 0f,
             boardTemp        = allZones["board"] ?: allZones["pcb"] ?: 0f,
-            modemTemp        = allZones["modem"] ?: allZones["wlan"] ?: 0f,
+modemTemp        = run {
+                val modem = allZones["modem"]?.takeIf { it in 25f..65f }
+                val wlan  = allZones["wlan"] ?.takeIf { it in 25f..65f }
+                modem ?: wlan ?: 0f
+            },
             displayTemp      = allZones["display"] ?: allZones["ddr"] ?: 0f,
             cpuUsage         = cpuUsage,
             batteryLevel     = batteryLevel,
@@ -165,12 +166,18 @@ cpuTemp          = run {
     )
 
     fun readAllThermalZones(): Map<String, Float> {
+        // Lee TODAS las zonas térmicas del kernel y las clasifica por tipo
+        // IMPORTANTE: solo acepta valores en rango realista para hardware (10-65°C)
+        // Valores > 65°C son límites de control del kernel, no temperaturas reales
         val result = mutableMapOf<String, Float>()
+        val allReadings = mutableMapOf<String, MutableList<Float>>()  // tipo -> lista de lecturas
+
         return try {
             val thermalDir = File("/sys/class/thermal/")
             if (!thermalDir.exists()) return result
 
             thermalDir.listFiles { f -> f.name.startsWith("thermal_zone") }
+                ?.sortedBy { it.name.removePrefix("thermal_zone").toIntOrNull() ?: 999 }
                 ?.forEach { zone ->
                     try {
                         val tempFile = File(zone, "temp")
@@ -180,64 +187,41 @@ cpuTemp          = run {
                         val rawTemp = tempFile.readText().trim().toLongOrNull() ?: return@forEach
                         val temp    = if (rawTemp > 1000) rawTemp / 1000f else rawTemp.toFloat()
 
-                        // Ignorar valores imposibles o siempre-cero
-                        if (temp <= 0f || temp > 120f) return@forEach
+                        // Solo valores en rango físicamente posible para el hardware
+                        if (temp <= 0f || temp > 65f) return@forEach  // > 65°C = zona de control, ignorar
 
-                        // Extraer número de zona
-                        val zoneNum = zone.name.removePrefix("thermal_zone").toIntOrNull()
+                        // Clasificar por tipo de zona (nombre del archivo)
+                        val typeName = if (typeFile.exists())
+                            typeFile.readText().trim().lowercase() else "unknown"
+                        val key = classifyZone(typeName)
 
-                        // Clasificar:
-                        // REGLA DE ORO: para CPU/GPU/Modem solo aceptar zonas del ZONE_OVERRIDE
-                        // Las zonas clasificadas por nombre de tipo pueden ser zonas de control
-                        // del kernel (ej: "cpu-1-0" con valor 75°C = límite de throttle, NO temp real)
-                        val key = if (zoneNum != null && ZONE_OVERRIDE.containsKey(zoneNum)) {
-                            val mappedKey = ZONE_OVERRIDE[zoneNum]!!
-                            // Para zonas conocidas: rechazar valores > 65°C (son límites de throttle)
-                            if (temp > 65f) {
-                                result["raw_${zone.name}"] = temp  // guardar para diagnóstico
-                                return@forEach  // ignorar para el cálculo
-                            }
-                            mappedKey
-                        } else if (typeFile.exists()) {
-                            val type = typeFile.readText().trim().lowercase()
-                            val classified = classifyZone(type)
-                            // Zonas NO mapeadas que sean CPU/GPU/Modem: ignorar si > 65°C
-                            // (muy probable que sean zonas de control del kernel)
-                            if (classified in listOf("cpu", "gpu", "modem") && temp > 65f) {
-                                result["raw_${zone.name}"] = temp
-                                return@forEach
-                            }
-                            classified
-                        } else {
-                            "unknown"
-                        }
-
-                        // Ignorar zonas marcadas explícitamente o desconocidas
+                        // Ignorar zonas ambientales, desconocidas o explícitamente ignoradas
                         if (key == "ignore" || key == "ambient" || key == "unknown") {
                             result["raw_${zone.name}"] = temp
                             return@forEach
                         }
 
-                        // Para zonas múltiples del mismo tipo: guardar el PROMEDIO acumulado
-                        val sumKey = "sum_$key"
-                        val cntKey = "cnt_$key"
-                        result[sumKey] = (result[sumKey] ?: 0f) + temp
-                        result[cntKey] = (result[cntKey] ?: 0f) + 1f
-
-                        // Guardar zona original para diagnóstico
+                        // Acumular lecturas por tipo
+                        allReadings.getOrPut(key) { mutableListOf() }.add(temp)
                         result["raw_${zone.name}"] = temp
 
-                    } catch (e: Exception) { }
+                    } catch (_: Exception) { }
                 }
-            // Calcular promedio simple de zonas válidas para cada componente
-            listOf("cpu", "gpu", "modem", "skin", "display", "battery_zone", "board").forEach { key ->
-                val sum = result.remove("sum_$key") ?: return@forEach
-                val cnt = result.remove("cnt_$key") ?: return@forEach
-                if (cnt > 0f) result[key] = sum / cnt
+
+            // Calcular temperatura representativa por tipo:
+            // Usamos el percentil 75 (no el máximo, no el promedio)
+            // Esto filtra outliers bajos (zonas frías no representativas)
+            // y outliers altos (zonas de control que pasaron el filtro de 65°C)
+            allReadings.forEach { (key, readings) ->
+                if (readings.isEmpty()) return@forEach
+                val sorted = readings.sorted()
+                // Percentil 75: valor que supera al 75% de las lecturas
+                val p75idx = ((sorted.size - 1) * 0.75).toInt()
+                result[key] = sorted[p75idx]
             }
 
             result
-        } catch (e: Exception) { result }
+        } catch (_: Exception) { result }
     }
 
     private fun classifyZone(type: String): String = when {
@@ -248,21 +232,21 @@ cpuTemp          = run {
         type.contains("board") || type.contains("pcb")         -> "board"
         type.contains("modem") || type.contains("mdm")         -> "modem"
         type.contains("wlan") || type.contains("wifi")         -> "wlan"
-        type.contains("display") || type.contains("disp")      -> "display"
         type.contains("ddr") || type.contains("mem")           -> "ddr"
+        type.contains("display") || type.contains("disp")      -> "display"
         type.contains("npu") || type.contains("dsp")           -> "npu"
-        type.contains("charger") || type.contains("chg")       -> "charger"
-        type.contains("pa") || type.contains("amplifier")      -> "pa"
-        type.contains("camera") || type.contains("cam")        -> "camera"
-        type.contains("usb")                                    -> "usb"
-        else                                                    -> type.take(20)
+        type.contains("pa") && type.length <= 5                -> "pa"
+        type.contains("ambient") || type.contains("xo_therm")  -> "ambient"
+        type.contains("quiet")                                  -> "ambient"
+        type == "default" || type == "cpu-0-0" || type.isEmpty() -> "ignore"
+        else -> "unknown"
     }
 
     // ============================================================
     //  DIAGNOSTICO DE COMPONENTES
     // ============================================================
 
-    fun diagnoseComponents(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
+(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
         val diagnoses = mutableListOf<ComponentDiagnosis>()
 
         // --- CPU ---
