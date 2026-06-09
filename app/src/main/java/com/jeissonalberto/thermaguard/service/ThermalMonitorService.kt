@@ -104,6 +104,11 @@ class ThermalMonitorService : Service() {
                     sendAlert(snap, profile)
                 }
 
+                // ── MODO GAMER: acción anti-throttle si supera 43°C ──────────
+                if (lastGamerMode && mainTemp >= 43f) {
+                    triggerGamerCooling(snap)
+                }
+
                 // Limpiar historial antiguo — solo 1 vez por hora aprox (no cada ciclo)
                 if (System.currentTimeMillis() % 3600_000L < INTERVAL_MS) {
                     val sevenDaysAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
@@ -202,4 +207,30 @@ class ThermalMonitorService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+    // ── MODO GAMER ──────────────────────────────────────────────────────────
+    var lastGamerMode: Boolean = false
+
+    private fun triggerGamerCooling(snap: ThermalSnapshot) {
+        // 1. Bajar brillo al 30% si está alto
+        try {
+            val cr = contentResolver
+            val currentBrightness = android.provider.Settings.System.getInt(cr,
+                android.provider.Settings.System.SCREEN_BRIGHTNESS, 255)
+            if (currentBrightness > 80) {
+                android.provider.Settings.System.putInt(cr,
+                    android.provider.Settings.System.SCREEN_BRIGHTNESS, 75)
+            }
+        } catch (_: Exception) {}
+
+        // 2. Notificación de alerta gamer
+        val nm = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+        val alertNotif = android.app.Notification.Builder(this, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle("🎮 Modo Gamer — Temperatura ${snap.cpuTemp.toInt()}°C")
+            .setContentText("Reduciendo consumo para proteger el rendimiento")
+            .setOnlyAlertOnce(true)
+            .build()
+        nm.notify(NOTIF_ID + 1, alertNotif)
+    }
+
 }
