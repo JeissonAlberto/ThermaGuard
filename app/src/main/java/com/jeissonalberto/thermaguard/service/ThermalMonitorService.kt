@@ -83,10 +83,11 @@ class ThermalMonitorService : Service() {
 
                 // Actualizar estado compartido
                 lastRiskScore = profile.riskScore
-                lastLevel     = snap.batteryTemp.toThermalLevel()
+                lastLevel     = (if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp).toThermalLevel()
 
                 // Tracking de cooldown: mide tiempo de enfriamiento
-                val isHot = snap.batteryTemp >= profile.dynamicThreshold
+                val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
+                val isHot = mainTemp >= profile.dynamicThreshold
                 if (isHot && !wasHot) {
                     heatStartTime = System.currentTimeMillis()
                 } else if (!isHot && wasHot && heatStartTime > 0L) {
@@ -103,25 +104,37 @@ class ThermalMonitorService : Service() {
                     sendAlert(snap, profile)
                 }
 
-                // Limpiar historial antiguo (>7 días)
-                val sevenDaysAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
-                db.thermalDao().deleteOlderThan(sevenDaysAgo)
+                // Limpiar historial antiguo — solo 1 vez por hora aprox (no cada ciclo)
+                if (System.currentTimeMillis() % 3600_000L < INTERVAL_MS) {
+                    val sevenDaysAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
+                    db.thermalDao().deleteOlderThan(sevenDaysAgo)
+                }
 
             } catch (_: Exception) { }
 
-            delay(INTERVAL_MS)
+            // ── INTERVALO ADAPTATIVO ──────────────────────────────────────
+            // Si temp normal → esperar más (ahorro de batería)
+            // Si temp alta   → intervalo corto (reactividad)
+            val adaptiveDelay = when {
+                lastLevel == ThermalLevel.EMERGENCY || lastLevel == ThermalLevel.CRITICAL -> 10_000L
+                lastLevel == ThermalLevel.HOT  -> 20_000L
+                lastLevel == ThermalLevel.WARM -> 30_000L
+                else -> INTERVAL_MS  // NORMAL → intervalo largo (60s por defecto)
+            }
+            delay(adaptiveDelay)
         }
     }
 
     private fun updateNotification(snap: ThermalSnapshot, profile: LearnedProfile) {
-        val level = snap.batteryTemp.toThermalLevel()
+        val level = (if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp).toThermalLevel()
         val riskEmoji = when {
             profile.riskScore >= 75 -> "🔴"
             profile.riskScore >= 50 -> "🟠"
             profile.riskScore >= 25 -> "🟡"
             else                    -> "🟢"
         }
-        val text = "$riskEmoji ${snap.batteryTemp}°C · CPU ${snap.cpuUsage.toInt()}% · Riesgo ${profile.riskScore}/100"
+        val mainT = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
+        val text = "$riskEmoji ${mainT.toInt()}°C · CPU ${snap.cpuUsage.toInt()}% · Riesgo ${profile.riskScore}/100"
         val title = when (level) {
             ThermalLevel.NORMAL    -> "Estado normal"
             ThermalLevel.WARM      -> "Dispositivo tibio"
