@@ -260,6 +260,9 @@ fun TempHeroCard(
                 }
             }
 
+            // Barra de umbrales de temperatura (estilo Samsung)
+            ThermalThresholdBar(mainTemp = mainTemp, isCharging = snap.isCharging)
+
             // Mini-barra de riesgo
             RiskMiniBar(risk = riskScore.toFloat(), accent = accent)
 
@@ -1270,4 +1273,154 @@ private fun ramLabel(mb: Int) = when {
     mb < 400 -> "Muy poca"
     mb < 900 -> "Ajustada"
     else     -> "Disponible"
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  BARRA DE UMBRALES TÉRMICOS — estilo Samsung
+//  Muestra la temperatura actual en relación a los umbrales críticos
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+fun ThermalThresholdBar(mainTemp: Float, isCharging: Boolean) {
+    val tempAnim by animateFloatAsState(mainTemp, tween(800, easing = EaseOutCubic), label = "tb")
+
+    // Umbrales (igual que Samsung Thermal Guardian)
+    val tempMin    = 25f   // mínimo del rango visual
+    val tempMax    = 60f   // máximo del rango visual
+    val tempWarm   = 38f   // tibio
+    val tempHot    = 45f   // caliente
+    val tempCrit   = 52f   // crítico
+    val tempShutdown = 58f // apagado automático
+
+    val progress = ((tempAnim - tempMin) / (tempMax - tempMin)).coerceIn(0f, 1f)
+
+    // Color de la barra según temperatura
+    val barColor = when {
+        tempAnim >= tempCrit  -> Color(0xFFFF1744)
+        tempAnim >= tempHot   -> Color(0xFFFF6F00)
+        tempAnim >= tempWarm  -> Color(0xFFFFD600)
+        else                  -> Color(0xFF00E5FF)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically) {
+            Text("Escala térmica", fontSize = 10.sp,
+                color = Color(0xFFE0E6FF).copy(alpha = 0.5f))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                if (isCharging) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text("⚡", fontSize = 9.sp)
+                        Text("Cargando", fontSize = 9.sp,
+                            color = Color(0xFFFFD600).copy(alpha = 0.8f))
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFFF1744)))
+                    Text("Apagado: ${tempShutdown.toInt()}°C", fontSize = 9.sp,
+                        color = Color(0xFFE0E6FF).copy(alpha = 0.5f))
+                }
+            }
+        }
+
+        // Barra principal con gradiente y marcador
+        Box(modifier = Modifier.fillMaxWidth().height(20.dp)) {
+            // Fondo degradado: azul → verde → amarillo → naranja → rojo
+            Box(modifier = Modifier.fillMaxWidth().height(8.dp)
+                .align(Alignment.Center)
+                .clip(RoundedCornerShape(4.dp))
+                .background(Brush.horizontalGradient(
+                    colorStops = arrayOf(
+                        0.0f to Color(0xFF00E5FF),
+                        0.3f to Color(0xFF00E676),
+                        0.55f to Color(0xFFFFD600),
+                        0.75f to Color(0xFFFF6F00),
+                        1.0f to Color(0xFFFF1744)
+                    )
+                )))
+
+            // Marcadores de umbral
+            listOf(
+                (tempWarm - tempMin)/(tempMax - tempMin) to "38°",
+                (tempHot  - tempMin)/(tempMax - tempMin) to "45°",
+                (tempCrit - tempMin)/(tempMax - tempMin) to "52°",
+            ).forEach { (pos, label) ->
+                Column(modifier = Modifier
+                    .fillMaxHeight()
+                    .offset(x = with(androidx.compose.ui.platform.LocalDensity.current) {
+                        // posición relativa — approx
+                        0.dp
+                    }),
+                    horizontalAlignment = Alignment.CenterHorizontally) { }
+                // Tick vertical en la barra
+                Box(modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxHeight(0.7f)
+                    .width(1.dp)
+                    .offset(x = with(androidx.compose.ui.platform.LocalDensity.current) {
+                        0.dp // se calcula en Canvas
+                    })
+                    .background(Color.Black.copy(alpha = 0.5f)))
+            }
+
+            // Indicador de temperatura actual (triángulo/círculo)
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val barY = size.height / 2f
+                val barH = 8.dp.toPx()
+                val xPos = progress * size.width
+
+                // Línea vertical del marcador
+                drawLine(
+                    color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f),
+                    start = androidx.compose.ui.geometry.Offset(xPos, barY - barH),
+                    end   = androidx.compose.ui.geometry.Offset(xPos, barY + barH),
+                    strokeWidth = 2.dp.toPx(),
+                    cap   = androidx.compose.ui.graphics.drawscope.Stroke.DefaultCap
+                )
+                // Círculo marcador
+                drawCircle(
+                    color  = androidx.compose.ui.graphics.Color.White,
+                    radius = 5.dp.toPx(),
+                    center = androidx.compose.ui.geometry.Offset(xPos, barY)
+                )
+                drawCircle(
+                    color  = when {
+                        mainTemp >= tempCrit -> androidx.compose.ui.graphics.Color(0xFFFF1744)
+                        mainTemp >= tempHot  -> androidx.compose.ui.graphics.Color(0xFFFF6F00)
+                        mainTemp >= tempWarm -> androidx.compose.ui.graphics.Color(0xFFFFD600)
+                        else -> androidx.compose.ui.graphics.Color(0xFF00E5FF)
+                    },
+                    radius = 4.dp.toPx(),
+                    center = androidx.compose.ui.geometry.Offset(xPos, barY)
+                )
+
+                // Marcadores de umbral (ticks)
+                listOf(
+                    (tempWarm - tempMin)/(tempMax - tempMin),
+                    (tempHot  - tempMin)/(tempMax - tempMin),
+                    (tempCrit - tempMin)/(tempMax - tempMin),
+                    (tempShutdown - tempMin)/(tempMax - tempMin)
+                ).forEach { pos ->
+                    val x = pos * size.width
+                    drawLine(
+                        color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.6f),
+                        start = androidx.compose.ui.geometry.Offset(x, barY - 6.dp.toPx()),
+                        end   = androidx.compose.ui.geometry.Offset(x, barY + 6.dp.toPx()),
+                        strokeWidth = 1.5f
+                    )
+                }
+            }
+        }
+
+        // Labels de temperatura bajo la barra
+        Row(modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            listOf("25°", "38°", "45°", "52°", "60°").forEach { t ->
+                Text(t, fontSize = 8.sp, color = Color(0xFFE0E6FF).copy(alpha = 0.35f))
+            }
+        }
+    }
 }
