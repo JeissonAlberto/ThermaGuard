@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ThermaGuard</string>
+
+    <!-- General -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="save">Save</string>
+    <string name="settings">Settings</string>
+    <string name="loading">Loading…</string>
+    <string name="monitoring">Monitoring</string>
+    <string name="version">Version</string>
+    <string name="by">by</string>
+
+    <!-- Nav tabs -->
+    <string name="tab_home">Home</string>
+    <string name="tab_diagnosis">Diagnosis</string>
+    <string name="tab_stats">Stats</string>
+    <string name="tab_alerts">Alerts</string>
+    <string name="tab_optimize">Optimize</string>
+    <string name="tab_logs">Logs</string>
+    <string name="tab_about">About</string>
+
+    <!-- Dashboard -->
+    <string name="hero_normal">All good 🟢</string>
+    <string name="hero_warm">Warming up a bit 🟡</string>
+    <string name="hero_hot">High temperature ⚠️</string>
+    <string name="hero_critical">Critical temperature 🔴</string>
+    <string name="hero_emergency">Thermal emergency! 🚨</string>
+    <string name="cpu_temp">CPU Temp</string>
+    <string name="battery_temp">Battery Temp</string>
+    <string name="cpu_usage">CPU Usage</string>
+    <string name="ram_free">Free RAM</string>
+
+    <!-- Modes -->
+    <string name="mode_learning">Learning</string>
+    <string name="mode_auto">Automatic</string>
+    <string name="mode_active">Active</string>
+    <string name="mode_gamer">Gamer 🎮</string>
+    <string name="mode_learning_desc">Observe and learn only · 60s · low power</string>
+    <string name="mode_auto_desc">Act on learned patterns · 30s</string>
+    <string name="mode_active_desc">Maximum intervention · 15s</string>
+    <string name="mode_gamer_desc">Aggressive anti-throttle · 10s · max 43°C</string>
+
+    <!-- Diagnosis -->
+    <string name="diagnosis_title">Diagnosis</string>
+    <string name="components_monitored">components monitored</string>
+    <string name="all_normal">All normal ✓</string>
+    <string name="in_alert">in alert</string>
+    <string name="monitoring_components">Monitoring components…</string>
+
+    <!-- Stats -->
+    <string name="stats_title">Statistics</string>
+    <string name="risk_score">Risk Score</string>
+    <string name="risk_excellent">Excellent — cool and efficient</string>
+    <string name="risk_normal">Normal — moderate use</string>
+    <string name="risk_attention">Attention — elevated temperature</string>
+    <string name="risk_critical">Critical — action recommended</string>
+    <string name="history_empty">History will appear after the engine runs for a few minutes</string>
+
+    <!-- Alerts -->
+    <string name="alerts_title">Alerts</string>
+    <string name="threshold">Threshold</string>
+    <string name="threshold_hint">Notify when this temperature is exceeded</string>
+
+    <!-- Optimize -->
+    <string name="optimize_title">Optimize</string>
+    <string name="recommended_actions">Recommended actions</string>
+    <string name="smart_tips">Smart tips</string>
+    <string name="all_ok">All good</string>
+    <string name="all_ok_desc">Normal temperature, no action needed</string>
+
+    <!-- Logs -->
+    <string name="logs_title">Logs</string>
+    <string name="logs_empty">No records</string>
+    <string name="logs_empty_desc">Logs will appear when the engine is active</string>
+
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="max_temp">Max</string>
+    <string name="min_temp">Min</string>
+    <string name="avg_temp">Avg</string>
+    <string name="readings">Readings</string>
+
+    <!-- Settings -->
+    <string name="appearance">Appearance</string>
+    <string name="dark_mode">Dark mode</string>
+    <string name="light_mode">Light mode</string>
+    <string name="auto_theme">Auto (system)</string>
+    <string name="language">Language</string>
+    <string name="language_es">Español</string>
+    <string name="language_en">English</string>
+    <string name="floating_widget">Floating widget</string>
+    <string name="floating_widget_desc">Show temperature in a floating bubble</string>
+
+    <!-- About -->
+    <string name="about_title">About ThermaGuard</string>
+    <string name="about_desc">Advanced thermal monitor for Android</string>
+    <string name="about_company">Jasol Group</string>
+    <string name="about_author">Eng. Jeisson Alberto Sarmiento Cabrera</string>
+    <string name="about_role">NOC Lead Coordinator · Avidtel S.A.S.</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">Thermal Monitor</string>
+    <string name="notif_channel_desc">Device temperature alerts</string>
+    <string name="notif_monitoring">ThermaGuard active</string>
+    <string name="notif_alert">Temperature alert!</string>
+    <string name="notif_gamer">Gamer mode active — protecting performance</string>
+
+    <!-- Gamer Mode -->
+    <string name="gamer_active">Gamer Mode active 🎮</string>
+    <string name="gamer_protected">Performance protected</string>
+    <string name="gamer_temp_limit">Anti-throttle limit</string>
+    <string name="gamer_cooling">Cooling down…</string>
+</resources>
