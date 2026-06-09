@@ -196,9 +196,9 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                         1 -> DiagnosisScreen(uiState = uiState)
                         2 -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
                         3 -> AlertsScreen(uiState = uiState, onThresholdChange = viewModel::setAlertThreshold, onClearLog = viewModel::clearAutoLog)
-                        4 -> AboutScreen()
                         4 -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) })
                         5 -> LogsScreen(uiState = uiState)
+                        6 -> AboutScreen()
                         else -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) })
                     }
                 }
