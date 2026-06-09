@@ -88,25 +88,62 @@ fun OptimizeScreen(
                 fontWeight = FontWeight.SemiBold, color = TG.textPri)
             ModeSelector(mode = uiState.operationMode, onSetMode = onSetMode, accent = accent)
 
-            // Recomendaciones
-            if (uiState.coolingRecs.isNotEmpty()) {
+            // Recomendaciones — si el motor no genera ninguna, construir según temperatura
+            val effectiveRecs = uiState.coolingRecs.ifEmpty {
+                when {
+                    mainTemp >= 55f -> listOf(
+                        CoolingRecommendation("opt1", CoolingCategory.APP_MANAGEMENT,
+                            "Cierra apps en segundo plano", "Hay procesos activos elevando la temperatura. Cierra las apps que no estés usando.",
+                            3f, 1, true, "📱"),
+                        CoolingRecommendation("opt2", CoolingCategory.SYSTEM_SETTINGS,
+                            "Reduce el brillo de pantalla", "La pantalla al máximo genera calor adicional.",
+                            1.5f, 1, true, "☀️"),
+                        CoolingRecommendation("opt3", CoolingCategory.ENVIRONMENT,
+                            "Deja el teléfono en reposo", "Pausa el uso intensivo unos minutos para permitir enfriamiento.",
+                            4f, 1, true, "⏸️"),
+                        CoolingRecommendation("opt4", CoolingCategory.SYSTEM_SETTINGS,
+                            "Activa el modo Activo", "Cambia el motor a modo Activo para que ThermaGuard intervenga automáticamente.",
+                            2f, 1, true, "🔥")
+                    )
+                    mainTemp >= 43f -> listOf(
+                        CoolingRecommendation("opt1", CoolingCategory.APP_MANAGEMENT,
+                            "Revisa apps con alto consumo", "Algunos procesos están usando CPU de forma sostenida.",
+                            2f, 1, true, "📊"),
+                        CoolingRecommendation("opt2", CoolingCategory.SYSTEM_SETTINGS,
+                            "Considera modo Automático", "El motor puede gestionar esto de forma autónoma.",
+                            1.5f, 1, true, "⚙️")
+                    )
+                    mainTemp >= 38f -> listOf(
+                        CoolingRecommendation("opt1", CoolingCategory.ENVIRONMENT,
+                            "Temperatura leve — sigue monitoreando", "El dispositivo está tibio pero dentro del rango normal de uso.",
+                            0f, 1, false, "🌡️")
+                    )
+                    else -> emptyList()
+                }
+            }
+
+            if (effectiveRecs.isNotEmpty()) {
                 Text("Acciones recomendadas", fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold, color = TG.textPri)
-                CoolingRecsCard(recs = uiState.coolingRecs)
+                CoolingRecsCard(recs = effectiveRecs)
             } else {
                 Box(
                     modifier = Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(TG.glass)
+                        .background(TG.green.copy(alpha = 0.07f))
+                        .border(1.dp, TG.green.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
                         .padding(20.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("OK", fontSize = 32.sp)
-                        Text("Sin recomendaciones", fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold, color = TG.textPri)
-                        Text("El dispositivo esta funcionando correctamente", fontSize = 11.sp, color = TG.textDim)
+                        Text("✅", fontSize = 32.sp)
+                        Text("Todo en orden", fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold, color = TG.green)
+                        Text("${mainTemp.toInt()}°C — temperatura normal, sin acción necesaria",
+                            fontSize = 11.sp, color = TG.textDim,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 8.dp))
                     }
                 }
             }
