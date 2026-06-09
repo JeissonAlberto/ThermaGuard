@@ -210,4 +210,5 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
             }
         }
     }
+    } // end ThermaGuardTheme
 }
