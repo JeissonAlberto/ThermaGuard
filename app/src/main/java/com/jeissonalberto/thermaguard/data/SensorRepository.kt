@@ -123,6 +123,33 @@ class SensorRepository(private val context: Context) {
     //  ZONAS TERMICAS — lectura exhaustiva de /sys/class/thermal
     // ============================================================
 
+    // Mapeo hardcoded para dispositivos con zonas genéricas (sin nombres descriptivos).
+    // Derivado del análisis real del hardware — zonas 25-33 = CPU/SoC,
+    // zonas 35-44 = GPU/Big cores, zonas 46-55 = Módem/NPU, zona 58/73 = skin/display.
+    // Zonas 4,6,22,23,56,57,60,61,62 siempre en 0 — ignoradas.
+    // Zonas 7,12,13,14 constantes en ~27°C — referencia ambiente.
+    private val ZONE_OVERRIDE = mapOf(
+        // CPU / SoC cluster (las más calientes del núcleo)
+        25 to "cpu", 26 to "cpu", 27 to "cpu", 28 to "cpu", 29 to "cpu",
+        30 to "cpu", 31 to "cpu", 32 to "cpu", 33 to "cpu",
+        // GPU / Big cores
+        35 to "gpu", 36 to "gpu", 37 to "gpu", 38 to "gpu", 39 to "gpu",
+        40 to "gpu", 41 to "gpu", 42 to "gpu", 43 to "gpu", 44 to "gpu",
+        // Módem / NPU / conectividad
+        46 to "modem", 47 to "modem", 48 to "modem", 49 to "modem", 50 to "modem",
+        51 to "modem", 52 to "modem", 53 to "modem", 54 to "modem", 55 to "modem",
+        // Skin / display
+        58 to "skin", 73 to "skin",
+        70 to "display", 72 to "display",
+        // Batería / carcasa
+        74 to "battery_zone", 75 to "battery_zone", 76 to "battery_zone", 77 to "battery_zone",
+        // Referencia ambiente — ignorar para temperaturas de componentes
+        7 to "ambient", 12 to "ambient", 13 to "ambient", 14 to "ambient",
+        // Siempre 0 — ignorar
+        4 to "ignore", 6 to "ignore", 22 to "ignore", 23 to "ignore",
+        56 to "ignore", 57 to "ignore", 60 to "ignore", 61 to "ignore", 62 to "ignore"
+    )
+
     fun readAllThermalZones(): Map<String, Float> {
         val result = mutableMapOf<String, Float>()
         return try {
@@ -134,22 +161,38 @@ class SensorRepository(private val context: Context) {
                     try {
                         val tempFile = File(zone, "temp")
                         val typeFile = File(zone, "type")
-                        if (!tempFile.exists() || !typeFile.exists()) return@forEach
+                        if (!tempFile.exists()) return@forEach
 
                         val rawTemp = tempFile.readText().trim().toLongOrNull() ?: return@forEach
-                        val type    = typeFile.readText().trim().lowercase()
                         val temp    = if (rawTemp > 1000) rawTemp / 1000f else rawTemp.toFloat()
 
-                        // Ignorar valores imposibles
-                        if (temp < 0f || temp > 120f) return@forEach
+                        // Ignorar valores imposibles o siempre-cero
+                        if (temp <= 0f || temp > 120f) return@forEach
 
-                        val key = classifyZone(type)
+                        // Extraer número de zona
+                        val zoneNum = zone.name.removePrefix("thermal_zone").toIntOrNull()
 
-                        // Para zonas multiples del mismo tipo, guardar la mayor
+                        // Clasificar: primero override por número, luego por tipo
+                        val key = if (zoneNum != null && ZONE_OVERRIDE.containsKey(zoneNum)) {
+                            ZONE_OVERRIDE[zoneNum]!!
+                        } else if (typeFile.exists()) {
+                            val type = typeFile.readText().trim().lowercase()
+                            classifyZone(type)
+                        } else {
+                            "unknown"
+                        }
+
+                        // Ignorar zonas marcadas explícitamente
+                        if (key == "ignore" || key == "ambient") {
+                            result["raw_${zone.name}"] = temp
+                            return@forEach
+                        }
+
+                        // Para zonas múltiples del mismo tipo, guardar la mayor
                         val existing = result[key] ?: 0f
                         if (temp > existing) result[key] = temp
 
-                        // Guardar zona original tambien con nombre real (para diagnostico)
+                        // Guardar zona original para diagnóstico
                         result["raw_${zone.name}"] = temp
 
                     } catch (e: Exception) { }
@@ -187,10 +230,10 @@ class SensorRepository(private val context: Context) {
         val cpuTemp = snapshot.cpuTemp.takeIf { it > 0f } ?: snapshot.batteryTemp
         // Status por temperatura Y uso — el que sea más grave gana
         val cpuStatusByTemp = when {
-            cpuTemp >= 70f -> ComponentStatus.CRITICAL
-            cpuTemp >= 60f -> ComponentStatus.HOT
-            cpuTemp >= 48f -> ComponentStatus.WARM
-            else           -> ComponentStatus.NORMAL
+            cpuTemp >= 65f -> ComponentStatus.CRITICAL  // emergencia real
+            cpuTemp >= 55f -> ComponentStatus.HOT       // intervenir ya
+            cpuTemp >= 47f -> ComponentStatus.WARM      // ojo
+            else           -> ComponentStatus.NORMAL    // <47°C = ok en este SoC
         }
         val cpuStatusByUsage = when {
             snapshot.cpuUsage >= 90f -> ComponentStatus.CRITICAL
@@ -215,9 +258,9 @@ class SensorRepository(private val context: Context) {
         // --- GPU ---
         if (snapshot.gpuTemp > 0f) {
             val gpuStatus = when {
-                snapshot.gpuTemp >= 52f -> ComponentStatus.CRITICAL
-                snapshot.gpuTemp >= 46f -> ComponentStatus.HOT
-                snapshot.gpuTemp >= 40f -> ComponentStatus.WARM
+                snapshot.gpuTemp >= 55f -> ComponentStatus.CRITICAL  // emergencia GPU
+                snapshot.gpuTemp >= 48f -> ComponentStatus.HOT
+                snapshot.gpuTemp >= 43f -> ComponentStatus.WARM      // 40-42°C = normal en uso
                 else                    -> ComponentStatus.NORMAL
             }
             diagnoses.add(ComponentDiagnosis(
