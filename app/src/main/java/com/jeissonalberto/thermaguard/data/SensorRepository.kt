@@ -373,6 +373,35 @@ class SensorRepository(private val context: Context) {
             }
         }
 
+        // --- SKIN (zona 58/73 disponible en este hardware) ---
+        val skinT = snapshot.skinTemp.takeIf { it > 10f }
+        if (skinT != null) {
+            val skinStatus = when {
+                skinT >= 48f -> ComponentStatus.CRITICAL
+                skinT >= 43f -> ComponentStatus.HOT
+                skinT >= 39f -> ComponentStatus.WARM
+                else         -> ComponentStatus.NORMAL
+            }
+            if (skinStatus != ComponentStatus.NORMAL) {
+                diagnoses.add(ComponentDiagnosis(
+                    component = ThermalComponent.SKIN,
+                    temp      = skinT,
+                    usagePct  = -1f,
+                    status    = skinStatus,
+                    cause     = when (skinStatus) {
+                        ComponentStatus.CRITICAL -> "La carcasa está muy caliente al tacto."
+                        ComponentStatus.HOT      -> "La carcasa está caliente. Considera poner el teléfono en reposo."
+                        else                     -> "Temperatura superficial elevada."
+                    },
+                    advice    = when (skinStatus) {
+                        ComponentStatus.CRITICAL -> "Quita la funda, deja el teléfono sobre superficie fría y cierra todas las apps."
+                        ComponentStatus.HOT      -> "Reduce el brillo y cierra apps pesadas para enfriar la carcasa."
+                        else                     -> "Monitorea la temperatura."
+                    }
+                ))
+            }
+        }
+
         return diagnoses.sortedByDescending { it.status.ordinal }
     }
 
