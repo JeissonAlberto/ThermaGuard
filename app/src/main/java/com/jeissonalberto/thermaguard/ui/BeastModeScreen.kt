@@ -18,7 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.*
-import com.jeissonalberto.thermaguard.ui.theme.TG
+// TG defined in DashboardScreen — same package, no import needed
 import kotlinx.coroutines.delay
 
 @Composable
