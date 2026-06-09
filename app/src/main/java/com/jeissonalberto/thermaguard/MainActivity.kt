@@ -177,6 +177,43 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                         }
                     }
                 }
+
+                // ── Botón "Más" ──────────────────────────────────────────
+                Box(modifier = Modifier.weight(1f)) {
+                    IconButton(onClick = { showMoreMenu = !showMoreMenu },
+                        modifier = Modifier.fillMaxWidth()) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Icon(Icons.Default.MoreHoriz, null,
+                                tint = if (selectedTab >= 5) accent else TG.textSec,
+                                modifier = Modifier.size(20.dp))
+                            Text("Más", fontSize = 9.sp,
+                                color = if (selectedTab >= 5) accent else TG.textSec,
+                                fontWeight = if (selectedTab >= 5) FontWeight.Bold else FontWeight.Normal)
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = showMoreMenu,
+                        onDismissRequest = { showMoreMenu = false },
+                        modifier = Modifier.background(Color(0xFF0D1520))
+                            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(12.dp))
+                    ) {
+                        listOf(
+                            Triple(5, "Stats",   Icons.Default.BarChart),
+                            Triple(6, "Alertas", Icons.Default.Notifications),
+                            Triple(7, "Logs",    Icons.Default.Terminal),
+                            Triple(8, "Acerca",  Icons.Default.Info),
+                        ).forEach { (tabIdx, label, icon) ->
+                            DropdownMenuItem(
+                                text = { Text(label, color = TG.textPri, fontSize = 13.sp) },
+                                leadingIcon = { Icon(icon, null, tint = accent,
+                                    modifier = Modifier.size(18.dp)) },
+                                onClick = { selectedTab = tabIdx; showMoreMenu = false },
+                                modifier = Modifier.background(Color.Transparent)
+                            )
+                        }
+                    }
+                }
             }
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
