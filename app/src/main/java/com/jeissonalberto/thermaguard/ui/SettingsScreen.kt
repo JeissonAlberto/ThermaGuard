@@ -21,7 +21,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.data.*
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.compose.ui.platform.LocalContext
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
+import com.jeissonalberto.thermaguard.service.FloatingWidgetService
 
 @Composable
 fun SettingsScreen(
@@ -32,7 +38,9 @@ fun SettingsScreen(
 ) {
     val accent = TG.blue
     val scroll = rememberScrollState()
+    val context = LocalContext.current
     var widgetEnabled by remember { mutableStateOf(false) }
+    var needsOverlayPermission by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
         Column(
@@ -138,9 +146,22 @@ fun SettingsScreen(
                     }
                     Switch(
                         checked = widgetEnabled,
-                        onCheckedChange = {
-                            widgetEnabled = it
-                            onToggleWidget(it)
+                        onCheckedChange = { enabled ->
+                            if (enabled) {
+                                // Verificar permiso SYSTEM_ALERT_WINDOW
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                                    !Settings.canDrawOverlays(context)) {
+                                    needsOverlayPermission = true
+                                } else {
+                                    widgetEnabled = true
+                                    FloatingWidgetService.start(context)
+                                    onToggleWidget(true)
+                                }
+                            } else {
+                                widgetEnabled = false
+                                FloatingWidgetService.stop(context)
+                                onToggleWidget(false)
+                            }
                         },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
@@ -194,6 +215,31 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(16.dp))
         }
+    }
+
+    // Diálogo: pedir permiso de superposición
+    if (needsOverlayPermission) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { needsOverlayPermission = false },
+            title = { Text("Permiso necesario", color = TG.textPri) },
+            text = { Text("Para mostrar el widget flotante, ThermaGuard necesita permiso de superposición de apps.", color = TG.textSec, fontSize = 13.sp) },
+            confirmButton = {
+                TextButton(onClick = {
+                    needsOverlayPermission = false
+                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:${context.packageName}"))
+                    context.startActivity(intent)
+                }) { Text("Permitir", color = TG.blue) }
+            },
+            dismissButton = {
+                TextButton(onClick = { needsOverlayPermission = false }) {
+                    Text("Cancelar", color = TG.textDim)
+                }
+            },
+            containerColor = android.graphics.Color.argb(240, 10, 15, 30).let {
+                androidx.compose.ui.graphics.Color(it)
+            }
+        )
     }
 }
 
