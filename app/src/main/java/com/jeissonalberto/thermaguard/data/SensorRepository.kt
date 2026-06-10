@@ -219,6 +219,17 @@ modemTemp        = run {
     }
 
     private fun classifyZone(type: String): String = when {
+        // ── Snapdragon 8 Gen 1 / SM8450 (Galaxy S22 Snapdragon) ──────────
+        // cpu-0-0..cpu-2-0 = Silver/Gold/Prime clusters
+        type.matches(Regex("cpu-[0-9]+-[0-9]+"))               -> "cpu"
+        type.contains("qcom-cpuss") || type.contains("cpuss")  -> "cpu"
+        type.contains("gpuss")                                  -> "gpu"
+        type.contains("mdmss")                                  -> "modem"
+        type.contains("aoss")                                   -> "board"
+        type.contains("xo-therm") || type.contains("xo_therm") -> "board"
+        type.contains("quiet-therm") || type.contains("quiet_therm") -> "skin"
+        type.contains("sdm-therm") || type.contains("sdm_therm")     -> "skin"
+        // ── Genérico / otros SoC ─────────────────────────────────────────
         type.contains("cpu") || type.contains("processor") || type.contains("tsens_tz_sensor") -> "cpu"
         type.contains("gpu")                                    -> "gpu"
         type.contains("skin") || type.contains("surface")      -> "skin"
