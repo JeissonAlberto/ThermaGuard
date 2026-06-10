@@ -45,27 +45,28 @@ class SensorRepository(private val context: Context) {
     //  SNAPSHOT PRINCIPAL
     // ============================================================
 
-    suspend fun readSnapshot(): ThermalSnapshot {
+    suspend fun readSnapshot(): ThermalSnapshot = withContext(Dispatchers.IO) {
+        val self = this@SensorRepository
         val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
 
         val batteryTemp  = (batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0) / 10f
         val batteryLevel = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, 0) ?: 0
         val isCharging   = batteryIntent?.getIntExtra(BatteryManager.EXTRA_STATUS, 0) == BatteryManager.BATTERY_STATUS_CHARGING
 
-        val thermalStatus = readThermalStatus()
-        val allZones      = readAllThermalZones()          // mapa completo tipo->temp
-        val cpuUsage      = readCpuUsage()
-        val perCoreUsage  = readPerCoreUsage()
+        val thermalStatus = self.readThermalStatus()
+        val allZones      = self.readAllThermalZones()          // mapa completo tipo->temp
+        val cpuUsage      = self.readCpuUsage()
+        val perCoreUsage  = self.readPerCoreUsage()
         // topApp y topProcesses: costosos — leer solo si el ciclo lo requiere
         // El servicio los pide solo cuando el usuario ve la app (snapshotCycle par)
-        val topApp        = if (snapshotCycle % 5 == 0) getTopApp() else lastTopApp
-        val topProcesses  = if (snapshotCycle % 5 == 0) getTopProcesses() else lastTopProcesses
+        val topApp        = if (snapshotCycle % 5 == 0) self.getTopApp() else lastTopApp
+        val topProcesses  = if (snapshotCycle % 5 == 0) self.getTopProcesses() else lastTopProcesses
         if (snapshotCycle % 5 == 0) { lastTopApp = topApp; lastTopProcesses = topProcesses }
         snapshotCycle++
-        val wifiActive    = isWifiActive()
-        val bluetoothActive = readBluetoothState()
-        val brightness    = readBrightness()
-        val ramUsage      = readRamUsage()
+        val wifiActive    = self.isWifiActive()
+        val bluetoothActive = self.readBluetoothState()
+        val brightness    = self.readBrightness()
+        val ramUsage      = self.readRamUsage()
 
         val snap = ThermalSnapshot(
             batteryTemp      = batteryTemp,
@@ -137,7 +138,7 @@ modemTemp        = run {
         }
 
         snap
-    }
+    } // end withContext
 
     // ============================================================
     //  ZONAS TERMICAS — lectura exhaustiva de /sys/class/thermal
