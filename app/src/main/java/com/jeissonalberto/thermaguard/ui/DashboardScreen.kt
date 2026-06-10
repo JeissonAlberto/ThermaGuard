@@ -89,7 +89,12 @@ fun DashboardScreen(
 ) {
     val snap   = uiState.latest
     // Temperatura principal: usar cpuTemp si está disponible, sino batteryTemp
-    val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
+    // Temperatura principal: CPU real > Modem > Batería (según log del device)
+    val mainTemp = when {
+        snap.cpuTemp   > 20f -> snap.cpuTemp
+        snap.modemTemp > 20f -> snap.modemTemp
+        else                  -> snap.batteryTemp
+    }
     val level  = mainTemp.toThermalLevel()
     val accent = TG.accentFor(level)
     val glow   = TG.glowFor(level)
@@ -339,7 +344,9 @@ fun HardwareMetricsRow(snap: ThermalSnapshot, accent: Color) {
             ))
         }
         // GPU temp — si el sensor existe
-        if (snap.gpuTemp > 20f) {
+        // GPU: mostrar solo si existe Y es diferente al CPU (evitar duplicados)
+        val gpuDiffFromCpu = kotlin.math.abs(snap.gpuTemp - snap.cpuTemp) > 2f
+        if (snap.gpuTemp > 20f && gpuDiffFromCpu) {
             add(Metric(
                 label = "GPU",
                 value = "${snap.gpuTemp.toInt()}°C",
@@ -347,13 +354,21 @@ fun HardwareMetricsRow(snap: ThermalSnapshot, accent: Color) {
                 color = if (snap.gpuTemp > 50f) TG.amber else TG.green
             ))
         }
-        // Modem — si el sensor existe
+        // Modem — sensor real y confiable en este device
         if (snap.modemTemp > 20f) {
             add(Metric(
-                label = "Modem",
+                label = "Módem",
                 value = "${snap.modemTemp.toInt()}°C",
-                sub = if (snap.modemTemp > 45f) "Caliente" else "Normal",
-                color = if (snap.modemTemp > 45f) TG.amber else TG.green
+                sub = when {
+                    snap.modemTemp > 55f -> "Muy caliente"
+                    snap.modemTemp > 45f -> "Caliente"
+                    else -> "Normal"
+                },
+                color = when {
+                    snap.modemTemp > 55f -> TG.red
+                    snap.modemTemp > 45f -> TG.amber
+                    else -> TG.green
+                }
             ))
         }
     }
