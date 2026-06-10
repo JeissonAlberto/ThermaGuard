@@ -68,25 +68,26 @@ class ThermalMonitorService : Service() {
     }
 
     private suspend fun monitorLoop() {
-        var wasHot = false
+        var wasHot        = false
         var heatStartTime = 0L
+        var lastDbWrite   = 0L   // solo escribir DB cada 5 min
 
         while (true) {
             try {
-                // Usar el snapshot ya calculado por el ViewModel (evita doble lectura)
-                // Si el VM aún no ha publicado nada, leer directamente (arranque en frío)
                 val snap    = lastSnapshot ?: sensorRepo.readSnapshot()
                 val profile = lastProfile  ?: learningEngine.learn(snap)
 
-                // Guardar en DB
-                db.thermalDao().insert(snap)
+                // Temperatura principal: CPU si disponible, si no modem, si no batería
+                val mainTemp = when {
+                    snap.cpuTemp   > 20f -> snap.cpuTemp
+                    snap.modemTemp > 20f -> snap.modemTemp
+                    else                  -> snap.batteryTemp
+                }
 
-                // Actualizar estado compartido
                 lastRiskScore = profile.riskScore
-                lastLevel     = (if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp).toThermalLevel()
+                lastLevel     = mainTemp.toThermalLevel()
 
-                // Tracking de cooldown: mide tiempo de enfriamiento
-                val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
+                // ── Tracking cooldown ────────────────────────────────────
                 val isHot = mainTemp >= profile.dynamicThreshold
                 if (isHot && !wasHot) {
                     heatStartTime = System.currentTimeMillis()
@@ -96,42 +97,44 @@ class ThermalMonitorService : Service() {
                 }
                 wasHot = isHot
 
-                // Actualizar notificación persistente con info real
+                // ── Notificación ─────────────────────────────────────────
                 updateNotification(snap, profile)
 
-                // Alerta si temperatura crítica
+                // ── Alerta crítica ───────────────────────────────────────
                 if (lastLevel == ThermalLevel.CRITICAL || lastLevel == ThermalLevel.EMERGENCY) {
                     sendAlert(snap, profile)
                 }
 
-                // ── MODO BESTIA: intervención escalonada según temperatura ─────
-                if (lastGamerMode) {
-                    // Nivel 1 (>40°C): prevención temprana
-                    // Nivel 2 (>43°C): intervención media
-                    // Nivel 3 (>46°C): intervención máxima
-                    if (mainTemp >= 40f) triggerGamerCooling(snap)
-                }
+                // ── Modo Bestia ──────────────────────────────────────────
+                if (lastGamerMode && mainTemp >= 40f) triggerGamerCooling(snap)
 
-                // Limpiar historial antiguo — solo 1 vez por hora aprox (no cada ciclo)
-                if (System.currentTimeMillis() % 3600_000L < INTERVAL_MS) {
-                    val sevenDaysAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L
+                // ── Escribir DB solo cada 5 minutos (no cada ciclo) ──────
+                val now = System.currentTimeMillis()
+                if (now - lastDbWrite >= 5 * 60_000L) {
+                    db.thermalDao().insert(snap)
+                    lastDbWrite = now
+                    // Limpiar historial antiguo solo al escribir
+                    val sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000L
                     db.thermalDao().deleteOlderThan(sevenDaysAgo)
                 }
 
             } catch (_: Exception) { }
 
-            // ── INTERVALO ADAPTATIVO ──────────────────────────────────────
-            // Si temp normal → esperar más (ahorro de batería)
-            // Si temp alta   → intervalo corto (reactividad)
-            val adaptiveDelay = when {
-                lastLevel == ThermalLevel.EMERGENCY || lastLevel == ThermalLevel.CRITICAL -> 10_000L
-                lastLevel == ThermalLevel.HOT  -> 20_000L
-                lastLevel == ThermalLevel.WARM -> 30_000L
-                else -> INTERVAL_MS  // NORMAL → intervalo largo (60s por defecto)
+            // ── INTERVALO ADAPTATIVO ─────────────────────────────────────
+            // Normal/Aprendizaje → 60s (casi sin consumo)
+            // Tibio            → 30s
+            // Caliente/Crítico → 20s
+            // Emergencia       → 10s
+            val interval = when (lastLevel) {
+                ThermalLevel.EMERGENCY, ThermalLevel.CRITICAL -> 10_000L
+                ThermalLevel.HOT                              -> 20_000L
+                ThermalLevel.WARM                             -> 30_000L
+                else                                          -> 60_000L
             }
-            delay(adaptiveDelay)
+            delay(interval)
         }
     }
+
 
     private fun updateNotification(snap: ThermalSnapshot, profile: LearnedProfile) {
         val level = (if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp).toThermalLevel()
