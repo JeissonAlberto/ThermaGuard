@@ -520,9 +520,9 @@ fun diagnoseComponents(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
     private var cpuEma: Float = -1f  // Suavizado exponencial (EMA) entre lecturas
 
     private suspend fun readCpuUsage(): Float = withContext(Dispatchers.IO) {
-        // ── MÉTODO 1: /proc/stat — lectura diferencial con 800ms ──────────
-        // El S22 (Exynos 2200, 8 núcleos) necesita más tiempo para captura
-        // estable. La línea "cpu " es la suma de todos los núcleos.
+        // ── MÉTODO 1: /proc/stat — lectura diferencial con 200ms ──────────
+        // Galaxy S22 Snapdragon 8 Gen 1 — 8 cores (1+3+4 big.LITTLE)
+        // 200ms es suficiente para diferencial estable en este SoC. La línea "cpu " es la suma de todos los núcleos.
         // idle está en columna [3], iowait en [4] — ambos son tiempo no activo.
         try {
             fun parseStat(): Pair<Long, Long>? {
