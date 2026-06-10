@@ -26,6 +26,7 @@ import com.jeissonalberto.thermaguard.data.toThermalLevel
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
 import com.jeissonalberto.thermaguard.service.ThermalMonitorService
 import com.jeissonalberto.thermaguard.ui.*
+import com.jeissonalberto.thermaguard.ui.screens.RootControlScreen
 import com.jeissonalberto.thermaguard.ui.theme.ThermaGuardTheme
 
 class MainActivity : ComponentActivity() {
@@ -63,7 +64,8 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
         NavItem("Ajustes",     Icons.Default.Settings),
     )
     // Tabs extendidos — accesibles por índice desde el menú
-    // 5=Stats, 6=Alertas, 7=Logs, 8=Acerca
+    // 5=Stats, 6=Alertas, 7=Logs, 8=Acerca, 9=Root
+    val rootAvail by viewModel.rootAvailable.collectAsState()
     var showMoreMenu by remember { mutableStateOf(false) }
 
     // ── SPLASH ────────────────────────────────────────────────────────────
@@ -201,6 +203,7 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                             Triple(6, "Alertas", Icons.Default.Notifications),
                             Triple(7, "Logs",    Icons.Default.Terminal),
                             Triple(8, "Acerca",  Icons.Default.Info),
+                        ) + (if (rootAvail) listOf(Triple(9, "Root ⚡", Icons.Default.Security)) else emptyList())
                         ).forEach { (tabIdx, label, icon) ->
                             DropdownMenuItem(
                                 text = { Text(label, color = TG.textPri, fontSize = 13.sp) },
@@ -237,6 +240,7 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                         6 -> AlertsScreen(uiState = uiState, onThresholdChange = viewModel::setAlertThreshold, onClearLog = viewModel::clearAutoLog)
                         7 -> LogsScreen(uiState = uiState)
                         8 -> AboutScreen()
+                        9 -> RootControlScreen(viewModel = viewModel)
                         else -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) })
                     }
                 }
