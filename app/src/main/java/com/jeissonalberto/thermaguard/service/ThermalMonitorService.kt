@@ -74,8 +74,18 @@ class ThermalMonitorService : Service() {
 
         while (true) {
             try {
-                val snap    = lastSnapshot ?: sensorRepo.readSnapshot()
-                val profile = lastProfile  ?: learningEngine.learn(snap)
+                val snap = lastSnapshot ?: sensorRepo.readSnapshot()
+                // learningEngine.learn solo si temperatura cambió >0.5°C o cada 10 ciclos
+                val mainT = if (snap.cpuTemp > 20f) snap.cpuTemp
+                            else if (snap.modemTemp > 20f) snap.modemTemp
+                            else snap.batteryTemp
+                val tempChanged = kotlin.math.abs(mainT - lastKnownTemp) > 0.5f
+                if (tempChanged || learnCycle % 10 == 0) {
+                    lastProfile = learningEngine.learn(snap)
+                    lastKnownTemp = mainT
+                }
+                learnCycle++
+                val profile = lastProfile ?: learningEngine.learn(snap)
 
                 // Temperatura principal: CPU si disponible, si no modem, si no batería
                 val mainTemp = when {
@@ -214,7 +224,9 @@ class ThermalMonitorService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
     // ── MODO GAMER ──────────────────────────────────────────────────────────
-    var lastGamerMode: Boolean = false
+    var lastGamerMode:  Boolean = false
+    private var lastKnownTemp: Float = 0f
+    private var learnCycle:    Int   = 0
 
     private fun triggerGamerCooling(snap: ThermalSnapshot) {
         val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
