@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jeissonalberto.thermaguard.data.*
+import com.jeissonalberto.thermaguard.root.RootEngine
 import com.jeissonalberto.thermaguard.service.ThermalMonitorService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -324,4 +325,48 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         _uiState.update { it.copy(operationMode = OperationMode.AUTO, isGamerMode = false) }
     }
 
+
+    // ── Métodos Root ──────────────────────────────────────────────────
+    fun checkRoot() = viewModelScope.launch {
+        _rootAvailable.value = RootEngine.isRootAvailable()
+    }
+
+    fun activateSuperCool(ultra: Boolean = false) = viewModelScope.launch {
+        if (!_rootAvailable.value) return@launch
+        val result = RootEngine.activateSuperCool(getApplication(), ultra)
+        _superCoolResult.value = result
+        _superCoolActive.value = !ultra
+        _ultraCoolActive.value = ultra
+    }
+
+    fun deactivateSuperCool() = viewModelScope.launch {
+        RootEngine.deactivateSuperCool()
+        _superCoolActive.value = false
+        _ultraCoolActive.value = false
+    }
+
+    fun rootCpuThrottle() = viewModelScope.launch {
+        if (!_rootAvailable.value) return@launch
+        RootEngine.setCpuMaxFreq(RootEngine.CpuLevel.THROTTLE)
+    }
+
+    fun rootGpuThrottle() = viewModelScope.launch {
+        if (!_rootAvailable.value) return@launch
+        RootEngine.setGpuMaxFreq(RootEngine.GpuLevel.THROTTLE)
+    }
+
+    fun rootDisableData() = viewModelScope.launch {
+        if (!_rootAvailable.value) return@launch
+        RootEngine.disableMobileData()
+    }
+
+    fun rootSetBrightness(percent: Int) = viewModelScope.launch {
+        if (!_rootAvailable.value) return@launch
+        RootEngine.setBrightness((percent / 100f * 255).toInt())
+    }
+
+    fun rootKillBg() = viewModelScope.launch {
+        if (!_rootAvailable.value) return@launch
+        RootEngine.killBackgroundApps(getApplication())
+    }
 }
