@@ -8,6 +8,7 @@ import com.jeissonalberto.thermaguard.root.RootEngine
 import com.jeissonalberto.thermaguard.service.ThermalMonitorService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 data class ThermalUiState(
@@ -57,6 +58,23 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _uiState = MutableStateFlow(ThermalUiState())
     val uiState: StateFlow<ThermalUiState> = _uiState.asStateFlow()
 
+    // ── Root StateFlows ───────────────────────────────────────────────
+    private val _rootAvailable   = MutableStateFlow(false)
+    val rootAvailable: StateFlow<Boolean> = _rootAvailable.asStateFlow()
+
+    private val _superCoolActive = MutableStateFlow(false)
+    val superCoolActive: StateFlow<Boolean> = _superCoolActive.asStateFlow()
+
+    private val _ultraCoolActive = MutableStateFlow(false)
+    val ultraCoolActive: StateFlow<Boolean> = _ultraCoolActive.asStateFlow()
+
+    private val _superCoolResult = MutableStateFlow<RootEngine.SuperCoolResult?>(null)
+    val superCoolResult: StateFlow<RootEngine.SuperCoolResult?> = _superCoolResult.asStateFlow()
+
+    // latestSnapshot — acceso directo al último snapshot (sin necesidad de uiState)
+    val latestSnapshot: StateFlow<ThermalSnapshot?> = _uiState.map { it.latest }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     // Tiempo del último momento en que se detectó temperatura alta (para medir cooldown)
     private var heatStartTime   = 0L
     private var lastAutoTime    = 0L
@@ -81,6 +99,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     init {
         observeHistory()
         startLiveReading()
+        viewModelScope.launch { _rootAvailable.value = RootEngine.isRootAvailable() }
     }
 
     private fun startLiveReading() {
