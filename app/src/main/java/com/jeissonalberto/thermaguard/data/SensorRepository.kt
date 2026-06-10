@@ -19,6 +19,13 @@ class SensorRepository(private val context: Context) {
 
     // Cola de logs — últimas 500 entradas (circular)
     private val _sensorLogs = ArrayDeque<SensorLog>(500)
+
+    // Cache para operaciones costosas — propiedades de instancia (accesibles en withContext)
+    private var snapshotCycle:    Int = 0
+    private var lastTopApp:       String = ""
+    private var lastTopProcesses: List<ProcessInfo> = emptyList()
+    private var lastCpuIdle:      Long = 0L
+    private var lastCpuTotal:     Long = 0L
     val sensorLogs: List<SensorLog> get() = _sensorLogs.toList()
 
     private fun log(tag: String, source: String, field: String,
