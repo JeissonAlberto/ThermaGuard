@@ -45,7 +45,7 @@ class SensorRepository(private val context: Context) {
     //  SNAPSHOT PRINCIPAL
     // ============================================================
 
-    suspend fun readSnapshot(): ThermalSnapshot = withContext(Dispatchers.IO) {
+    suspend fun readSnapshot(): ThermalSnapshot {
         val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
 
         val batteryTemp  = (batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0) / 10f
