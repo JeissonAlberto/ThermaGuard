@@ -58,27 +58,21 @@ class SensorRepository(private val context: Context) {
 
         val snap = ThermalSnapshot(
             batteryTemp      = batteryTemp,
-cpuTemp          = run {
-                // Orden de confianza: cpu > skin > gpu > (batería escalada)
-                val cpu  = allZones["cpu"]  ?.takeIf { it in 25f..65f }
-                val skin = allZones["skin"] ?.takeIf { it in 25f..65f }
-                val gpu  = allZones["gpu"]  ?.takeIf { it in 25f..65f }
-                val bat  = batteryTemp.takeIf { it in 20f..50f }
-                cpu ?: skin ?: gpu ?: (bat?.let { it * 1.25f }) ?: 0f
-            },
-gpuTemp          = run {
-                val gpu  = allZones["gpu"]  ?.takeIf { it in 25f..65f }
-                val npu  = allZones["npu"]  ?.takeIf { it in 25f..65f }
-                gpu ?: npu ?: 0f
-            },
-            skinTemp         = allZones["skin"] ?: allZones["surface"] ?: 0f,
-            boardTemp        = allZones["board"] ?: allZones["pcb"] ?: 0f,
+            // cpuTemp: SOLO valor real del kernel. 0f si no disponible — NO inventar con GPU/batería
+            // (Log confirma que a veces el kernel no reporta cpu → raw=0.0)
+            cpuTemp          = allZones["cpu"]?.takeIf { it in 25f..65f } ?: 0f,
+            // gpuTemp: zona GPU real. En este device es zona separada del CPU
+            gpuTemp          = allZones["gpu"]?.takeIf { it in 25f..65f } ?: 0f,
+            // skinTemp: NO existe en este device (siempre raw=0.0 según log) → 0f siempre
+            skinTemp         = allZones["skin"]?.takeIf { it > 0f } ?: 0f,
+            boardTemp        = allZones["board"]?.takeIf { it > 0f } ?: 0f,
 modemTemp        = run {
                 val modem = allZones["modem"]?.takeIf { it in 25f..65f }
                 val wlan  = allZones["wlan"] ?.takeIf { it in 25f..65f }
                 modem ?: wlan ?: 0f
             },
-            displayTemp      = allZones["display"] ?: allZones["ddr"] ?: 0f,
+            // displayTemp: NO existe en este device (raw=0.0 siempre) → 0f
+            displayTemp      = allZones["display"]?.takeIf { it > 0f } ?: 0f,
             cpuUsage         = cpuUsage,
             batteryLevel     = batteryLevel,
             isCharging       = isCharging,
