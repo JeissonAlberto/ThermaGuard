@@ -49,8 +49,12 @@ class SensorRepository(private val context: Context) {
         val allZones      = readAllThermalZones()          // mapa completo tipo->temp
         val cpuUsage      = readCpuUsage()
         val perCoreUsage  = readPerCoreUsage()
-        val topApp        = getTopApp()
-        val topProcesses  = getTopProcesses()
+        // topApp y topProcesses: costosos — leer solo si el ciclo lo requiere
+        // El servicio los pide solo cuando el usuario ve la app (snapshotCycle par)
+        val topApp        = if (snapshotCycle % 5 == 0) getTopApp() else lastTopApp
+        val topProcesses  = if (snapshotCycle % 5 == 0) getTopProcesses() else lastTopProcesses
+        if (snapshotCycle % 5 == 0) { lastTopApp = topApp; lastTopProcesses = topProcesses }
+        snapshotCycle++
         val wifiActive    = isWifiActive()
         val bluetoothActive = readBluetoothState()
         val brightness    = readBrightness()
@@ -490,138 +494,21 @@ fun diagnoseComponents(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
     //  LECTURA DE CPU POR NUCLEO
     // ============================================================
 
-    private suspend fun readPerCoreUsage(): List<Float> = withContext(Dispatchers.IO) {
-        try {
-            val stats1 = readAllCoreStats()
-            delay(300L)
-            val stats2 = readAllCoreStats()
-            stats1.zip(stats2).map { (s1, s2) ->
-                val totalDiff = s2.first - s1.first
-                val idleDiff  = s2.second - s1.second
-                if (totalDiff <= 0) 0f
-                else ((totalDiff - idleDiff).toFloat() / totalDiff.toFloat() * 100f).coerceIn(0f, 100f)
-            }
-        } catch (e: Exception) { emptyList() }
-    }
-
-    private fun readAllCoreStats(): List<Pair<Long, Long>> {
+    private suspend fun readPerCoreUsage(): List<Float> {
+        // Lectura ligera de frecuencia actual por core — sin delay
+        // Usa /sys/devices/system/cpu/cpuN/cpufreq/scaling_cur_freq
         return try {
-            File("/proc/stat").readLines()
-                .filter { it.startsWith("cpu") && it.length > 4 && it[3].isDigit() }
-                .map { line ->
-                    val parts = line.trim().split(" ").filter { it.isNotEmpty() }.drop(1).mapNotNull { it.toLongOrNull() }
-                    val total = parts.sum()
-                    val idle  = if (parts.size > 3) parts[3] else 0L
-                    Pair(total, idle)
-                }
-        } catch (e: Exception) { emptyList() }
+            (0..7).mapNotNull { core ->
+                val freqFile = java.io.File("/sys/devices/system/cpu/cpu$core/cpufreq/scaling_cur_freq")
+                val maxFile  = java.io.File("/sys/devices/system/cpu/cpu$core/cpufreq/scaling_max_freq")
+                if (!freqFile.exists()) return@mapNotNull null
+                val cur = freqFile.readText().trim().toLongOrNull() ?: return@mapNotNull null
+                val max = maxFile.readText().trim().toLongOrNull() ?: 1L
+                (cur.toFloat() / max.toFloat() * 100f).coerceIn(0f, 100f)
+            }
+        } catch (_: Exception) { emptyList() }
     }
 
-    private var cpuEma: Float = -1f  // Suavizado exponencial (EMA) entre lecturas
-
-    private suspend fun readCpuUsage(): Float = withContext(Dispatchers.IO) {
-        // ── MÉTODO 1: /proc/stat — lectura diferencial con 800ms ──────────
-        // El S22 (Exynos 2200, 8 núcleos) necesita más tiempo para captura
-        // estable. La línea "cpu " es la suma de todos los núcleos.
-        // idle está en columna [3], iowait en [4] — ambos son tiempo no activo.
-        try {
-            fun parseStat(): Pair<Long, Long>? {
-                val line = File("/proc/stat").readLines()
-                    .firstOrNull { it.startsWith("cpu ") } ?: return null
-                val parts = line.trim().split(" ").filter { it.isNotEmpty() }.drop(1)
-                    .mapNotNull { it.toLongOrNull() }
-                if (parts.size < 5) return null
-                val total = parts.sum()
-                val idle  = parts[3] + parts[4]   // idle + iowait = tiempo real libre
-                return Pair(total, idle)
-            }
-            val s1 = parseStat()
-            if (s1 != null) {
-                delay(800L)   // 800ms: captura estable en SoC de 8 núcleos
-                val s2 = parseStat()
-                if (s2 != null) {
-                    val totalDiff = s2.first  - s1.first
-                    val idleDiff  = s2.second - s1.second
-                    if (totalDiff > 50) {   // mínimo de actividad para ser válido
-                        val raw = ((totalDiff - idleDiff).toFloat() / totalDiff * 100f)
-                            .coerceIn(0f, 100f)
-                        // EMA α=0.3 — suaviza spikes sin ocultar subidas reales
-                        cpuEma = if (cpuEma < 0f) raw else cpuEma * 0.7f + raw * 0.3f
-                        return@withContext cpuEma
-                    }
-                }
-            }
-        } catch (_: Exception) {}
-
-        // ── MÉTODO 2: /proc/loadavg — CORREGIDO para Android/Samsung ──────
-        // loadavg ≠ % de CPU. En Linux/Android cuenta procesos en run-queue
-        // incluyendo I/O wait. Factor corrector empírico para Samsung: /2.5
-        // Un loadavg de 1.0 por núcleo = CPU saturado = 100%
-        // Pero Android idle NORMAL tiene loadavg 4-7 → sin corrección = 80%
-        try {
-            val parts = File("/proc/loadavg").readText().trim().split(" ")
-            val load1m = parts[0].toFloat()   // promedio 1 minuto
-            val cores  = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
-            // Corrección: loadavg en Android incluye D-state (I/O), dividir por 2
-            // para aproximar solo CPU. Cap al 95% para no mostrar saturación falsa.
-            val corrected = (load1m / (cores * 2f) * 100f).coerceIn(1f, 95f)
-            return@withContext corrected
-        } catch (_: Exception) {}
-
-        // ── MÉTODO 3: Fallback conservador ────────────────────────────────
-        // Si no hay acceso a /proc, retornar valor neutro (no 80%)
-        15f
-    }
-
-    // ============================================================
-    //  RESTO DE SENSORES
-    // ============================================================
-
-    private fun readThermalStatus(): Int = try {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q)
-            powerManager.currentThermalStatus else 0
-    } catch (e: Exception) { 0 }
-
-    private fun readBluetoothState(): Boolean = try {
-        (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter?.isEnabled ?: false
-    } catch (e: Exception) { false }
-
-    private fun isWifiActive(): Boolean = try {
-        val net = connectivityManager.activeNetwork ?: return false
-        connectivityManager.getNetworkCapabilities(net)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false
-    } catch (e: Exception) { false }
-
-    private fun readBrightness(): Int = try {
-        Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, 0)
-    } catch (e: Exception) { 0 }
-
-    private fun readRamUsage(): Int = try {
-        val info = ActivityManager.MemoryInfo()
-        activityManager.getMemoryInfo(info)
-        // Devolver RAM LIBRE en MB (más útil para el usuario)
-        (info.availMem / 1024 / 1024).toInt()
-    } catch (e: Exception) { 0 }
-
-    private fun getTopApp(): String = try {
-        val ownPkg = context.packageName
-        val systemPkgs = setOf("android","com.android","com.samsung","systemui","launcher","com.google.android.gms")
-        activityManager.runningAppProcesses
-            ?.filter { it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND }
-            ?.firstOrNull { proc ->
-                proc.processName != ownPkg &&
-                systemPkgs.none { sys -> proc.processName.startsWith(sys) }
-            }
-            ?.processName
-            ?.let { pkg ->
-                // Intentar obtener nombre amigable de la app
-                try {
-                    val pm = context.packageManager
-                    pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
-                } catch (e: Exception) {
-                    pkg.split(".").last().replaceFirstChar { it.uppercase() }
-                }
-            } ?: ""
-    } catch (e: Exception) { "" }
 
     fun analyzeHeatCauses(snapshot: ThermalSnapshot): List<HeatCause> {
         val causes = mutableListOf<HeatCause>()
