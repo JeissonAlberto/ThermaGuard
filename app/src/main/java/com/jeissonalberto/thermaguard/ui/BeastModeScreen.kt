@@ -287,7 +287,7 @@ fun BeastModeScreen(
                 enabled = mainTemp >= 43f,
                 disabledReason = "Se activa a partir de 43°C",
                 onToggle = { v ->
-                    toggleHz = v
+                    toggleRefreshRate = v
                     applyRefreshRate(v, context)
                 }
             )
