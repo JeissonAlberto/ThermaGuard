@@ -15,6 +15,8 @@ import com.jeissonalberto.thermaguard.data.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.isActive
 
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
 class ThermalMonitorService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -74,7 +76,10 @@ class ThermalMonitorService : Service() {
 
         while (true) {
             try {
-                val snap = lastSnapshot ?: sensorRepo.readSnapshot()
+                // Pantalla apagada → intervalo mínimo 120s, sin lecturas de UI
+                val effectiveInterval = if (screenOff) maxOf(interval, 120_000L) else interval
+                val snap = if (screenOff && lastSnapshot != null) lastSnapshot!!
+                           else sensorRepo.readSnapshot()
                 // learningEngine.learn solo si temperatura cambió >0.5°C o cada 10 ciclos
                 val mainT = if (snap.cpuTemp > 20f) snap.cpuTemp
                             else if (snap.modemTemp > 20f) snap.modemTemp
@@ -141,7 +146,7 @@ class ThermalMonitorService : Service() {
                 ThermalLevel.WARM                             -> 30_000L
                 else                                          -> 60_000L
             }
-            delay(interval)
+            delay(if (screenOff) maxOf(interval, 120_000L) else interval)
         }
     }
 
