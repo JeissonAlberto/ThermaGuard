@@ -228,6 +228,7 @@ class ThermalMonitorService : Service() {
 
     override fun onDestroy() {
         isRunning = false
+        try { unregisterReceiver(screenReceiver) } catch (_: Exception) {}
         serviceScope.cancel()
         super.onDestroy()
     }
