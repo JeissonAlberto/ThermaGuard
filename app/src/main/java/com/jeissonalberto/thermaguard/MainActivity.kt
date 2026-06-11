@@ -198,7 +198,7 @@ fun ThermaGuardApp(onStartService: () -> Unit) {
                         onDismissRequest = { showMoreMenu = false },
                         modifier = Modifier.background(Color(0xFF0D1520))
                     ) {
-                        listOf(
+                        (listOf(
                             Triple(5, "Stats",   Icons.Default.BarChart),
                             Triple(6, "Alertas", Icons.Default.Notifications),
                             Triple(7, "Logs",    Icons.Default.Terminal),
