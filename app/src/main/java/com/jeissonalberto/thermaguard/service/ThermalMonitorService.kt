@@ -65,6 +65,11 @@ class ThermalMonitorService : Service() {
             startForeground(NOTIF_ID, notif)
         }
 
+        val screenFilter = android.content.IntentFilter().also {
+            it.addAction(android.content.Intent.ACTION_SCREEN_OFF)
+            it.addAction(android.content.Intent.ACTION_SCREEN_ON)
+        }
+        registerReceiver(screenReceiver, screenFilter)
         serviceScope.launch { monitorLoop() }
         return START_STICKY
     }
@@ -232,6 +237,15 @@ class ThermalMonitorService : Service() {
     var lastGamerMode:  Boolean = false
     private var lastKnownTemp: Float = 0f
     private var learnCycle:    Int   = 0
+    @Volatile private var screenOff: Boolean = false
+    private val screenReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(c: android.content.Context?, i: android.content.Intent?) {
+            when (i?.action) {
+                android.content.Intent.ACTION_SCREEN_OFF -> screenOff = true
+                android.content.Intent.ACTION_SCREEN_ON  -> { screenOff = false; lastSnapshot = null }
+            }
+        }
+    }
 
     private fun triggerGamerCooling(snap: ThermalSnapshot) {
         val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
