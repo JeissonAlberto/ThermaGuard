@@ -45,7 +45,6 @@ fun applyNetworkAction(enable: Boolean, context: Context) {
             val wm = context.applicationContext
                 .getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
             @Suppress("DEPRECATION")
-            @Suppress("DEPRECATION")
             if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
                 wm.isWifiEnabled = false
             } else {
@@ -65,7 +64,6 @@ fun applyNetworkAction(enable: Boolean, context: Context) {
         } else {
             val wm = context.applicationContext
                 .getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
-            @Suppress("DEPRECATION")
             @Suppress("DEPRECATION")
             if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
                 wm.isWifiEnabled = true
