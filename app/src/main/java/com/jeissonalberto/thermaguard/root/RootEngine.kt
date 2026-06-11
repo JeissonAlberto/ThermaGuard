@@ -164,7 +164,7 @@ object RootEngine {
         val procs = am.runningAppProcesses ?: return 0
         val toKill = procs.filter { it.importance > android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE }
         if (toKill.isEmpty()) return 0
-        val cmds = toKill.flatMap { p -> p.pids.map { "kill -9 $it 2>/dev/null" } }
+        val cmds = toKill.map { p -> "kill -9 ${p.pid} 2>/dev/null" }
         return if (su(*cmds.toTypedArray()).isSuccess) toKill.size else 0
     }
 
