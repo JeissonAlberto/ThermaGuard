@@ -70,7 +70,12 @@ class ThermalMonitorService : Service() {
             it.addAction(android.content.Intent.ACTION_SCREEN_ON)
         }
         registerReceiver(screenReceiver, screenFilter)
-        serviceScope.launch { monitorLoop() }
+        serviceScope.launch {
+            try { monitorLoop() }
+            catch (e: Exception) {
+                android.util.Log.e("ThermaGuard", "monitorLoop crash: ${e.message}", e)
+            }
+        }
         return START_STICKY
     }
 
@@ -130,11 +135,12 @@ class ThermalMonitorService : Service() {
                 // ── Escribir DB solo cada 5 minutos (no cada ciclo) ──────
                 val now = System.currentTimeMillis()
                 if (now - lastDbWrite >= 5 * 60_000L) {
-                    db.thermalDao().insert(snap)
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        db.thermalDao().insert(snap)
+                        val sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000L
+                        db.thermalDao().deleteOlderThan(sevenDaysAgo)
+                    }
                     lastDbWrite = now
-                    // Limpiar historial antiguo solo al escribir
-                    val sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000L
-                    db.thermalDao().deleteOlderThan(sevenDaysAgo)
                 }
 
             } catch (_: Exception) { }
