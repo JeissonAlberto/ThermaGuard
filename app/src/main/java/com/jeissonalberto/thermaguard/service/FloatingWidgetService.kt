@@ -106,41 +106,38 @@ class FloatingWidgetService : Service() {
 
     private fun startUpdateLoop() {
         scope.launch {
-            try { while (true) {
-                delay(5_000L)  // Actualizar cada 5s — suficiente para una burbuja
-                if (!screenOn) continue  // Pantalla apagada → no actualizar
-
-                val snap = ThermalMonitorService.lastSnapshot ?: continue
-                val temp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
-
-                // Solo actualizar si cambió más de 0.5°C (evita redraws innecesarios)
-                if (kotlin.math.abs(temp - lastDisplayedTemp) < 0.5f) continue
-                lastDisplayedTemp = temp
-
-                val level = temp.toThermalLevel()
-                val color = when (level) {
-                    ThermalLevel.NORMAL    -> android.graphics.Color.argb(200, 0, 200, 100)
-                    ThermalLevel.WARM      -> android.graphics.Color.argb(200, 255, 180, 0)
-                    ThermalLevel.HOT       -> android.graphics.Color.argb(200, 255, 100, 0)
-                    ThermalLevel.CRITICAL,
-                    ThermalLevel.EMERGENCY -> android.graphics.Color.argb(220, 255, 30, 30)
+            try {
+                while (true) {
+                    delay(5_000L)
+                    if (!screenOn) continue
+                    val snap = ThermalMonitorService.lastSnapshot ?: continue
+                    val temp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
+                    if (kotlin.math.abs(temp - lastDisplayedTemp) < 0.5f) continue
+                    lastDisplayedTemp = temp
+                    val level = temp.toThermalLevel()
+                    val color = when (level) {
+                        ThermalLevel.NORMAL    -> android.graphics.Color.argb(200, 0, 200, 100)
+                        ThermalLevel.WARM      -> android.graphics.Color.argb(200, 255, 180, 0)
+                        ThermalLevel.HOT       -> android.graphics.Color.argb(200, 255, 100, 0)
+                        ThermalLevel.CRITICAL,
+                        ThermalLevel.EMERGENCY -> android.graphics.Color.argb(220, 255, 30, 30)
+                    }
+                    val emoji = when (level) {
+                        ThermalLevel.NORMAL    -> "🟢"
+                        ThermalLevel.WARM      -> "🟡"
+                        ThermalLevel.HOT       -> "🟠"
+                        ThermalLevel.CRITICAL,
+                        ThermalLevel.EMERGENCY -> "🔴"
+                    }
+                    (floatingView as? TextView)?.apply {
+                        text = "$emoji ${temp.toInt()}°C"
+                        (background as? android.graphics.drawable.GradientDrawable)
+                            ?.setStroke(2, color)
+                    }
                 }
-                val emoji = when (level) {
-                    ThermalLevel.NORMAL    -> "🟢"
-                    ThermalLevel.WARM      -> "🟡"
-                    ThermalLevel.HOT       -> "🟠"
-                    ThermalLevel.CRITICAL,
-                    ThermalLevel.EMERGENCY -> "🔴"
-                }
-
-                (floatingView as? TextView)?.apply {
-                    text = "$emoji ${temp.toInt()}°C"
-                    (background as? android.graphics.drawable.GradientDrawable)
-                        ?.setStroke(2, color)
-                }
+            } catch (e: Exception) {
+                android.util.Log.e("FloatingWidget", "loop crash", e)
             }
-            } catch (e: Exception) { android.util.Log.e("FloatingWidget","loop crash",e) }
-        }
         }
     }
 
