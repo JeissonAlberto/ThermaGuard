@@ -99,7 +99,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     init {
         observeHistory()
         startLiveReading()
-        viewModelScope.launch { _rootAvailable.value = RootEngine.isRootAvailable() }
+        viewModelScope.launch { try { _rootAvailable.value = RootEngine.isRootAvailable() } catch (_:Exception) { _rootAvailable.value = false } }
     }
 
     private fun startLiveReading() {
@@ -347,45 +347,61 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     // ── Métodos Root ──────────────────────────────────────────────────
     fun checkRoot() = viewModelScope.launch {
+        try {
         _rootAvailable.value = RootEngine.isRootAvailable()
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","checkRoot error",e) }
     }
 
     fun activateSuperCool(ultra: Boolean = false) = viewModelScope.launch {
+        try {
         if (!_rootAvailable.value) return@launch
         val result = RootEngine.activateSuperCool(getApplication(), ultra)
         _superCoolResult.value = result
         _superCoolActive.value = !ultra
         _ultraCoolActive.value = ultra
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","activateSuperCool error",e) }
     }
 
     fun deactivateSuperCool() = viewModelScope.launch {
+        try {
         RootEngine.deactivateSuperCool()
         _superCoolActive.value = false
         _ultraCoolActive.value = false
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
     }
 
     fun rootCpuThrottle() = viewModelScope.launch {
+        try {
         if (!_rootAvailable.value) return@launch
         RootEngine.setCpuMaxFreq(RootEngine.CpuLevel.THROTTLE)
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
     }
 
     fun rootGpuThrottle() = viewModelScope.launch {
+        try {
         if (!_rootAvailable.value) return@launch
         RootEngine.setGpuMaxFreq(RootEngine.GpuLevel.THROTTLE)
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
     }
 
     fun rootDisableData() = viewModelScope.launch {
+        try {
         if (!_rootAvailable.value) return@launch
         RootEngine.disableMobileData()
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
     }
 
     fun rootSetBrightness(percent: Int) = viewModelScope.launch {
+        try {
         if (!_rootAvailable.value) return@launch
         RootEngine.setBrightness((percent / 100f * 255).toInt())
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
     }
 
     fun rootKillBg() = viewModelScope.launch {
+        try {
         if (!_rootAvailable.value) return@launch
         RootEngine.killBackgroundApps(getApplication())
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
     }
 }
