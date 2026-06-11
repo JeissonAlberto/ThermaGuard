@@ -81,8 +81,7 @@ class ThermalMonitorService : Service() {
 
         while (true) {
             try {
-                // Pantalla apagada → intervalo mínimo 120s, sin lecturas de UI
-                val effectiveInterval = if (screenOff) maxOf(interval, 120_000L) else interval
+                // Pantalla apagada → reutilizar último snapshot si disponible
                 val snap = if (screenOff && lastSnapshot != null) lastSnapshot!!
                            else sensorRepo.readSnapshot()
                 // learningEngine.learn solo si temperatura cambió >0.5°C o cada 10 ciclos
