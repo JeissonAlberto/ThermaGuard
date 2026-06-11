@@ -465,3 +465,4 @@ fun applyRefreshRate(enable: Boolean, context: Context) {
         }
     } catch (_: Exception) {}
 }
+}
