@@ -367,41 +367,41 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         RootEngine.deactivateSuperCool()
         _superCoolActive.value = false
         _ultraCoolActive.value = false
-        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","deactivateSuperCool error",e) }
     }
 
     fun rootCpuThrottle() = viewModelScope.launch {
         try {
         if (!_rootAvailable.value) return@launch
         RootEngine.setCpuMaxFreq(RootEngine.CpuLevel.THROTTLE)
-        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","rootCpuThrottle error",e) }
     }
 
     fun rootGpuThrottle() = viewModelScope.launch {
         try {
         if (!_rootAvailable.value) return@launch
         RootEngine.setGpuMaxFreq(RootEngine.GpuLevel.THROTTLE)
-        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","rootGpuThrottle error",e) }
     }
 
     fun rootDisableData() = viewModelScope.launch {
         try {
         if (!_rootAvailable.value) return@launch
         RootEngine.disableMobileData()
-        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","rootDisableData error",e) }
     }
 
     fun rootSetBrightness(percent: Int) = viewModelScope.launch {
         try {
         if (!_rootAvailable.value) return@launch
         RootEngine.setBrightness((percent / 100f * 255).toInt())
-        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","rootSetBrightness error",e) }
     }
 
     fun rootKillBg() = viewModelScope.launch {
         try {
         if (!_rootAvailable.value) return@launch
         RootEngine.killBackgroundApps(getApplication())
-        } catch (e: Exception) { android.util.Log.e("ThermaGuard","$fn_name error",e) }
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard","rootKillBg error",e) }
     }
 }
