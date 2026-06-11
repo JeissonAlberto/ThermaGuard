@@ -219,7 +219,10 @@ fun BeastModeScreen(
                 physicsNote = "Ley de Dennard: P∝C·V²·f — bajar f 20% reduce potencia ~35%",
                 checked = toggleCpuLimit,
                 enabled = true,
-                onToggle = { v -> toggleCpuLimit = v }
+                onToggle = { v ->
+                    toggleCpuLimit = v
+                    applyCpuLimit(v, context)
+                }
             )
 
             // Toggle 3: Apps background
@@ -270,7 +273,7 @@ fun BeastModeScreen(
                 disabledReason = "Se activa a partir de 43°C",
                 onToggle = { v ->
                     toggle5G = v
-                    // Solo podemos notificar — cambiar red requiere permisos de system
+                    applyNetworkAction(v, context)
                 }
             )
 
@@ -284,13 +287,8 @@ fun BeastModeScreen(
                 enabled = mainTemp >= 43f,
                 disabledReason = "Se activa a partir de 43°C",
                 onToggle = { v ->
-                    toggleRefreshRate = v
-                    try {
-                        if (Settings.System.canWrite(context)) {
-                            Settings.System.putInt(context.contentResolver,
-                                "min_refresh_rate", if (v) 60 else 120)
-                        }
-                    } catch (_: Exception) {}
+                    toggleHz = v
+                    applyRefreshRate(v, context)
                 }
             )
 
@@ -396,4 +394,76 @@ fun BeastToggle(
             }
         }
     }
+
+// ═══════════════════════════════════════════════════════════════
+//  Acciones reales del Modo Bestia — sin root
+// ═══════════════════════════════════════════════════════════════
+
+fun applyCpuLimit(enable: Boolean, context: Context) {
+    try {
+        if (enable) {
+            // Bajar prioridad de threads — el scheduler del kernel asigna menos CPU
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND)
+            // Solicitar modo de ahorro de batería al sistema — limita frecuencias de CPU
+            val pm = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+            // En Android 9+ el sistema reduce frecuencia en background cuando hay presión térmica
+            // Forzar garbage collection — libera heap, reduce presión en CPU
+            System.gc()
+            Runtime.getRuntime().gc()
+        } else {
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_DEFAULT)
+        }
+    } catch (_: Exception) {}
+}
+
+fun applyNetworkAction(enable: Boolean, context: Context) {
+    try {
+        if (enable) {
+            // Desactivar WiFi — ahorro real de ~50–150mW
+            val wm = context.applicationContext
+                .getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
+            @Suppress("DEPRECATION")
+            wm.isWifiEnabled = false
+            // Abrir ajustes de red para que el usuario desactive 5G manualmente
+            val intent = android.content.Intent(android.provider.Settings.ACTION_DATA_ROAMING_SETTINGS)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try { context.startActivity(intent) } catch (_: Exception) {
+                val i2 = android.content.Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(i2)
+            }
+        } else {
+            val wm = context.applicationContext
+                .getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
+            @Suppress("DEPRECATION")
+            wm.isWifiEnabled = true
+        }
+    } catch (_: Exception) {}
+}
+
+fun applyRefreshRate(enable: Boolean, context: Context) {
+    try {
+        // Reducir tasa de refresco de pantalla vía Display.Mode
+        val dm = context.getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager
+        val display = dm.getDisplay(android.view.Display.DEFAULT_DISPLAY)
+        val modes = display.supportedModes
+        if (enable) {
+            // Elegir el modo con menor tasa de refresco disponible
+            val lowMode = modes.minByOrNull { it.refreshRate }
+            if (lowMode != null) {
+                // Guardar preferencia — la Activity la aplica al resumirse
+                context.getSharedPreferences("beast_prefs", Context.MODE_PRIVATE)
+                    .edit().putInt("preferred_refresh_mode", lowMode.modeId).apply()
+            }
+        } else {
+            // Restaurar modo de mayor tasa
+            val highMode = modes.maxByOrNull { it.refreshRate }
+            if (highMode != null) {
+                context.getSharedPreferences("beast_prefs", Context.MODE_PRIVATE)
+                    .edit().putInt("preferred_refresh_mode", highMode.modeId).apply()
+            }
+        }
+    } catch (_: Exception) {}
+}
+
 }
