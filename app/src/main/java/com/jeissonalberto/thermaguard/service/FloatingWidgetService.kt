@@ -106,7 +106,7 @@ class FloatingWidgetService : Service() {
 
     private fun startUpdateLoop() {
         scope.launch {
-            while (true) {
+            try { while (true) {
                 delay(5_000L)  // Actualizar cada 5s — suficiente para una burbuja
                 if (!screenOn) continue  // Pantalla apagada → no actualizar
 
@@ -139,6 +139,8 @@ class FloatingWidgetService : Service() {
                         ?.setStroke(2, color)
                 }
             }
+            } catch (e: Exception) { android.util.Log.e("FloatingWidget","loop crash",e) }
+        }
         }
     }
 
