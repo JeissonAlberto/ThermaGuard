@@ -45,7 +45,15 @@ fun applyNetworkAction(enable: Boolean, context: Context) {
             val wm = context.applicationContext
                 .getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
             @Suppress("DEPRECATION")
-            wm.isWifiEnabled = false
+            @Suppress("DEPRECATION")
+            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+                wm.isWifiEnabled = false
+            } else {
+                // API 29+: no se puede desactivar WiFi por código — abrir panel
+                val panelIntent = android.content.Intent(android.provider.Settings.Panel.ACTION_WIFI)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                try { context.startActivity(panelIntent) } catch (_: Exception) {}
+            }
             // Abrir ajustes de red para que el usuario desactive 5G manualmente
             val intent = android.content.Intent(android.provider.Settings.ACTION_DATA_ROAMING_SETTINGS)
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -58,7 +66,14 @@ fun applyNetworkAction(enable: Boolean, context: Context) {
             val wm = context.applicationContext
                 .getSystemService(Context.WIFI_SERVICE) as android.net.wifi.WifiManager
             @Suppress("DEPRECATION")
-            wm.isWifiEnabled = true
+            @Suppress("DEPRECATION")
+            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+                wm.isWifiEnabled = true
+            } else {
+                val panelIntent = android.content.Intent(android.provider.Settings.Panel.ACTION_WIFI)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                try { context.startActivity(panelIntent) } catch (_: Exception) {}
+            }
         }
     } catch (_: Exception) {}
 }
