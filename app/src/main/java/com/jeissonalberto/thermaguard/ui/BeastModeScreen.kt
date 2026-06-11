@@ -466,3 +466,4 @@ fun BeastToggle(
 
 // ═══════════════════════════════════════════════════════════════
 //  Acciones reales del Modo Bestia — sin root
+}
