@@ -58,6 +58,7 @@ object TG {
     val textPri = Color(0xFFF0F4FF)
     val textSec = Color(0x80F0F4FF)
     val textDim = Color(0x40F0F4FF)
+    val cyan    = Color(0xFF00D4FF)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
