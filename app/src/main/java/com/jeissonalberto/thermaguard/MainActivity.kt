@@ -181,25 +181,18 @@ fun MainAppShell(
                             val iconTint   = if (selected) accent else TG.textSec
                             val showBadge  = idx == 2 && uiState.operationMode == OperationMode.GAMER
 
-                            IconButton(
-                                onClick  = { selectedTab = idx },
-                                modifier = Modifier.weight(1f)
+                            Box(
+                                modifier        = Modifier.weight(1f),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(contentAlignment = Alignment.TopEnd) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(3.dp)
-                                    ) {
-                                        AnimatedContent(
-                                            targetState = selected,
-                                            transitionSpec = {
-                                                (scaleIn(tween(200)) + fadeIn(tween(200))) togetherWith
-                                                (scaleOut(tween(150)) + fadeOut(tween(150)))
-                                            },
-                                            label = "tab_$idx"
-                                        ) { isSel ->
-                                            val pad = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
-                                            if (isSel) {
+                                IconButton(onClick = { selectedTab = idx }) {
+                                    Box(contentAlignment = Alignment.TopEnd) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                                        ) {
+                                            val pad = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                            if (selected) {
                                                 Box(modifier = Modifier.clip(RoundedCornerShape(14.dp))
                                                     .background(accent.copy(alpha = 0.15f)).then(pad)) {
                                                     Icon(item.icon, null, tint = iconTint, modifier = Modifier.size(20.dp))
@@ -209,22 +202,22 @@ fun MainAppShell(
                                                     Icon(item.icon, null, tint = iconTint, modifier = Modifier.size(20.dp))
                                                 }
                                             }
+                                            Text(item.label, fontSize = 9.sp,
+                                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                                color = iconTint, letterSpacing = 0.3.sp)
                                         }
-                                        Text(item.label, fontSize = 9.sp,
-                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                            color = iconTint, letterSpacing = 0.3.sp)
-                                    }
-                                    if (showBadge) {
-                                        Box(modifier = Modifier.size(8.dp).clip(RoundedCornerShape(4.dp))
-                                            .background(accent).offset(x = 2.dp, y = (-2).dp))
+                                        if (showBadge) {
+                                            Box(modifier = Modifier.size(8.dp).clip(RoundedCornerShape(4.dp))
+                                                .background(accent).offset(x = 2.dp, y = (-2).dp))
+                                        }
                                     }
                                 }
                             }
                         }
 
                         // Botón "Más"
-                        Box {
-                            IconButton(onClick = { showMoreMenu = !showMoreMenu }, modifier = Modifier.weight(1f)) {
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            IconButton(onClick = { showMoreMenu = !showMoreMenu }) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                     Icon(Icons.Default.MoreHoriz, null,
