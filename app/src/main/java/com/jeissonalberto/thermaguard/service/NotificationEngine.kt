@@ -61,7 +61,7 @@ object NotificationEngine {
 
     // ── Inicialización de canales ─────────────────────────────────────────
     fun createChannels(context: Context) {
-        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
 
         val channels = listOf(
             NotificationChannel(
