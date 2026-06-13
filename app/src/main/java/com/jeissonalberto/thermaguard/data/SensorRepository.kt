@@ -39,7 +39,14 @@ class SensorRepository(private val context: Context) {
     // ============================================================
 
     suspend fun readSnapshot(): ThermalSnapshot = withContext(Dispatchers.IO) {
-        val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        try { readSnapshotInternal() } catch (e: Exception) {
+            android.util.Log.e("ThermaGuard", "readSnapshot fallback: ${e.message}")
+            ThermalSnapshot()  // snapshot vacío seguro
+        }
+    }
+
+    private suspend fun readSnapshotInternal(): ThermalSnapshot = withContext(Dispatchers.IO) {
+        val batteryIntent = try { context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)) } catch (_: Exception) { null }
 
         val batteryTemp  = (batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0) / 10f
         val batteryLevel = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, 0) ?: 0
