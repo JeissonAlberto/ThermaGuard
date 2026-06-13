@@ -30,9 +30,12 @@ class SensorRepository(private val context: Context) {
     }
 
 
-    private val powerManager       = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-    private val activityManager    = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-    private val connectivityManager= context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private val powerManager: PowerManager? =
+        context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+    private val activityManager: ActivityManager? =
+        context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+    private val connectivityManager: ConnectivityManager? =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
 
     // ============================================================
     //  SNAPSHOT PRINCIPAL
@@ -481,7 +484,7 @@ fun diagnoseComponents(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
 
     private fun getTopProcesses(): List<ProcessInfo> {
         return try {
-            val procs = activityManager.runningAppProcesses ?: return emptyList()
+            val procs = activityManager?.runningAppProcesses ?: return emptyList()
             procs.take(5).map { proc ->
                 val name = proc.processName.split(".").last()
                 val desc = when {
@@ -605,8 +608,8 @@ fun diagnoseComponents(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
     } catch (e: Exception) { false }
 
     private fun isWifiActive(): Boolean = try {
-        val net = connectivityManager.activeNetwork ?: return false
-        connectivityManager.getNetworkCapabilities(net)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false
+        val net = connectivityManager?.activeNetwork ?: return false
+        connectivityManager?.getNetworkCapabilities(net)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false
     } catch (e: Exception) { false }
 
     private fun readBrightness(): Int = try {
