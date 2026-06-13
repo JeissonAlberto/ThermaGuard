@@ -50,7 +50,7 @@ class ThermalMonitorService : Service() {
         learningEngine = ThermalLearningEngine(this)
         optRepo        = OptimizationRepository(this)
         db             = ThermalDatabase.getInstance(this)
-        nm             = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        nm             = getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
         createChannels()
         isRunning = true
     }
@@ -87,7 +87,7 @@ class ThermalMonitorService : Service() {
         while (true) {
             try {
                 // Pantalla apagada → reutilizar último snapshot si disponible
-                val snap = if (screenOff && lastSnapshot != null) lastSnapshot!!
+                val snap = if (screenOff && lastSnapshot != null) lastSnapshot ?: ThermalSnapshot()
                            else sensorRepo.readSnapshot()
                 // learningEngine.learn solo si temperatura cambió >0.5°C o cada 10 ciclos
                 val mainT = if (snap.cpuTemp > 20f) snap.cpuTemp
