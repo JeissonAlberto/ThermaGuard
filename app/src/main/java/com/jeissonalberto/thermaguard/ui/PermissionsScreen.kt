@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -84,11 +83,7 @@ fun PermissionsScreen(onAllGranted: () -> Unit) {
                         .size(110.dp)
                         .background(Color.White.copy(alpha = 0.07f), RoundedCornerShape(24.dp)),
                     contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.jasol_logo),
-                        contentDescription = "Jasol Group",
-                        modifier = Modifier.size(85.dp).clip(RoundedCornerShape(18.dp))
+                ) {.clip(RoundedCornerShape(18.dp))
                     )
                 }
 
