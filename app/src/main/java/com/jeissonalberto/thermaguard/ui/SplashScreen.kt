@@ -3,39 +3,36 @@ package com.jeissonalberto.thermaguard.ui
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jeissonalberto.thermaguard.R
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(onFinished: () -> Unit) {
     val inf = rememberInfiniteTransition(label = "splash")
 
-    // Orb pulsante
     val orbAlpha by inf.animateFloat(0.3f, 0.7f,
         infiniteRepeatable(tween(1800, easing = EaseInOut), RepeatMode.Reverse), label = "orb")
     val orbScale by inf.animateFloat(0.9f, 1.1f,
         infiniteRepeatable(tween(2200, easing = EaseInOut), RepeatMode.Reverse), label = "orbS")
+    val iconPulse by inf.animateFloat(0.92f, 1.08f,
+        infiniteRepeatable(tween(1600, easing = EaseInOut), RepeatMode.Reverse), label = "ip")
 
-    // Logo aparece
-    var logoAlpha by remember { mutableStateOf(0f) }
-    var logoScale by remember { mutableStateOf(0.7f) }
+    var logoAlpha    by remember { mutableStateOf(0f) }
+    var logoScale    by remember { mutableStateOf(0.7f) }
     var taglineAlpha by remember { mutableStateOf(0f) }
 
-    val logoAlphaAnim by animateFloatAsState(logoAlpha, tween(700, easing = EaseOutCubic), label = "la")
-    val logoScaleAnim by animateFloatAsState(logoScale, tween(700, easing = EaseOutBack), label = "ls")
-    val taglineAlphaAnim by animateFloatAsState(taglineAlpha, tween(500), label = "ta")
+    val logoAlphaAnim   by animateFloatAsState(logoAlpha,    tween(700, easing = EaseOutCubic), label = "la")
+    val logoScaleAnim   by animateFloatAsState(logoScale,    tween(700, easing = EaseOutBack),  label = "ls")
+    val taglineAlphaAnim by animateFloatAsState(taglineAlpha, tween(500),                        label = "ta")
 
     LaunchedEffect(Unit) {
         delay(200)
@@ -59,30 +56,38 @@ fun SplashScreen(onFinished: () -> Unit) {
                 .size(380.dp)
                 .scale(orbScale)
                 .blur(90.dp)
-                .background(Color(0xFF00E5FF).copy(alpha = orbAlpha * 0.18f),
-                    RoundedCornerShape(50))
+                .background(
+                    Color(0xFF00E5FF).copy(alpha = orbAlpha * 0.18f),
+                    RoundedCornerShape(50)
+                )
         )
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Logo Jasol
+            // Icono vectorial — sin dependencia de assets externos
             Box(
                 modifier = Modifier
                     .size(130.dp)
-                    .scale(logoScaleAnim)
+                    .scale(logoScaleAnim * iconPulse)
                     .alpha(logoAlphaAnim)
-                    .background(Color.White.copy(alpha = 0.06f), RoundedCornerShape(28.dp)),
+                    .background(Color(0xFF00E5FF).copy(alpha = 0.12f), RoundedCornerShape(32.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.jasol_logo),
-                    contentDescription = "Jasol Group",
+                // Círculo externo decorativo
+                Box(
                     modifier = Modifier
-                        .size(100.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                )
+                        .size(80.dp)
+                        .background(Color(0xFF00E5FF).copy(alpha = 0.15f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Símbolo temperatura — 100% vectorial, sin assets
+                    Text(
+                        text = "🌡",
+                        fontSize = 44.sp
+                    )
+                }
             }
 
             // Nombre app
@@ -115,9 +120,9 @@ fun SplashScreen(onFinished: () -> Unit) {
             )
         }
 
-        // Versión abajo
+        // Versión
         Text(
-            "v2.7.0",
+            "v3.9.12",
             fontSize = 10.sp,
             color = TG.textDim,
             modifier = Modifier
