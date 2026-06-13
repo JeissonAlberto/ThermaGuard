@@ -50,7 +50,7 @@ class ThermalMonitorService : Service() {
         learningEngine = ThermalLearningEngine(this)
         optRepo        = OptimizationRepository(this)
         db             = ThermalDatabase.getInstance(this)
-        nm             = getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
+        nm: NotificationManager? = null
         createChannels()
         isRunning = true
     }
@@ -178,7 +178,7 @@ class ThermalMonitorService : Service() {
             ThermalLevel.CRITICAL  -> "🔥 Temperatura crítica"
             ThermalLevel.EMERGENCY -> "🚨 Emergencia térmica"
         }
-        nm.notify(NOTIF_ID, buildNotification(text, level, profile.riskScore, title))
+        nm?.notify(NOTIF_ID, buildNotification(text, level, profile.riskScore, title))
     }
 
     private fun sendAlert(snap: ThermalSnapshot, profile: LearnedProfile) {
@@ -272,7 +272,7 @@ class ThermalMonitorService : Service() {
                 interventions.joinToString("\n")
             ))
             .build()
-        nm.notify(NOTIF_ID + 1, alertNotif)
+        nm?.notify(NOTIF_ID + 1, alertNotif)
     }
 
 }
