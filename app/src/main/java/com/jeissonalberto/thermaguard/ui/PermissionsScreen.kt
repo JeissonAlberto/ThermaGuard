@@ -83,8 +83,8 @@ fun PermissionsScreen(onAllGranted: () -> Unit) {
                         .size(110.dp)
                         .background(Color.White.copy(alpha = 0.07f), RoundedCornerShape(24.dp)),
                     contentAlignment = Alignment.Center
-                ) {.clip(RoundedCornerShape(18.dp))
-                    )
+                ) {
+                    Text("🌡️", fontSize = 44.sp)
                 }
 
                 Spacer(Modifier.height(24.dp))
