@@ -45,8 +45,16 @@ class MainActivity : ComponentActivity() {
             ThermaGuardApp(
                 context       = this,
                 onStartService = {
-                    try { startForegroundService(Intent(this, ThermalMonitorService::class.java)) }
-                    catch (_: Exception) {}
+                    try {
+                        val i = Intent(this, ThermalMonitorService::class.java)
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            startForegroundService(i)
+                        } else {
+                            startService(i)
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.w("ThermaGuard", "Service: ${e.message}")
+                    }
                 }
             )
         }
