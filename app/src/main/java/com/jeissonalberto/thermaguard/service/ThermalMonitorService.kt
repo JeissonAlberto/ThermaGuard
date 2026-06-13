@@ -59,10 +59,10 @@ class ThermalMonitorService : Service() {
         if (intent?.action == ACTION_STOP) { stopSelf(); return START_NOT_STICKY }
 
         val notif = buildNotification("Iniciando…", ThermalLevel.NORMAL, 0)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        try {
             startForeground(NOTIF_ID, notif)
-        } else {
-            startForeground(NOTIF_ID, notif)
+        } catch (e: Exception) {
+            android.util.Log.w("ThermaGuard", "startForeground: ${e.message}")
         }
 
         val screenFilter = android.content.IntentFilter().also {
