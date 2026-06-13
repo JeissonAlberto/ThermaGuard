@@ -601,26 +601,33 @@ fun diagnoseComponents(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
     private fun readThermalStatus(): Int = try {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q)
             (powerManager?.currentThermalStatus ?: 0)
+        else 0
     } catch (e: Exception) { 0 }
 
     private fun readBluetoothState(): Boolean = try {
         (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter?.isEnabled ?: false
     } catch (e: Exception) { false }
 
-    private fun isWifiActive(): Boolean = try {
-        val net = connectivityManager?.activeNetwork ?: return false
-        connectivityManager?.getNetworkCapabilities(net)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false
-    } catch (e: Exception) { false }
+    private fun isWifiActive(): Boolean {
+        return try {
+            val net = connectivityManager?.activeNetwork ?: return false
+            connectivityManager?.getNetworkCapabilities(net)
+                ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false
+        } catch (e: Exception) { false }
+    }
 
     private fun readBrightness(): Int = try {
         Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, 0)
     } catch (e: Exception) { 0 }
 
-    private fun readRamUsage(): Int = try {
-        val info = ActivityManager.MemoryInfo()
-        activityManager?.getMemoryInfo(info) ?: return@readRamUsage 0
-        (info.availMem / 1024 / 1024).toInt()
-    } catch (e: Exception) { 0 }
+    private fun readRamUsage(): Int {
+        return try {
+            val info = ActivityManager.MemoryInfo()
+            if (activityManager == null) return 0
+            activityManager!!.getMemoryInfo(info)
+            (info.availMem / 1024 / 1024).toInt()
+        } catch (e: Exception) { 0 }
+    }
 
     private fun getTopApp(): String = try {
         val ownPkg = context.packageName
