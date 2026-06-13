@@ -53,5 +53,15 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".service.NotificationActionReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="ACTION_OPTIMIZE" />
+                <action android:name="ACTION_DISMISS" />
+            </intent-filter>
+        </receiver>
+
     </application>
 </manifest>
