@@ -600,7 +600,7 @@ fun diagnoseComponents(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
 
     private fun readThermalStatus(): Int = try {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q)
-            powerManager.currentThermalStatus else 0
+            (powerManager?.currentThermalStatus ?: 0)
     } catch (e: Exception) { 0 }
 
     private fun readBluetoothState(): Boolean = try {
@@ -618,15 +618,14 @@ fun diagnoseComponents(snapshot: ThermalSnapshot): List<ComponentDiagnosis> {
 
     private fun readRamUsage(): Int = try {
         val info = ActivityManager.MemoryInfo()
-        activityManager.getMemoryInfo(info)
-        // Devolver RAM LIBRE en MB (más útil para el usuario)
+        activityManager?.getMemoryInfo(info) ?: return@readRamUsage 0
         (info.availMem / 1024 / 1024).toInt()
     } catch (e: Exception) { 0 }
 
     private fun getTopApp(): String = try {
         val ownPkg = context.packageName
         val systemPkgs = setOf("android","com.android","com.samsung","systemui","launcher","com.google.android.gms")
-        activityManager.runningAppProcesses
+        activityManager?.runningAppProcesses
             ?.filter { it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND }
             ?.firstOrNull { proc ->
                 proc.processName != ownPkg &&
