@@ -303,20 +303,27 @@ object NotificationEngine {
     private enum class VibrationPattern { EMERGENCY, CRITICAL, WARNING }
 
     private fun vibrate(context: Context, pattern: VibrationPattern) {
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
-        } else {
+        try {
             @Suppress("DEPRECATION")
-            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-        val effect = when (pattern) {
-            VibrationPattern.EMERGENCY -> VibrationEffect.createWaveform(
-                longArrayOf(0, 300, 100, 600, 100, 900), -1)
-            VibrationPattern.CRITICAL  -> VibrationEffect.createWaveform(
-                longArrayOf(0, 200, 100, 400), -1)
-            VibrationPattern.WARNING   -> VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE)
-        }
-        vibrator.vibrate(effect)
+            val vib: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)
+                    ?.defaultVibrator
+                    ?: (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
+                    ?: return
+            } else {
+                (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator) ?: return
+            }
+            if (!vib.hasVibrator()) return
+            val effect = when (pattern) {
+                VibrationPattern.EMERGENCY -> VibrationEffect.createWaveform(
+                    longArrayOf(0, 300, 100, 600, 100, 900), -1)
+                VibrationPattern.CRITICAL  -> VibrationEffect.createWaveform(
+                    longArrayOf(0, 200, 100, 400), -1)
+                VibrationPattern.WARNING   -> VibrationEffect.createOneShot(
+                    150, VibrationEffect.DEFAULT_AMPLITUDE)
+            }
+            vib.vibrate(effect)
+        } catch (_: Exception) { /* sin vibración disponible */ }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────
