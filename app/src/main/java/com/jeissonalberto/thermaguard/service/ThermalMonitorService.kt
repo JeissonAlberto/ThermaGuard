@@ -182,14 +182,18 @@ class ThermalMonitorService : Service() {
     }
 
     private fun sendAlert(snap: ThermalSnapshot, profile: LearnedProfile) {
-        val notif = NotificationCompat.Builder(this, CHANNEL_ALERT)
-            .setSmallIcon(android.R.drawable.ic_menu_compass)
-            .setContentTitle("🔥 Temperatura crítica — ${snap.batteryTemp}°C")
-            .setContentText("Risk score ${profile.riskScore}/100 · El motor está actuando automáticamente")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .build()
-        nm.notify(ALERT_NOTIF_ID, notif)
+        val mainTemp = when {
+            snap.cpuTemp   > 20f -> snap.cpuTemp
+            snap.modemTemp > 20f -> snap.modemTemp
+            else                  -> snap.batteryTemp
+        }
+        NotificationEngine.sendThermalAlert(
+            context     = this,
+            level       = lastLevel,
+            temperature = mainTemp,
+            riskScore   = profile.riskScore,
+            details     = "Motor automático activo"
+        )
     }
 
     private fun buildNotification(
@@ -220,15 +224,7 @@ class ThermalMonitorService : Service() {
     }
 
     private fun createChannels() {
-        val monitorCh = NotificationChannel(CHANNEL_ID, "Monitor activo", NotificationManager.IMPORTANCE_LOW).apply {
-            description = "Muestra el estado térmico en tiempo real"
-            setShowBadge(false)
-        }
-        val alertCh = NotificationChannel(CHANNEL_ALERT, "Alertas térmicas", NotificationManager.IMPORTANCE_HIGH).apply {
-            description = "Alertas cuando la temperatura es crítica"
-        }
-        nm.createNotificationChannel(monitorCh)
-        nm.createNotificationChannel(alertCh)
+        NotificationEngine.createChannels(this)
     }
 
     override fun onDestroy() {
