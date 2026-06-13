@@ -24,7 +24,7 @@ class ThermalMonitorService : Service() {
     private lateinit var learningEngine: ThermalLearningEngine
     private lateinit var optRepo: OptimizationRepository
     private lateinit var db: ThermalDatabase
-    private lateinit var nm: NotificationManager
+    private var nm: NotificationManager? = null
 
     companion object {
         const val CHANNEL_ID      = "thermaguard_monitor"
@@ -50,7 +50,7 @@ class ThermalMonitorService : Service() {
         learningEngine = ThermalLearningEngine(this)
         optRepo        = OptimizationRepository(this)
         db             = ThermalDatabase.getInstance(this)
-        nm: NotificationManager? = null
+        nm = getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
         createChannels()
         isRunning = true
     }
