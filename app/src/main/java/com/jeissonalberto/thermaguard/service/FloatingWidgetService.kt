@@ -50,7 +50,7 @@ class FloatingWidgetService : Service() {
     }
 
     private fun setupOverlayView() {
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        windowManager = getSystemService(WINDOW_SERVICE) as? WindowManager ?: return
 
         // Layout programático — sin XML, sin inflate pesado
         val tv = TextView(this).apply {
