@@ -120,7 +120,7 @@ object BeastCoolingEngine {
             // Deshabilitar escaneo siempre disponible (usa menos el radio)
             // Nota: en Android 9+ requiere CHANGE_WIFI_STATE
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                wifi.isScanThrottleEnabled.let { /* ya throttleado por defecto en P+ */ }
+                wifi?.isScanThrottleEnabled.let { /* ya throttleado por defecto en P+ */ }
             }
         } catch (_: Exception) {}
     }
@@ -151,7 +151,7 @@ object BeastCoolingEngine {
                 val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
                 // Notificar al sistema que estamos en estado térmico elevado
                 // Esto activa el thermal governor del kernel (step_wise o power_allocator)
-                pm.currentThermalStatus.let { status ->
+                pm?.currentThermalStatus.let { status ->
                     // status >= THERMAL_STATUS_MODERATE activa throttling automático
                 }
             }
