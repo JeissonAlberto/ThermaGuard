@@ -100,7 +100,7 @@ class FloatingWidgetService : Service() {
             }
         }
 
-        try { windowManager?.addView(floatingView, params) }
+        try { try { windowManager?.addView(floatingView, params) }
         catch (_: Exception) {}
     }
 
