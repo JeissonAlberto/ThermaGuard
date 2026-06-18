@@ -27,8 +27,8 @@ class ThermalMonitorService : Service() {
     private var nm: NotificationManager? = null
 
     companion object {
-        const val CHANNEL_ID      = "thermaguard_monitor"
-        const val CHANNEL_ALERT   = "thermaguard_alerts"
+        const val CHANNEL_ID      = NotificationEngine.CHANNEL_MONITOR   // "tg_monitor"
+        const val CHANNEL_ALERT   = NotificationEngine.CHANNEL_ALERT     // "tg_alert_critical"
         const val NOTIF_ID        = 1001
         const val ALERT_NOTIF_ID  = 1002
         const val ACTION_STOP     = "STOP_MONITOR"
@@ -72,7 +72,14 @@ class ThermalMonitorService : Service() {
 
         val notif = buildNotification("Iniciando…", ThermalLevel.NORMAL, 0)
         try {
-            startForeground(NOTIF_ID, notif)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                startForeground(
+                    NOTIF_ID, notif,
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                )
+            } else {
+                startForeground(NOTIF_ID, notif)
+            }
         } catch (e: Exception) {
             android.util.Log.w("ThermaGuard", "startForeground: ${e.message}")
         }
