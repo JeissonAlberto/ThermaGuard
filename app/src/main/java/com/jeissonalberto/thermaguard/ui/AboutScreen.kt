@@ -15,12 +15,10 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jeissonalberto.thermaguard.R
 
 @Composable
 fun AboutScreen() {
@@ -63,11 +61,7 @@ fun AboutScreen() {
                     .border(1.dp, Color(0xFF00E5FF).copy(alpha = 0.2f), RoundedCornerShape(28.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.jasol_logo),
-                    contentDescription = "Jasol Group",
-                    modifier = Modifier.size(84.dp).clip(RoundedCornerShape(20.dp))
-                )
+                Text("🌡", fontSize = 48.sp)
             }
 
             // ── Nombre app ───────────────────────────────────────────────
