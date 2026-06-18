@@ -15,8 +15,8 @@ import kotlinx.coroutines.withContext
  */
 class OptimizationRepository(private val context: Context) {
 
-    private val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-    private val powerManager    = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    private val activityManager: ActivityManager? = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+    private val powerManager: PowerManager?    = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
 
     // ============================================================
     //  ACCIONES EJECUTABLES DIRECTAMENTE
@@ -26,9 +26,9 @@ class OptimizationRepository(private val context: Context) {
     suspend fun killBackgroundApps(): Int = withContext(Dispatchers.IO) {
         var killed = 0
         try {
-            activityManager.runningAppProcesses?.forEach { process ->
+            activityManager?.runningAppProcesses?.forEach { process ->
                 if (process.importance >= ActivityManager.RunningAppProcessInfo.IMPORTANCE_CACHED) {
-                    activityManager.killBackgroundProcesses(process.processName)
+                    activityManager?.killBackgroundProcesses(process.processName)
                     killed++
                 }
             }
@@ -40,9 +40,9 @@ class OptimizationRepository(private val context: Context) {
     suspend fun freeRam(): Int = withContext(Dispatchers.IO) {
         var freed = 0
         try {
-            activityManager.runningAppProcesses?.forEach { process ->
+            activityManager?.runningAppProcesses?.forEach { process ->
                 if (process.importance >= ActivityManager.RunningAppProcessInfo.IMPORTANCE_GONE) {
-                    activityManager.killBackgroundProcesses(process.processName)
+                    activityManager?.killBackgroundProcesses(process.processName)
                     freed++
                 }
             }
@@ -51,11 +51,11 @@ class OptimizationRepository(private val context: Context) {
     }
 
     /** Comprueba si el modo ahorro de bateria esta activo */
-    fun isBatterySaverOn(): Boolean = try { powerManager.isPowerSaveMode } catch (e: Exception) { false }
+    fun isBatterySaverOn(): Boolean = try { powerManager?.isPowerSaveMode } catch (e: Exception) { false }
 
     /** Comprueba si la app esta exenta de optimizacion de bateria */
     fun isBatteryOptimizationIgnored(): Boolean = try {
-        powerManager.isIgnoringBatteryOptimizations(context.packageName)
+        powerManager?.isIgnoringBatteryOptimizations(context.packageName)
     } catch (e: Exception) { false }
 
     // ============================================================
