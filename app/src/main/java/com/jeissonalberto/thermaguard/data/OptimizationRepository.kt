@@ -51,11 +51,11 @@ class OptimizationRepository(private val context: Context) {
     }
 
     /** Comprueba si el modo ahorro de bateria esta activo */
-    fun isBatterySaverOn(): Boolean = try { powerManager?.isPowerSaveMode } catch (e: Exception) { false }
+    fun isBatterySaverOn(): Boolean = try { powerManager?.isPowerSaveMode ?: false } catch (e: Exception) { false }
 
     /** Comprueba si la app esta exenta de optimizacion de bateria */
     fun isBatteryOptimizationIgnored(): Boolean = try {
-        powerManager?.isIgnoringBatteryOptimizations(context.packageName)
+        powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: false
     } catch (e: Exception) { false }
 
     // ============================================================
