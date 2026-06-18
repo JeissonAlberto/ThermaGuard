@@ -56,6 +56,18 @@ class ThermalMonitorService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Guard: si onCreate no completó por algún motivo, reinicializar
+        if (!::sensorRepo.isInitialized) {
+            try {
+                sensorRepo     = SensorRepository(this)
+                learningEngine = ThermalLearningEngine(this)
+                optRepo        = OptimizationRepository(this)
+                db             = ThermalDatabase.getInstance(this)
+            } catch (e: Exception) {
+                android.util.Log.e("ThermaGuard", "Service reinit failed: ${e.message}")
+                return START_NOT_STICKY
+            }
+        }
         if (intent?.action == ACTION_STOP) { stopSelf(); return START_NOT_STICKY }
 
         val notif = buildNotification("Iniciando…", ThermalLevel.NORMAL, 0)
