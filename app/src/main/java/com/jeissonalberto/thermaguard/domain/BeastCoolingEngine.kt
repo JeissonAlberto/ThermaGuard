@@ -116,7 +116,7 @@ object BeastCoolingEngine {
     private fun limitWifiScan(context: Context) {
         try {
             val wifi = context.applicationContext
-                .getSystemService(Context.WIFI_SERVICE) as WifiManager
+                .getSystemService(Context.WIFI_SERVICE) as? WifiManager
             // Deshabilitar escaneo siempre disponible (usa menos el radio)
             // Nota: en Android 9+ requiere CHANGE_WIFI_STATE
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
@@ -148,7 +148,7 @@ object BeastCoolingEngine {
     private fun requestThermalThrottling(context: Context) {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
                 // Notificar al sistema que estamos en estado térmico elevado
                 // Esto activa el thermal governor del kernel (step_wise o power_allocator)
                 pm.currentThermalStatus.let { status ->
