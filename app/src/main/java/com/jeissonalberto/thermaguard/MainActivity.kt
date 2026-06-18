@@ -286,6 +286,7 @@ fun MainAppShell(
                     8  -> LogsScreen(uiState = uiState)
                     9  -> AboutScreen()
                     10 -> RootControlScreen(viewModel = viewModel)
+                    11 -> ThermalOptimizationScreen(uiState = uiState)
                     else -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) })
                 }
             }
