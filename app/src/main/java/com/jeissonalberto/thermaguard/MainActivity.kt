@@ -1,11 +1,16 @@
 package com.jeissonalberto.thermaguard
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -38,16 +43,29 @@ private const val PREFS_ONBOARD = "tg_onboarding"
 private const val KEY_ONBOARD   = "done"
 
 class MainActivity : ComponentActivity() {
+
+    // ── Lanzador de permisos en runtime ──────────────────────────────────────
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+            results.forEach { (perm, granted) ->
+                android.util.Log.d("ThermaGuard", "Permiso $perm: $granted")
+            }
+            // Solicitar permisos especiales que requieren navegación a Settings
+            requestSpecialPermissions()
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Solicitar permisos normales al iniciar
+        requestAllPermissions()
         setContent {
             ThermaGuardApp(
                 context       = this,
                 onStartService = {
                     try {
                         val i = Intent(this, ThermalMonitorService::class.java)
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             startForegroundService(i)
                         } else {
                             startService(i)
@@ -58,6 +76,80 @@ class MainActivity : ComponentActivity() {
                 }
             )
         }
+    }
+
+    /** Solicita todos los permisos que el sistema puede pedir en runtime. */
+    private fun requestAllPermissions() {
+        val perms = buildList {
+            // Notificaciones — Android 13+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            // Bluetooth — Android 12+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
+            // Estado del teléfono (temperatura modem)
+            add(Manifest.permission.READ_PHONE_STATE)
+        }
+        if (perms.isNotEmpty()) {
+            permissionLauncher.launch(perms.toTypedArray())
+        } else {
+            requestSpecialPermissions()
+        }
+    }
+
+    /**
+     * Permisos especiales que requieren ir a pantalla de configuración.
+     * Solo se abre la pantalla si el permiso todavía no fue otorgado.
+     */
+    private fun requestSpecialPermissions() {
+        // 1. Ignorar optimizaciones de batería (Doze Mode)
+        val pm = getSystemService(android.content.Context.POWER_SERVICE)
+                as android.os.PowerManager
+        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            try {
+                startActivity(Intent(
+                    Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    Uri.parse("package:$packageName")
+                ))
+            } catch (_: Exception) {}
+        }
+        // 2. Overlay / Ventana sobre otras apps (SYSTEM_ALERT_WINDOW)
+        if (!Settings.canDrawOverlays(this)) {
+            try {
+                startActivity(Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                ))
+            } catch (_: Exception) {}
+        }
+        // 3. Estadísticas de uso de apps (PACKAGE_USAGE_STATS)
+        if (!hasUsageStatsPermission()) {
+            try {
+                startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+            } catch (_: Exception) {}
+        }
+    }
+
+    private fun hasUsageStatsPermission(): Boolean {
+        return try {
+            val appOps = getSystemService(android.content.Context.APP_OPS_SERVICE)
+                    as android.app.AppOpsManager
+            val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                appOps.unsafeCheckOpNoThrow(
+                    android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(), packageName
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                appOps.checkOpNoThrow(
+                    android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(), packageName
+                )
+            }
+            mode == android.app.AppOpsManager.MODE_ALLOWED
+        } catch (_: Exception) { false }
     }
 }
 
