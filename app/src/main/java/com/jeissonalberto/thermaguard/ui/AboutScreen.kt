@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun AboutScreen() {
+fun AboutScreen(
+    onLegalClick: () -> Unit = {}
+) {
     val context = LocalContext.current
     val scroll  = rememberScrollState()
 
