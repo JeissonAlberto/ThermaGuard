@@ -89,19 +89,34 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
                         }
                     }
                 }
+                // Badge único: componentes en alerta — info que sólo existe aquí
+                val critCount = diags.count {
+                    it.status == ComponentStatus.CRITICAL || it.status == ComponentStatus.HOT
+                }
                 Box(modifier = Modifier.clip(RoundedCornerShape(14.dp))
-                    .background(accent.copy(alpha = 0.1f))
-                    .border(1.dp, accent.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
-                    .padding(horizontal = 14.dp, vertical = 8.dp)) {
-                    Text("${snap.batteryTemp.toInt()}°C",
-                        fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = accent)
+                    .background(
+                        (if (critCount > 0) TG.red else TG.green).copy(alpha = 0.1f)
+                    )
+                    .border(1.dp,
+                        (if (critCount > 0) TG.red else TG.green).copy(alpha = 0.25f),
+                        RoundedCornerShape(14.dp))
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            if (critCount > 0) "$critCount" else "✓",
+                            fontSize = 22.sp, fontWeight = FontWeight.ExtraBold,
+                            color = if (critCount > 0) TG.red else TG.green
+                        )
+                        Text(
+                            if (critCount > 0) "alertas" else "OK",
+                            fontSize = 9.sp, color = TG.textDim
+                        )
+                    }
                 }
             }
 
-            // Radar
-            val alertCount = diags.count {
-                it.status == ComponentStatus.HOT || it.status == ComponentStatus.CRITICAL
-            }
+            // Radar — usa critCount declarado en el badge
             Row(
                 modifier = Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
@@ -112,8 +127,8 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
             ) {
                 Text("${diags.size} componentes monitoreados",
                     fontSize = 11.sp, color = TG.textSec)
-                if (alertCount > 0)
-                    Text("$alertCount en alerta", fontSize = 10.sp,
+                if (critCount > 0)
+                    Text("$critCount en alerta", fontSize = 10.sp,
                         fontWeight = FontWeight.Bold, color = TG.red)
                 else
                     Text("Todo normal", fontSize = 10.sp, color = TG.green)
