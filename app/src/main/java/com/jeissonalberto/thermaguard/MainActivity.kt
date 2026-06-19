@@ -278,7 +278,9 @@ fun MainAppShell(
                     0  -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) })
                     1  -> DiagnosisScreen(uiState = uiState)
                     2  -> BeastModeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) })
-                    3  -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) })
+                    3  -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) },
+                    onKillApps = { viewModel.killAppsNow() }
+                )
                     4  -> SettingsScreen(uiState = uiState, onSetTheme = { viewModel.setAppTheme(it) }, onSetLanguage = { viewModel.setAppLanguage(it) })
                     5  -> HistoryScreen(uiState = uiState, onExportCsv = onExportCsv)
                     6  -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
