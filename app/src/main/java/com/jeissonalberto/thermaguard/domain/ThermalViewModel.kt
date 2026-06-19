@@ -11,6 +11,11 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import com.jeissonalberto.thermaguard.data.AppUpdate
+import com.jeissonalberto.thermaguard.data.TelemetryRepository
+import com.jeissonalberto.thermaguard.data.UpdateChecker
+import com.jeissonalberto.thermaguard.service.TelemetryWorker
+import com.jeissonalberto.thermaguard.service.UpdateWorker
 
 data class ThermalUiState(
     val latest: ThermalSnapshot = ThermalSnapshot(),
@@ -104,6 +109,10 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     init {
         observeHistory()
         startLiveReading()
+        scheduleBackgroundWorkers()
+        checkForUpdates()
+        _telemetryOn.value = TelemetryRepository.isEnabled(getApplication())
+
         viewModelScope.launch { try { _rootAvailable.value = RootEngine.isRootAvailable() } catch (_:Exception) { _rootAvailable.value = false } }
     }
 
@@ -436,4 +445,44 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         RootEngine.killBackgroundApps(getApplication())
         } catch (e: Exception) { android.util.Log.e("ThermaGuard","rootKillBg error",e) }
     }
+    // ── Workers background ────────────────────────────────────────────────
+    private fun scheduleBackgroundWorkers() {
+        try {
+            TelemetryWorker.schedule(getApplication())
+            UpdateWorker.schedule(getApplication())
+        } catch (e: Exception) {
+            android.util.Log.w("ThermaGuard", "Workers schedule error: ${e.message}")
+        }
+    }
+
+    /** Verifica si hay una actualización disponible ahora mismo */
+    fun checkForUpdates() = viewModelScope.launch {
+        try {
+            val update = UpdateChecker.checkIfDue(getApplication())
+            _pendingUpdate.value = update
+        } catch (e: Exception) {
+            android.util.Log.w("ThermaGuard", "checkForUpdates: ${e.message}")
+        }
+    }
+
+    fun dismissUpdate()  { _pendingUpdate.value = null }
+
+    /** Activa o desactiva el envío de telemetría */
+    fun setTelemetryEnabled(enabled: Boolean) {
+        TelemetryRepository.setEnabled(getApplication(), enabled)
+        _telemetryOn.value = enabled
+        if (enabled) TelemetryWorker.schedule(getApplication())
+        else         TelemetryWorker.cancel(getApplication())
+    }
+
+    /** Envía telemetría manualmente (para botón en Settings) */
+    fun sendTelemetryNow() = viewModelScope.launch {
+        try {
+            val snaps = db.thermalDao().getHistory(200).first()
+            TelemetryRepository.sendReport(getApplication(), snaps)
+        } catch (e: Exception) {
+            android.util.Log.w("ThermaGuard", "sendTelemetryNow: ${e.message}")
+        }
+    }
+
 }
