@@ -133,7 +133,7 @@ fun DashboardScreen(
                 UpdateBanner(update = upd, onDismiss = onDismissUpdate)
             }
             // ── HEADER: logo + badge de modo ─────────────────────────────
-            HeaderBar(uiState = uiState, accent = accent)
+            HeaderBar(uiState = uiState, accent = accent, userName = userName)
 
             // ── AVATAR INTERACTIVO ───────────────────────────────────────
             AvatarCard(level = level, temp = mainTemp,
@@ -623,7 +623,7 @@ fun QuickStatusBar(snap: ThermalSnapshot, level: ThermalLevel, accent: Color) {
 //  HEADER BAR
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
-fun HeaderBar(uiState: ThermalUiState, accent: Color) {
+fun HeaderBar(uiState: ThermalUiState, accent: Color, userName: String = "") {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -637,7 +637,7 @@ fun HeaderBar(uiState: ThermalUiState, accent: Color) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(modifier = Modifier.size(5.dp).clip(CircleShape).background(accent))
-                Text("Jasol Group  ·  Motor v6", fontSize = 10.sp,
+                Text(if (userName.isNotBlank()) "Hola, $userName  ·  Motor v6" else "Jasol Group  ·  Motor v6", fontSize = 10.sp,
                     color = TG.textDim, letterSpacing = 0.3.sp)
             }
         }
