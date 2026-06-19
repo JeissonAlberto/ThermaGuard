@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
@@ -87,7 +89,9 @@ fun DashboardScreen(
     uiState: ThermalUiState,
     onToggleMonitor: () -> Unit,
     onToggleAutoMode: () -> Unit,
-    onSetMode: (OperationMode) -> Unit = {}
+    onSetMode: (OperationMode) -> Unit = {},
+    pendingUpdate: com.jeissonalberto.thermaguard.data.AppUpdate? = null,
+    onDismissUpdate: () -> Unit = {}
 ) {
     val snap   = uiState.latest
     // derivedStateOf: sólo recalcula cuando cpuTemp/modemTemp/batteryTemp cambian realmente
@@ -124,6 +128,10 @@ fun DashboardScreen(
                 .padding(top = 12.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // ── BANNER DE ACTUALIZACIÓN (si hay nueva versión) ──────────────
+            pendingUpdate?.let { upd ->
+                UpdateBanner(update = upd, onDismiss = onDismissUpdate)
+            }
             // ── HEADER: logo + badge de modo ─────────────────────────────
             HeaderBar(uiState = uiState, accent = accent)
 
@@ -1440,6 +1448,69 @@ fun ThermalThresholdBar(mainTemp: Float, isCharging: Boolean) {
             horizontalArrangement = Arrangement.SpaceBetween) {
             listOf("25°", "38°", "45°", "52°", "60°").forEach { t ->
                 Text(t, fontSize = 8.sp, color = Color(0xFFE0E6FF).copy(alpha = 0.35f))
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Banner de actualización disponible
+// ─────────────────────────────────────────────────────────────────────────────
+@androidx.compose.runtime.Composable
+private fun UpdateBanner(
+    update: com.jeissonalberto.thermaguard.data.AppUpdate,
+    onDismiss: () -> Unit
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    androidx.compose.material3.Card(
+        modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = androidx.compose.ui.graphics.Color(0xFF1A3A1A)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp, androidx.compose.ui.graphics.Color(0xFF00E676).copy(alpha = 0.5f)
+        )
+    ) {
+        androidx.compose.foundation.layout.Row(
+            modifier = androidx.compose.ui.Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)
+        ) {
+            androidx.compose.material3.Text("🚀", fontSize = 20.sp)
+            androidx.compose.foundation.layout.Column(modifier = androidx.compose.ui.Modifier.weight(1f)) {
+                androidx.compose.material3.Text(
+                    "Nueva versión ${update.version}",
+                    fontSize = 13.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = androidx.compose.ui.graphics.Color(0xFF00E676)
+                )
+                androidx.compose.material3.Text(
+                    update.releaseNotes.take(80),
+                    fontSize = 11.sp,
+                    color = TG.textSec
+                )
+            }
+            androidx.compose.material3.TextButton(onClick = {
+                try {
+                    context.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse(update.downloadUrl))
+                            .apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+                    )
+                } catch (_: Exception) {}
+            }) {
+                androidx.compose.material3.Text(
+                    "Instalar",
+                    fontSize = 12.sp,
+                    color = androidx.compose.ui.graphics.Color(0xFF00E676)
+                )
+            }
+            androidx.compose.material3.IconButton(onClick = onDismiss, modifier = androidx.compose.ui.Modifier.size(24.dp)) {
+                androidx.compose.material3.Icon(
+                    androidx.compose.material.icons.Icons.Default.Close, null,
+                    tint = TG.textSec, modifier = androidx.compose.ui.Modifier.size(16.dp)
+                )
             }
         }
     }
