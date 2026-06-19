@@ -34,7 +34,12 @@ fun SettingsScreen(
     uiState: ThermalUiState,
     onSetTheme: (AppTheme) -> Unit = {},
     onSetLanguage: (AppLanguage) -> Unit = {},
-    onToggleWidget: (Boolean) -> Unit = {}
+    onToggleWidget: (Boolean) -> Unit = {},
+    telemetryEnabled: Boolean = true,
+    onToggleTelemetry: (Boolean) -> Unit = {},
+    autoUpdateEnabled: Boolean = true,
+    onToggleAutoUpdate: (Boolean) -> Unit = {},
+    onCheckUpdateNow: () -> Unit = {}
 ) {
     val accent = TG.blue
     val scroll = rememberScrollState()
