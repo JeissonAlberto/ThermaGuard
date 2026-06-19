@@ -161,7 +161,8 @@ data class NavItem(val label: String, val icon: ImageVector)
 @Composable
 fun ThermaGuardApp(context: Context, onStartService: () -> Unit) {
     val viewModel: ThermalViewModel = viewModel()
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState       by viewModel.uiState.collectAsState()
+    val pendingUpdate by viewModel.pendingUpdate.collectAsState()
 
     ThermaGuardTheme(appTheme = uiState.appTheme) {
 
