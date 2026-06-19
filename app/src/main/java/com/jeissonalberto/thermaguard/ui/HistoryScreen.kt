@@ -38,11 +38,14 @@ fun HistoryScreen(
     val sdf     = remember { SimpleDateFormat("dd/MM HH:mm:ss", Locale.getDefault()) }
     val context = LocalContext.current
 
-    var filterHot      by remember { mutableStateOf(false) }
+    var filterHot      by rememberSaveable { mutableStateOf(false) }
     var showExportMenu by remember { mutableStateOf(false) }
     var exportFeedback by remember { mutableStateOf<String?>(null) }
 
-    val displayed = if (filterHot) history.filter { it.batteryTemp >= 40f } else history
+    var pageSize by rememberSaveable { mutableIntStateOf(50) }
+    val allDisplayed = if (filterHot) history.filter { it.batteryTemp >= 40f } else history
+    val displayed = allDisplayed.take(pageSize)
+    val hasMore   = allDisplayed.size > pageSize
 
     Column(
         modifier = Modifier
