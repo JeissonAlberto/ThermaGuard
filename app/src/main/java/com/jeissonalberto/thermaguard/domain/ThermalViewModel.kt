@@ -8,6 +8,7 @@ import com.jeissonalberto.thermaguard.root.RootEngine
 import com.jeissonalberto.thermaguard.service.ThermalMonitorService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -251,7 +252,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private fun observeHistory() {
         viewModelScope.launch {
-            db.thermalDao().getHistory(200).collect { rows ->
+            db.thermalDao().getHistory(200).distinctUntilChanged().collect { rows ->
                 _uiState.update { it.copy(history = rows) }
             }
         }
