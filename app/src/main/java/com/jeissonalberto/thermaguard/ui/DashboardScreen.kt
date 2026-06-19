@@ -91,7 +91,8 @@ fun DashboardScreen(
     onToggleAutoMode: () -> Unit,
     onSetMode: (OperationMode) -> Unit = {},
     pendingUpdate: com.jeissonalberto.thermaguard.data.AppUpdate? = null,
-    onDismissUpdate: () -> Unit = {}
+    onDismissUpdate: () -> Unit = {},
+    userName: String = ""
 ) {
     val snap   = uiState.latest
     // derivedStateOf: sólo recalcula cuando cpuTemp/modemTemp/batteryTemp cambian realmente
