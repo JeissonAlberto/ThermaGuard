@@ -110,9 +110,13 @@ fun BeastModeScreen(
     val context   = LocalContext.current
     val snap      = uiState.latest
     val isActive  = uiState.operationMode == OperationMode.GAMER
-    val mainTemp  = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
-    val level     = mainTemp.toThermalLevel()
-    val accent    = if (isActive) Color(0xFFFF3D00) else Color(0xFF00E5FF)
+    val mainTemp by remember(snap) { derivedStateOf {
+        if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
+    } }
+    val level  by remember(mainTemp) { derivedStateOf { mainTemp.toThermalLevel() } }
+    val accent by remember(isActive, level) { derivedStateOf {
+        if (isActive) Color(0xFFFF3D00) else TG.accentFor(level)
+    } }
 
     // Estado individual de cada toggle
     var toggleBrightness  by remember { mutableStateOf(false) }
