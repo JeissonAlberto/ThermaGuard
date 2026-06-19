@@ -29,9 +29,11 @@ import kotlin.math.roundToInt
 fun StatsScreen(uiState: ThermalUiState, onResetLearning: () -> Unit) {
     val context = LocalContext.current
     val scroll  = rememberScrollState()
-    val mainTemp = if (uiState.latest.cpuTemp > 20f) uiState.latest.cpuTemp else uiState.latest.batteryTemp
-    val level   = mainTemp.toThermalLevel()
-    val accent  = TG.accentFor(level)
+    val mainTemp by remember(uiState.latest) { derivedStateOf {
+        if (uiState.latest.cpuTemp > 20f) uiState.latest.cpuTemp else uiState.latest.batteryTemp
+    } }
+    val level   by remember(mainTemp) { derivedStateOf { mainTemp.toThermalLevel() } }
+    val accent  by remember(level)    { derivedStateOf { TG.accentFor(level) } }
     val profile = uiState.profile
 
     Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
