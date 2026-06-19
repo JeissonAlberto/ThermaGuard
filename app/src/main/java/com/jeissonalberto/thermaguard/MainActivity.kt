@@ -256,6 +256,7 @@ fun MainAppShell(
         NavItem("Bestia",      Icons.Default.Bolt),
         NavItem("Optimizar",   Icons.Default.Tune),
         NavItem("Ajustes",     Icons.Default.Settings),
+        NavItem("Física",      Icons.Default.Science),
     )
 
     Scaffold(
@@ -382,7 +383,15 @@ fun MainAppShell(
                         )
                     }
                     1  -> DiagnosisScreen(uiState = uiState)
-                    2  -> BeastModeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) })
+                    2  -> BeastModeScreen(
+                        uiState   = uiState,
+                        onSetMode = {
+                            viewModel.setOperationMode(it)
+                            if (it == com.jeissonalberto.thermaguard.data.OperationMode.GAMER)
+                                viewModel.unlockMaxPerformance()
+                            else viewModel.applyPhysicsGovernor()
+                        }
+                    )
                     3  -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) },
                     onKillApps = { viewModel.killAppsNow() }
                 )
@@ -412,6 +421,12 @@ fun MainAppShell(
                     8  -> LogsScreen(uiState = uiState)
                     9  -> AboutScreen()
                     10 -> RootControlScreen(viewModel = viewModel)
+                    12 -> PhysicsScreen(
+                        uiState              = uiState,
+                        onApplyGovernor      = { viewModel.applyPhysicsGovernor() },
+                        onEmergencyThrottle  = { viewModel.emergencyThrottleIfNeeded() },
+                        onUnlockMaxPerf      = { viewModel.unlockMaxPerformance() }
+                    )
                     11 -> ThermalOptimizationScreen(uiState = uiState)
                     else -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) })
                 }
