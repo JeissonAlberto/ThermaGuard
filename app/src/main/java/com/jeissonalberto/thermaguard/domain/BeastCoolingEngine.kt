@@ -133,10 +133,18 @@ object BeastCoolingEngine {
     private fun killBackgroundApps(context: Context) {
         try {
             val am = context.getSystemService(Context.ACTIVITY_SERVICE)
-                    as android.app.ActivityManager
-            // Pide al sistema que libere memoria y detenga procesos en background
-            // Esto dispara el LMK (Low Memory Killer) para limpiar procesos no usados
-            am.isBackgroundRestricted.let { /* verificar estado */ }
+                    as? android.app.ActivityManager ?: return
+            // Obtener procesos en background (IMPORTANCE_CACHED = ≥400)
+            // y pedir al sistema que los limpie vía killBackgroundProcesses
+            val processes = am.runningAppProcesses ?: return
+            processes
+                .filter { it.importance >= android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_CACHED }
+                .filter { !it.processName.contains("thermaguard", ignoreCase = true) }
+                .forEach { proc ->
+                    try {
+                        am.killBackgroundProcesses(proc.processName)
+                    } catch (_: Exception) {}
+                }
         } catch (_: Exception) {}
     }
 
