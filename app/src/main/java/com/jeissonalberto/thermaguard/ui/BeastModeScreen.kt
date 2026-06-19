@@ -192,45 +192,100 @@ fun BeastModeScreen(
             }
 
             // ── TEMPERATURA CENTRAL ──────────────────────────────────────
+            // ── PANEL DE RENDIMIENTO GAMER ─────────────────────────────
+            // Métricas exclusivas del modo: throttle %, presión térmica, núcleos
             Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
                 .background(Color(0x12FFFFFF))
                 .border(1.dp, accent.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
                 .padding(20.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(20.dp)) {
 
-                    // Círculo de temperatura
-                    Box(modifier = Modifier.size(90.dp).clip(CircleShape)
-                        .background(Brush.radialGradient(listOf(
-                            accent.copy(alpha = 0.2f), Color.Transparent)))
-                        .border(2.dp, accent.copy(alpha = 0.5f), CircleShape),
-                        contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("${mainTemp.toInt()}°C", fontSize = 28.sp,
-                                fontWeight = FontWeight.Black, color = accent)
-                            Text(when (level) {
-                                ThermalLevel.NORMAL -> "Normal"
-                                ThermalLevel.WARM   -> "Tibio"
-                                ThermalLevel.HOT    -> "Caliente"
-                                ThermalLevel.CRITICAL -> "Crítico"
-                                ThermalLevel.EMERGENCY -> "Emergencia"
-                            }, fontSize = 9.sp, color = accent.copy(alpha = 0.7f),
-                                fontWeight = FontWeight.Bold)
-                        }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                    // Título del panel
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(Icons.Default.Speed, null, tint = accent,
+                            modifier = Modifier.size(16.dp))
+                        Text("Rendimiento en tiempo real",
+                            fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TG.textSec)
                     }
 
-                    // Métricas laterales
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TempMetricRow("🔋", "Batería", "${snap.batteryTemp.toInt()}°C",
-                            snap.batteryTemp > 40f)
-                        if (snap.gpuTemp > 20f)
-                            TempMetricRow("🎮", "GPU", "${snap.gpuTemp.toInt()}°C",
-                                snap.gpuTemp > 45f)
-                        TempMetricRow("⚙️", "CPU uso", "${snap.cpuUsage.toInt()}%",
-                            snap.cpuUsage > 70f)
-                        if (snap.isCharging)
-                            TempMetricRow("⚡", "Cargando", "Sí",
-                                snap.batteryTemp > 40f)
+                    // Fila 1: Throttle estimado + Presión térmica
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                        // Throttle estimado (Ley de Amdahl)
+                        val throttlePct = when {
+                            mainTemp >= 50f -> 40
+                            mainTemp >= 46f -> 25
+                            mainTemp >= 43f -> 12
+                            mainTemp >= 40f -> 5
+                            else            -> 0
+                        }
+                        GamerStatCard(
+                            modifier    = Modifier.weight(1f),
+                            label       = "Throttle",
+                            value       = if (throttlePct > 0) "-$throttlePct%" else "Sin límite",
+                            sub         = "rendimiento CPU",
+                            valueColor  = when {
+                                throttlePct >= 25 -> TG.red
+                                throttlePct >= 10 -> TG.amber
+                                else              -> TG.green
+                            }
+                        )
+
+                        // Presión térmica (score 0-100)
+                        val thermalPressure = ((mainTemp - 30f) / 30f * 100f).coerceIn(0f, 100f).toInt()
+                        GamerStatCard(
+                            modifier   = Modifier.weight(1f),
+                            label      = "Presión Térmica",
+                            value      = "$thermalPressure%",
+                            sub        = "margen de seguridad ${100 - thermalPressure}%",
+                            valueColor = when {
+                                thermalPressure >= 70 -> TG.red
+                                thermalPressure >= 45 -> TG.amber
+                                else                  -> TG.green
+                            }
+                        )
+                    }
+
+                    // Fila 2: Núcleos activos + ETA a throttle
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                        val activeCores = when {
+                            isActive && snap.cpuUsage > 60f -> 8
+                            isActive                        -> 6
+                            snap.cpuUsage > 50f             -> 6
+                            else                            -> 4
+                        }
+                        GamerStatCard(
+                            modifier   = Modifier.weight(1f),
+                            label      = "Núcleos",
+                            value      = "$activeCores / 8",
+                            sub        = if (isActive) "modo bestia activo" else "modo normal",
+                            valueColor = if (isActive) TG.amber else TG.green
+                        )
+
+                        // ETA a zona crítica
+                        val etaMin = when {
+                            mainTemp >= 50f -> 0
+                            mainTemp >= 46f -> 3
+                            mainTemp >= 43f -> 8
+                            mainTemp >= 40f -> 15
+                            else            -> 99
+                        }
+                        GamerStatCard(
+                            modifier   = Modifier.weight(1f),
+                            label      = "ETA a throttle",
+                            value      = if (etaMin >= 99) "—" else "${etaMin}min",
+                            sub        = "a temperatura crítica",
+                            valueColor = when {
+                                etaMin <= 3  -> TG.red
+                                etaMin <= 10 -> TG.amber
+                                else         -> TG.green
+                            }
+                        )
                     }
                 }
             }
@@ -414,6 +469,30 @@ fun TempMetricRow(icon: String, label: String, value: String, alert: Boolean) {
         Spacer(Modifier.weight(1f))
         Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold,
             color = if (alert) Color(0xFFFF6F00) else Color(0xFF00E5FF))
+    }
+}
+
+@Composable
+private fun GamerStatCard(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    sub: String,
+    valueColor: Color
+) {
+    Box(modifier = modifier
+        .clip(RoundedCornerShape(12.dp))
+        .background(Color.White.copy(alpha = 0.05f))
+        .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+        .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(label, fontSize = 9.sp, color = TG.textDim,
+                fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp)
+            Text(value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold,
+                color = valueColor)
+            Text(sub, fontSize = 9.sp, color = TG.textSec, maxLines = 1)
+        }
     }
 }
 
