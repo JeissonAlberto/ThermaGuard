@@ -104,7 +104,7 @@ fun LegalScreen() {
                     "demanda colectiva (class action) o acción representativa.")
 
                 LegalSubtitle("Limitación de responsabilidad")
-                LegalParagraph("ThermaGuard se proporciona "tal cual" (as is), sin garantías " +
+                LegalParagraph("ThermaGuard se proporciona como es (as is), sin garantías " +
                     "expresas ni implícitas. Jasol Group no será responsable por daños directos " +
                     "o indirectos derivados del uso de la aplicación.")
 
@@ -142,7 +142,7 @@ fun LegalScreen() {
 
                 LegalSubtitle("Google Play Data Safety")
                 LegalParagraph("Declaramos todos los datos recopilados en la sección " +
-                    ""Seguridad de los datos" de Google Play, conforme a los requisitos " +
+                    "Seguridad de los datos de Google Play, conforme a los requisitos " +
                     "de Google para todas las apps publicadas.")
 
                 OutlinedButton(
