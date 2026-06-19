@@ -369,14 +369,18 @@ fun MainAppShell(
                 label = "screen"
             ) { tab ->
                 when (tab) {
-                    0  -> DashboardScreen(
-                        uiState         = uiState,
-                        onToggleMonitor  = viewModel::startMonitor,
-                        onToggleAutoMode = {},
-                        onSetMode        = { viewModel.setOperationMode(it) },
-                        pendingUpdate    = pendingUpdate,
-                        onDismissUpdate  = { viewModel.dismissUpdate() }
-                    )
+                    0  -> {
+                        val uName by viewModel.userName.collectAsState()
+                        DashboardScreen(
+                            uiState          = uiState,
+                            onToggleMonitor  = viewModel::startMonitor,
+                            onToggleAutoMode = {},
+                            onSetMode        = { viewModel.setOperationMode(it) },
+                            pendingUpdate    = pendingUpdate,
+                            onDismissUpdate  = { viewModel.dismissUpdate() },
+                            userName         = uName
+                        )
+                    }
                     1  -> DiagnosisScreen(uiState = uiState)
                     2  -> BeastModeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) })
                     3  -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) },
