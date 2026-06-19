@@ -97,6 +97,10 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         OperationMode.GAMER    ->  5_000L  // Máxima reactividad anti-throttle (S22 throttlea cada 4-6s)
     }
 
+    // Debounce: última temp que causó update de UI (evita recomposición innecesaria)
+    private var lastUiTemp    = 0f
+    private var lastUiCpuUse  = 0f
+
     init {
         observeHistory()
         startLiveReading()
@@ -146,6 +150,18 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     // Publicar en el Service para que no repita la lectura
                     ThermalMonitorService.lastSnapshot = snapshot
                     ThermalMonitorService.lastProfile  = profile
+
+                    // Debounce: solo actualizar UI si hay cambio real (evita recomposición en ciclos tranquilos)
+                    val tempDelta   = kotlin.math.abs(snapshot.batteryTemp - lastUiTemp)
+                    val cpuDelta    = kotlin.math.abs(snapshot.cpuUsage   - lastUiCpuUse)
+                    val forceUpdate = _uiState.value.isLoading || isHotNow || wasHot
+                    if (!forceUpdate && tempDelta < 0.3f && cpuDelta < 3f) {
+                        // Sin cambio relevante — saltar update de UI (ahorro ~30% recomposiciones)
+                        delay(intervalMs)
+                        continue
+                    }
+                    lastUiTemp   = snapshot.batteryTemp
+                    lastUiCpuUse = snapshot.cpuUsage
 
                     _uiState.update {
                         it.copy(
