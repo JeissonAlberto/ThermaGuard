@@ -28,6 +28,13 @@ import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
 import com.jeissonalberto.thermaguard.service.FloatingWidgetService
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 
 @Composable
 fun SettingsScreen(
@@ -37,9 +44,14 @@ fun SettingsScreen(
     onToggleWidget: (Boolean) -> Unit = {},
     telemetryEnabled: Boolean = true,
     onToggleTelemetry: (Boolean) -> Unit = {},
-    autoUpdateEnabled: Boolean = true,
-    onToggleAutoUpdate: (Boolean) -> Unit = {},
-    onCheckUpdateNow: () -> Unit = {}
+    onCheckUpdateNow: () -> Unit = {},
+    // Perfil de usuario
+    userName: String = "",
+    deviceNickname: String = "Mi S22",
+    usageProfile: String = "Gamer",
+    onSetUserName: (String) -> Unit = {},
+    onSetDeviceNickname: (String) -> Unit = {},
+    onSetUsageProfile: (String) -> Unit = {}
 ) {
     val accent = TG.blue
     val scroll = rememberScrollState()
@@ -223,6 +235,184 @@ fun SettingsScreen(
     }
 
     // Diálogo: pedir permiso de superposición
+
+            // ── PERFIL DE USUARIO ─────────────────────────────────────────────────
+            SettingsSection(title = "Perfil de usuario", icon = Icons.Default.Person, accent = accent) {
+
+                // Nombre del usuario
+                var editingName by remember { mutableStateOf(false) }
+                var nameInput   by remember(userName) { mutableStateOf(userName) }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Tu nombre",
+                        fontSize = 11.sp, color = TG.textSec, fontWeight = FontWeight.Medium)
+                    if (editingName) {
+                        OutlinedTextField(
+                            value = nameInput,
+                            onValueChange = { nameInput = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            placeholder = { Text("Ej: Jeisson", color = TG.textDim, fontSize = 13.sp) },
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Words,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = {
+                                onSetUserName(nameInput.trim())
+                                editingName = false
+                            }),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = accent,
+                                unfocusedBorderColor = TG.textDim.copy(alpha = 0.3f),
+                                focusedTextColor = TG.textPri,
+                                unfocusedTextColor = TG.textPri,
+                                cursorColor = accent
+                            ),
+                            trailingIcon = {
+                                IconButton(onClick = {
+                                    onSetUserName(nameInput.trim())
+                                    editingName = false
+                                }) {
+                                    Icon(Icons.Default.Check, null, tint = accent)
+                                }
+                            }
+                        )
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(TG.glass)
+                                .border(1.dp, TG.textDim.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
+                                .clickable { editingName = true }
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                if (userName.isEmpty()) "Toca para agregar tu nombre" else userName,
+                                fontSize = 14.sp,
+                                color = if (userName.isEmpty()) TG.textDim else TG.textPri
+                            )
+                            Icon(Icons.Default.Edit, null,
+                                tint = accent.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+
+                // Apodo del dispositivo
+                var editingDevice by remember { mutableStateOf(false) }
+                var deviceInput   by remember(deviceNickname) { mutableStateOf(deviceNickname) }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Nombre de tu dispositivo",
+                        fontSize = 11.sp, color = TG.textSec, fontWeight = FontWeight.Medium)
+                    if (editingDevice) {
+                        OutlinedTextField(
+                            value = deviceInput,
+                            onValueChange = { deviceInput = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            placeholder = { Text("Ej: Mi S22 Ultra", color = TG.textDim, fontSize = 13.sp) },
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = {
+                                onSetDeviceNickname(deviceInput.trim())
+                                editingDevice = false
+                            }),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = accent,
+                                unfocusedBorderColor = TG.textDim.copy(alpha = 0.3f),
+                                focusedTextColor = TG.textPri,
+                                unfocusedTextColor = TG.textPri,
+                                cursorColor = accent
+                            ),
+                            trailingIcon = {
+                                IconButton(onClick = {
+                                    onSetDeviceNickname(deviceInput.trim())
+                                    editingDevice = false
+                                }) { Icon(Icons.Default.Check, null, tint = accent) }
+                            }
+                        )
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(TG.glass)
+                                .border(1.dp, TG.textDim.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
+                                .clickable { editingDevice = true }
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(deviceNickname, fontSize = 14.sp, color = TG.textPri)
+                            Icon(Icons.Default.Edit, null,
+                                tint = accent.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+
+                // Perfil de uso (selector tipo chip)
+                val usageOptions = listOf("Gamer", "Trabajo", "Fotógrafo", "Casual", "Desarrollador")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Perfil de uso",
+                        fontSize = 11.sp, color = TG.textSec, fontWeight = FontWeight.Medium)
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(usageOptions) { option ->
+                            val selected = option == usageProfile
+                            Box(modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(if (selected) accent.copy(alpha = 0.2f) else TG.glass)
+                                .border(1.dp,
+                                    if (selected) accent else TG.textDim.copy(alpha = 0.2f),
+                                    RoundedCornerShape(20.dp))
+                                .clickable { onSetUsageProfile(option) }
+                                .padding(horizontal = 14.dp, vertical = 7.dp)
+                            ) {
+                                Text(option, fontSize = 12.sp,
+                                    color = if (selected) accent else TG.textSec,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── DATOS Y ACTUALIZACIONES ───────────────────────────────────────
+            SettingsSection(title = "Datos y Actualizaciones",
+                icon = Icons.Default.CloudSync, accent = accent) {
+
+                // Toggle telemetría
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text("Telemetría de rendimiento",
+                            fontSize = 13.sp, color = TG.textPri)
+                        Text("Envía datos anónimos para mejorar ThermaGuard",
+                            fontSize = 11.sp, color = TG.textSec)
+                    }
+                    Switch(
+                        checked = telemetryEnabled,
+                        onCheckedChange = onToggleTelemetry,
+                        colors = SwitchDefaults.colors(checkedThumbColor = accent)
+                    )
+                }
+
+                // Botón verificar actualizaciones ahora
+                OutlinedButton(
+                    onClick = onCheckUpdateNow,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, accent.copy(alpha = 0.4f))
+                ) {
+                    Icon(Icons.Default.Refresh, null, tint = accent,
+                        modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Verificar actualizaciones ahora",
+                        fontSize = 12.sp, color = accent)
+                }
+            }
+
     if (needsOverlayPermission) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { needsOverlayPermission = false },
