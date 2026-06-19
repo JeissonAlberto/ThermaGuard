@@ -16,6 +16,8 @@ import com.jeissonalberto.thermaguard.data.TelemetryRepository
 import com.jeissonalberto.thermaguard.data.UpdateChecker
 import com.jeissonalberto.thermaguard.service.TelemetryWorker
 import com.jeissonalberto.thermaguard.service.UpdateWorker
+import com.jeissonalberto.thermaguard.data.SiliconPhysicsEngine
+import com.jeissonalberto.thermaguard.data.PhysicsAnalysis
 
 data class ThermalUiState(
     val latest: ThermalSnapshot = ThermalSnapshot(),
@@ -29,6 +31,8 @@ data class ThermalUiState(
     val componentDiagnoses: List<ComponentDiagnosis> = emptyList(),
     val autoActionsLog: List<AutoAction> = emptyList(),
     val siliconAnalysis: SiliconAnalysis? = null,
+    val physicsAnalysis: PhysicsAnalysis? = null,   // Motor v2 — 19 leyes
+    val governorLog: List<String> = emptyList(),    // Log de acciones del governor
     val operationMode: OperationMode = OperationMode.LEARNING,
     val coolingRecs: List<CoolingRecommendation> = emptyList(),
     val sensorLogs: List<SensorLog> = emptyList(),
@@ -303,7 +307,16 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun startMonitor()              { _uiState.update { it.copy(isMonitoring = true) } }
+    fun startMonitor() {
+        _uiState.update { it.copy(isMonitoring = true) }
+        viewModelScope.launch {
+            while (_uiState.value.isMonitoring) {
+                refreshPhysicsAnalysis()
+                emergencyThrottleIfNeeded()
+                delay(10_000L) // cada 10s
+            }
+        }
+    }
     fun setAlertThreshold(t: Float) { _uiState.update { it.copy(alertThreshold = t) } }
     fun resetLearning()             { learningEngine.reset() }
     fun clearAutoLog()              { _uiState.update { it.copy(autoActionsLog = emptyList()) } }
@@ -486,6 +499,73 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun dismissUpdate()  { _pendingUpdate.value = null }
+
+    // ── Control CPU/GPU (CpuGpuGovernor) ──────────────────────────────────
+    /** Aplica análisis de física + configuración óptima de governor */
+    fun applyPhysicsGovernor() = viewModelScope.launch {
+        try {
+            val snap = _uiState.value.latest
+            val analysis = SiliconPhysicsEngine.analyze(snap)
+            val govConfig = com.jeissonalberto.thermaguard.domain.GovernorConfig(
+                name          = analysis.recommendedGovernor,
+                maxFreqGHz    = analysis.recommendedMaxFreqGHz,
+                activeCores   = when (analysis.recommendedMaxFreqGHz) {
+                    in 0.0..2.0  -> 4
+                    in 2.0..2.6  -> 6
+                    in 2.6..2.9  -> 7
+                    else         -> 8
+                },
+                gpuMaxFreqMHz = (818 * (1.0 - analysis.gpuThrottlePct / 100.0)).toInt(),
+                reason        = analysis.summaryLines.firstOrNull() ?: ""
+            )
+            val results = com.jeissonalberto.thermaguard.domain.CpuGpuGovernor.applyGovernorConfig(govConfig)
+            _uiState.update { it.copy(
+                physicsAnalysis = analysis,
+                governorLog     = results
+            )}
+        } catch (e: Exception) {
+            android.util.Log.w("ThermaGuard", "applyPhysicsGovernor: ${e.message}")
+        }
+    }
+
+    /** Throttle de emergencia si T > 52°C */
+    fun emergencyThrottleIfNeeded() = viewModelScope.launch {
+        try {
+            val temp = _uiState.value.latest.let {
+                if (it.cpuTemp > 20f) it.cpuTemp else it.batteryTemp
+            }
+            if (temp >= 52f) {
+                val results = com.jeissonalberto.thermaguard.domain.CpuGpuGovernor.emergencyThrottle()
+                _uiState.update { it.copy(governorLog = results) }
+                android.util.Log.w("ThermaGuard", "EMERGENCY THROTTLE @ ${temp}°C")
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("ThermaGuard", "emergencyThrottle: ${e.message}")
+        }
+    }
+
+    /** Desbloquea CPU/GPU al máximo para Modo Bestia */
+    fun unlockMaxPerformance() = viewModelScope.launch {
+        try {
+            val results = com.jeissonalberto.thermaguard.domain.CpuGpuGovernor.unlockMaxPerformance()
+            _uiState.update { it.copy(governorLog = results) }
+        } catch (e: Exception) {
+            android.util.Log.w("ThermaGuard", "unlockMaxPerf: ${e.message}")
+        }
+    }
+
+    /** Refresca análisis de física en cada ciclo de monitoreo */
+    fun refreshPhysicsAnalysis() = viewModelScope.launch {
+        try {
+            val snap = com.jeissonalberto.thermaguard.domain.CpuGpuGovernor.buildFullThermalSnapshot(
+                _uiState.value.latest
+            )
+            val analysis = SiliconPhysicsEngine.analyze(snap)
+            _uiState.update { it.copy(physicsAnalysis = analysis) }
+        } catch (e: Exception) {
+            android.util.Log.w("ThermaGuard", "refreshPhysics: ${e.message}")
+        }
+    }
 
     /** Activa o desactiva el envío de telemetría */
     fun setTelemetryEnabled(enabled: Boolean) {
