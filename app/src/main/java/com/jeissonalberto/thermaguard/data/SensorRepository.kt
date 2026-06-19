@@ -17,6 +17,11 @@ import java.io.File
 
 class SensorRepository(private val context: Context) {
 
+    // ── Cache de zonas térmicas (evita leer /sys cada ciclo corto) ──
+    private var zoneCacheTime: Long = 0L
+    private var zoneCacheData: Map<String, Float> = emptyMap()
+    private val ZONE_CACHE_TTL = 2_000L  // 2 segundos
+
     // Cola de logs — últimas 500 entradas (circular)
     private val _sensorLogs = ArrayDeque<SensorLog>(500)
     val sensorLogs: List<SensorLog> get() = _sensorLogs.toList()
@@ -56,7 +61,12 @@ class SensorRepository(private val context: Context) {
         val isCharging   = batteryIntent?.getIntExtra(BatteryManager.EXTRA_STATUS, 0) == BatteryManager.BATTERY_STATUS_CHARGING
 
         val thermalStatus = readThermalStatus()
-        val allZones      = readAllThermalZones()          // mapa completo tipo->temp
+        val now_ms        = System.currentTimeMillis()
+        if (now_ms - zoneCacheTime > ZONE_CACHE_TTL) {
+            zoneCacheData = readAllThermalZones()
+            zoneCacheTime = now_ms
+        }
+        val allZones      = zoneCacheData          // mapa completo tipo->temp (cacheado 2s)
         val cpuUsage      = readCpuUsage()
         val perCoreUsage  = readPerCoreUsage()
         val topApp        = getTopApp()
