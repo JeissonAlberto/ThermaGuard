@@ -16,7 +16,9 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.isActive
 
 import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.IntentFilter
+
 class ThermalMonitorService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -230,14 +232,14 @@ class ThermalMonitorService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_menu_compass)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(text)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setSilent(true)
             .setContentIntent(pendingIntent)
-            .addAction(android.R.drawable.ic_menu_compass, "Detener", stopIntent)
+            .addAction(android.R.drawable.ic_delete, "Detener", stopIntent)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
     }
