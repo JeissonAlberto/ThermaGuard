@@ -382,7 +382,17 @@ fun MainAppShell(
                     3  -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) },
                     onKillApps = { viewModel.killAppsNow() }
                 )
-                    4  -> SettingsScreen(uiState = uiState, onSetTheme = { viewModel.setAppTheme(it) }, onSetLanguage = { viewModel.setAppLanguage(it) })
+                    4  -> {
+                        val telOn  by viewModel.telemetryEnabled.collectAsState()
+                        SettingsScreen(
+                            uiState            = uiState,
+                            onSetTheme         = { viewModel.setAppTheme(it) },
+                            onSetLanguage      = { viewModel.setAppLanguage(it) },
+                            telemetryEnabled   = telOn,
+                            onToggleTelemetry  = { viewModel.setTelemetryEnabled(it) },
+                            onCheckUpdateNow   = { viewModel.checkForUpdates() }
+                        )
+                    }
                     5  -> HistoryScreen(uiState = uiState, onExportCsv = onExportCsv)
                     6  -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
                     7  -> AlertsScreen(uiState = uiState, onThresholdChange = viewModel::setAlertThreshold, onClearLog = viewModel::clearAutoLog)
