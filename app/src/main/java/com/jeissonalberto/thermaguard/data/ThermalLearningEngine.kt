@@ -709,7 +709,12 @@ class ThermalLearningEngine(context: Context) {
         avgCooldownMinutes = 0.3f * minutes + 0.7f * avgCooldownMinutes
     }
 
-    fun reset() { prefs.edit().clear().apply() }
+    /** Guarda múltiples campos en una sola transacción de SharedPreferences */
+    fun batchUpdate(block: android.content.SharedPreferences.Editor.() -> Unit) {
+        prefs.edit().apply(block).apply()
+    }
+
+        fun reset() { prefs.edit().clear().apply() }
 
 
     // ════════════════════════════════════════════════════════════════════════
