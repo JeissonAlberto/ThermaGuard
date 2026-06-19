@@ -67,6 +67,12 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     // ── Root StateFlows ───────────────────────────────────────────────
     private val _rootAvailable   = MutableStateFlow(false)
     val rootAvailable: StateFlow<Boolean> = _rootAvailable.asStateFlow()
+    // ── Actualización disponible ──────────────────────────────────────────
+    private val _pendingUpdate  = MutableStateFlow<AppUpdate?>(null)
+    val pendingUpdate: StateFlow<AppUpdate?> = _pendingUpdate.asStateFlow()
+    // ── Telemetría ────────────────────────────────────────────────────────
+    private val _telemetryOn    = MutableStateFlow(true)
+    val telemetryEnabled: StateFlow<Boolean> = _telemetryOn.asStateFlow()
 
     private val _superCoolActive = MutableStateFlow(false)
     val superCoolActive: StateFlow<Boolean> = _superCoolActive.asStateFlow()
