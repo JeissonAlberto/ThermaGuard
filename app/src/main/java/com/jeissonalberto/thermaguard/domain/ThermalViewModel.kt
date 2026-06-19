@@ -93,7 +93,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         OperationMode.LEARNING -> 60_000L  // Bajo consumo
         OperationMode.AUTO     -> 30_000L  // Balanceado
         OperationMode.ACTIVE   -> 15_000L  // Alto seguimiento
-        OperationMode.GAMER    -> 10_000L  // Máxima reactividad anti-throttle
+        OperationMode.GAMER    ->  5_000L  // Máxima reactividad anti-throttle (S22 throttlea cada 4-6s)
     }
 
     init {
@@ -186,7 +186,9 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private fun executeAutoOptimization(snap: ThermalSnapshot, profile: LearnedProfile) {
         val now = System.currentTimeMillis()
         // Cooldown inteligente: usa el tiempo promedio de enfriamiento aprendido
-        val cooldownMs = (profile.avgCooldownMinutes * 60_000f).toLong().coerceAtLeast(3 * 60_000L)
+        val cooldownMs = (profile.avgCooldownMinutes * 60_000f).toLong().coerceAtLeast(
+            if (_operationMode == OperationMode.GAMER) 2 * 60_000L else 3 * 60_000L
+        )
         if (now - lastAutoTime < cooldownMs) return
 
         val level = snap.batteryTemp.toThermalLevel()
@@ -249,7 +251,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private fun observeHistory() {
         viewModelScope.launch {
-            db.thermalDao().getHistory(120).collect { rows ->
+            db.thermalDao().getHistory(200).collect { rows ->
                 _uiState.update { it.copy(history = rows) }
             }
         }
@@ -308,7 +310,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             .filter { it.topApp.isNotEmpty() && it.batteryTemp >= 38f }
             .forEach { snap -> scores.getOrPut(snap.topApp) { mutableListOf() }.add(snap.batteryTemp) }
         return scores.map { (app, temps) -> app to temps.average().toFloat() }
-            .sortedByDescending { it.second }.take(5)
+            .sortedByDescending { it.second }.take(8)
     }
 
     // ── Alerta inteligente: no molestar si ya avisó en los últimos 10 min ─
@@ -345,7 +347,20 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     }
 
 
-    // ── Métodos Root ──────────────────────────────────────────────────
+    // ── Acciones manuales ──────────────────────────────────────────────────
+    fun killAppsNow() = viewModelScope.launch {
+        try {
+            val killed = optRepo.killBackgroundApps()
+            val freed  = optRepo.freeRam()
+            val action = AutoAction(
+                description = "Manual: cerré $killed apps • liberé ${freed}MB RAM",
+                trigger     = "Botón usuario"
+            )
+            _uiState.update { it.copy(autoActionsLog = (listOf(action) + it.autoActionsLog).take(20)) }
+        } catch (e: Exception) { android.util.Log.e("ThermaGuard", "killAppsNow: ${e.message}") }
+    }
+
+        // ── Métodos Root ──────────────────────────────────────────────────
     fun checkRoot() = viewModelScope.launch {
         try {
         _rootAvailable.value = RootEngine.isRootAvailable()
