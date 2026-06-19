@@ -13,13 +13,20 @@ import com.jeissonalberto.thermaguard.MainActivity
 import com.jeissonalberto.thermaguard.R
 import com.jeissonalberto.thermaguard.data.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.isActive
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
 
 class ThermalMonitorService : Service() {
+
+    /** Temperatura representativa: CPU > Modem > Batería */
+    private fun ThermalSnapshot.mainTemp(): Float = when {
+        cpuTemp   > 20f -> cpuTemp
+        modemTemp > 20f -> modemTemp
+        else            -> batteryTemp
+    }
+
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private lateinit var sensorRepo: SensorRepository
@@ -111,9 +118,7 @@ class ThermalMonitorService : Service() {
                 val snap = if (screenOff && lastSnapshot != null) lastSnapshot ?: ThermalSnapshot()
                            else sensorRepo.readSnapshot()
                 // learningEngine.learn solo si temperatura cambió >0.5°C o cada 10 ciclos
-                val mainT = if (snap.cpuTemp > 20f) snap.cpuTemp
-                            else if (snap.modemTemp > 20f) snap.modemTemp
-                            else snap.batteryTemp
+                val mainT = snap.mainTemp()
                 val tempChanged = kotlin.math.abs(mainT - lastKnownTemp) > 0.5f
                 if (tempChanged || learnCycle % 10 == 0) {
                     lastProfile = learningEngine.learn(snap)
@@ -123,11 +128,7 @@ class ThermalMonitorService : Service() {
                 val profile = lastProfile ?: learningEngine.learn(snap)
 
                 // Temperatura principal: CPU si disponible, si no modem, si no batería
-                val mainTemp = when {
-                    snap.cpuTemp   > 20f -> snap.cpuTemp
-                    snap.modemTemp > 20f -> snap.modemTemp
-                    else                  -> snap.batteryTemp
-                }
+                val mainTemp = snap.mainTemp()
 
                 lastRiskScore = profile.riskScore
                 lastLevel     = mainTemp.toThermalLevel()
@@ -203,11 +204,7 @@ class ThermalMonitorService : Service() {
     }
 
     private fun sendAlert(snap: ThermalSnapshot, profile: LearnedProfile) {
-        val mainTemp = when {
-            snap.cpuTemp   > 20f -> snap.cpuTemp
-            snap.modemTemp > 20f -> snap.modemTemp
-            else                  -> snap.batteryTemp
-        }
+        val mainTemp = snap.mainTemp()
         NotificationEngine.sendThermalAlert(
             context     = this,
             level       = lastLevel,
@@ -271,7 +268,7 @@ class ThermalMonitorService : Service() {
     }
 
     private fun triggerGamerCooling(snap: ThermalSnapshot) {
-        val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
+        val mainTemp = snap.mainTemp()
 
         // Ejecutar todas las intervenciones del motor de física
         com.jeissonalberto.thermaguard.domain.BeastCoolingEngine.executeAll(
