@@ -92,7 +92,8 @@ object TelemetryRepository {
                 val avgBat    = snapshots.map { it.batteryTemp }.average()
                     .takeIf { !it.isNaN() }?.let { "%.1f".format(it) } ?: "N/A"
                 val maxBat    = snapshots.maxOfOrNull { it.batteryTemp }?.let { "%.1f".format(it) } ?: "N/A"
-                val throttled = snapshots.count { it.cpuFreqMhz in 1..1000 }
+                // Throttling detectado cuando CPU usage > 90% con temp alta
+                val throttled = snapshots.count { it.cpuUsage > 90f && it.cpuTemp > 40f }
                 val sessions  = snapshots.size
                 val date      = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                     .format(Date())
