@@ -74,6 +74,17 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _telemetryOn    = MutableStateFlow(true)
     val telemetryEnabled: StateFlow<Boolean> = _telemetryOn.asStateFlow()
 
+    // ── Perfil de usuario ──────────────────────────────────────────────
+    private val _prefs by lazy {
+        getApplication<android.app.Application>().getSharedPreferences("tg_user_prefs", 0)
+    }
+    private val _userName       = MutableStateFlow("")
+    private val _deviceNickname = MutableStateFlow("Mi S22")
+    private val _usageProfile   = MutableStateFlow("Gamer")
+    val userName:       StateFlow<String> = _userName.asStateFlow()
+    val deviceNickname: StateFlow<String> = _deviceNickname.asStateFlow()
+    val usageProfile:   StateFlow<String> = _usageProfile.asStateFlow()
+
     private val _superCoolActive = MutableStateFlow(false)
     val superCoolActive: StateFlow<Boolean> = _superCoolActive.asStateFlow()
 
@@ -113,6 +124,9 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private var lastUiCpuUse  = 0f
 
     init {
+        _userName.value       = _prefs.getString("user_name", "") ?: ""
+        _deviceNickname.value = _prefs.getString("device_nickname", "Mi S22") ?: "Mi S22"
+        _usageProfile.value   = _prefs.getString("usage_profile", "Gamer") ?: "Gamer"
         observeHistory()
         startLiveReading()
         scheduleBackgroundWorkers()
