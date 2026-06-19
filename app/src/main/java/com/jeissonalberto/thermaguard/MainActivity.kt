@@ -257,6 +257,7 @@ fun MainAppShell(
         NavItem("Optimizar",   Icons.Default.Tune),
         NavItem("Ajustes",     Icons.Default.Settings),
         NavItem("Física",      Icons.Default.Science),
+        NavItem("Legal",       Icons.Default.Shield),
     )
 
     Scaffold(
@@ -419,8 +420,9 @@ fun MainAppShell(
                     6  -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
                     7  -> AlertsScreen(uiState = uiState, onThresholdChange = viewModel::setAlertThreshold, onClearLog = viewModel::clearAutoLog)
                     8  -> LogsScreen(uiState = uiState)
-                    9  -> AboutScreen()
+                    9  -> AboutScreen(onLegalClick = { selectedTab = 13 })
                     10 -> RootControlScreen(viewModel = viewModel)
+                    13 -> LegalScreen()
                     12 -> PhysicsScreen(
                         uiState              = uiState,
                         onApplyGovernor      = { viewModel.applyPhysicsGovernor() },
