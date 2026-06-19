@@ -75,6 +75,8 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
     implementation("com.airbnb.android:lottie-compose:6.4.0")
+    // WorkManager — telemetría y actualizaciones en background
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
