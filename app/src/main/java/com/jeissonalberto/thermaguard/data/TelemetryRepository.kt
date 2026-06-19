@@ -123,7 +123,7 @@ object TelemetryRepository {
                         .take(5)
                         .forEach { s ->
                             appendLine("CPU=${s.cpuTemp}°C Bat=${s.batteryTemp}°C " +
-                                "Freq=${s.cpuFreqMhz}MHz Uso=${s.cpuUsage}%")
+                                "Uso=${s.cpuUsage}%")
                         }
                     appendLine("```")
                     appendLine()
