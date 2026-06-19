@@ -383,14 +383,23 @@ fun MainAppShell(
                     onKillApps = { viewModel.killAppsNow() }
                 )
                     4  -> {
-                        val telOn  by viewModel.telemetryEnabled.collectAsState()
+                        val telOn      by viewModel.telemetryEnabled.collectAsState()
+                        val uName      by viewModel.userName.collectAsState()
+                        val devNick    by viewModel.deviceNickname.collectAsState()
+                        val uProfile   by viewModel.usageProfile.collectAsState()
                         SettingsScreen(
-                            uiState            = uiState,
-                            onSetTheme         = { viewModel.setAppTheme(it) },
-                            onSetLanguage      = { viewModel.setAppLanguage(it) },
-                            telemetryEnabled   = telOn,
-                            onToggleTelemetry  = { viewModel.setTelemetryEnabled(it) },
-                            onCheckUpdateNow   = { viewModel.checkForUpdates() }
+                            uiState              = uiState,
+                            onSetTheme           = { viewModel.setAppTheme(it) },
+                            onSetLanguage        = { viewModel.setAppLanguage(it) },
+                            telemetryEnabled     = telOn,
+                            onToggleTelemetry    = { viewModel.setTelemetryEnabled(it) },
+                            onCheckUpdateNow     = { viewModel.checkForUpdates() },
+                            userName             = uName,
+                            deviceNickname       = devNick,
+                            usageProfile         = uProfile,
+                            onSetUserName        = { viewModel.setUserName(it) },
+                            onSetDeviceNickname  = { viewModel.setDeviceNickname(it) },
+                            onSetUsageProfile    = { viewModel.setUsageProfile(it) }
                         )
                     }
                     5  -> HistoryScreen(uiState = uiState, onExportCsv = onExportCsv)
