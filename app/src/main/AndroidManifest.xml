@@ -56,6 +56,32 @@
     <!-- ══ Leer estado del teléfono (temperatura modem) ══ -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
+    <!-- ═══ PERMISOS ADICIONALES v3.9.25 — Control CPU/GPU/Hardware ═════════ -->
+    <!-- Proceso y CPU -->
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <!-- Red avanzada -->
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.NFC" />
+    <!-- Sistema y escritura segura -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
+    <uses-permission android:name="android.permission.DUMP"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.READ_LOGS"
+        tools:ignore="ProtectedPermissions" />
+    <!-- Energía y hardware -->
+    <uses-permission android:name="android.permission.DEVICE_POWER"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.HARDWARE_TEST"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+    <!-- Notificaciones y overlay ya declarados arriba -->
     <application
         android:allowBackup="true"
         android:largeHeap="true"
