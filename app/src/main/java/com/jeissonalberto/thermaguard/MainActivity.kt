@@ -162,8 +162,7 @@ data class NavItem(val label: String, val icon: ImageVector)
 @Composable
 fun ThermaGuardApp(context: Context, onStartService: () -> Unit) {
     val viewModel: ThermalViewModel = viewModel()
-    val uiState       by viewModel.uiState.collectAsState()
-    val pendingUpdate by viewModel.pendingUpdate.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     ThermaGuardTheme(appTheme = uiState.appTheme) {
 
@@ -243,8 +242,9 @@ fun MainAppShell(
     context:     Context,
     onExportCsv: () -> String,
 ) {
-    val uiState     by viewModel.uiState.collectAsState()
-    val rootAvail   by viewModel.rootAvailable.collectAsState()
+    val uiState       by viewModel.uiState.collectAsState()
+    val rootAvail     by viewModel.rootAvailable.collectAsState()
+    val pendingUpdate by viewModel.pendingUpdate.collectAsState()
     val level        = uiState.latest.batteryTemp.toThermalLevel()
     val accent       = TG.accentFor(level)
     var selectedTab  by remember { mutableStateOf(0) }
