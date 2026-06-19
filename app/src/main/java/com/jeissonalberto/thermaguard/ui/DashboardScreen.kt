@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.*
 import androidx.compose.ui.draw.scale
@@ -89,16 +90,19 @@ fun DashboardScreen(
     onSetMode: (OperationMode) -> Unit = {}
 ) {
     val snap   = uiState.latest
-    // Temperatura principal: usar cpuTemp si está disponible, sino batteryTemp
-    // Temperatura principal: CPU real > Modem > Batería (según log del device)
-    val mainTemp = when {
-        snap.cpuTemp   > 20f -> snap.cpuTemp
-        snap.modemTemp > 20f -> snap.modemTemp
-        else                  -> snap.batteryTemp
+    // derivedStateOf: sólo recalcula cuando cpuTemp/modemTemp/batteryTemp cambian realmente
+    val mainTemp by remember(snap) {
+        derivedStateOf {
+            when {
+                snap.cpuTemp   > 20f -> snap.cpuTemp
+                snap.modemTemp > 20f -> snap.modemTemp
+                else                  -> snap.batteryTemp
+            }
+        }
     }
-    val level  = mainTemp.toThermalLevel()
-    val accent = TG.accentFor(level)
-    val glow   = TG.glowFor(level)
+    val level  by remember(mainTemp) { derivedStateOf { mainTemp.toThermalLevel() } }
+    val accent by remember(level)    { derivedStateOf { TG.accentFor(level) } }
+    val glow   by remember(level)    { derivedStateOf { TG.glowFor(level) } }
     val scroll = rememberScrollState()
     var showSilicon by remember { mutableStateOf(false) }
 
