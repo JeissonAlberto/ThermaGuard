@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jeissonalberto.thermaguard.data.AppUpdate
 import com.jeissonalberto.thermaguard.data.OperationMode
 import com.jeissonalberto.thermaguard.data.toThermalLevel
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
@@ -368,7 +369,10 @@ fun MainAppShell(
                 label = "screen"
             ) { tab ->
                 when (tab) {
-                    0  -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) })
+                    0  -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) },
+                    pendingUpdate  = pendingUpdate,
+                    onDismissUpdate = { viewModel.dismissUpdate() }
+                )
                     1  -> DiagnosisScreen(uiState = uiState)
                     2  -> BeastModeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) })
                     3  -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) },
