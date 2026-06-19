@@ -29,6 +29,7 @@ class FloatingWidgetService : Service() {
     private var floatingView: View? = null
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var lastDisplayedTemp = -999f
+    private var lastDisplayedLevel: String = ""
     private var screenOn = true
 
     private val screenReceiver = object : android.content.BroadcastReceiver() {
