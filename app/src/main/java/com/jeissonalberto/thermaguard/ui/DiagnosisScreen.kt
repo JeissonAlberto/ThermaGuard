@@ -66,6 +66,10 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
                 .padding(horizontal = 18.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            val critCount = diags.count {
+                it.status == ComponentStatus.CRITICAL || it.status == ComponentStatus.HOT
+            }
+
             // Header
             Row(modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -89,10 +93,7 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
                         }
                     }
                 }
-                // Badge único: componentes en alerta — info que sólo existe aquí
-                val critCount = diags.count {
-                    it.status == ComponentStatus.CRITICAL || it.status == ComponentStatus.HOT
-                }
+                // Badge único: componentes en alerta
                 Box(modifier = Modifier.clip(RoundedCornerShape(14.dp))
                     .background(
                         (if (critCount > 0) TG.red else TG.green).copy(alpha = 0.1f)
