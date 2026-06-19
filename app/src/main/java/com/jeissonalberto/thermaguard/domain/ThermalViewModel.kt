@@ -491,4 +491,17 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // ── Perfil de usuario ──────────────────────────────────────────────────
+    fun setUserName(name: String) {
+        _userName.value = name
+        _prefs.edit().putString("user_name", name).apply()
+    }
+    fun setDeviceNickname(nick: String) {
+        _deviceNickname.value = nick
+        _prefs.edit().putString("device_nickname", nick).apply()
+    }
+    fun setUsageProfile(profile: String) {
+        _usageProfile.value = profile
+        _prefs.edit().putString("usage_profile", profile).apply()
+    }
 }
