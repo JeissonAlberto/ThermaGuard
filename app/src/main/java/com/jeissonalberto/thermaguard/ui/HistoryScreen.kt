@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -42,7 +44,7 @@ fun HistoryScreen(
     var showExportMenu by remember { mutableStateOf(false) }
     var exportFeedback by remember { mutableStateOf<String?>(null) }
 
-    var pageSize by rememberSaveable { mutableIntStateOf(50) }
+    var pageSize by rememberSaveable { mutableStateOf(50) }
     val allDisplayed = if (filterHot) history.filter { it.batteryTemp >= 40f } else history
     val displayed = allDisplayed.take(pageSize)
     val hasMore   = allDisplayed.size > pageSize
@@ -68,7 +70,7 @@ fun HistoryScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = filterHot,
-                    onClick  = { filterHot = !filterHot },
+                    onClick  = { filterHot = filterHot.not() },
                     label    = { Text("≥ 40°C", fontSize = 11.sp) },
                     leadingIcon = { Text("🔥", fontSize = 11.sp) },
                     colors = FilterChipDefaults.filterChipColors(
