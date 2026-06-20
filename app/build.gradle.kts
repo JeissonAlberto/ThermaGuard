@@ -14,8 +14,8 @@ android {
         applicationId = "com.jeissonalberto.thermaguard"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "3.8.0"
+        versionCode = 9
+        versionName = "3.9.26"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
@@ -23,12 +23,18 @@ android {
     buildTypes {
         release {
             // Firma gestionada por Google Play App Signing
-            // signingConfig se configura localmente para APKs firmados
-            isMinifyEnabled = true
+            isMinifyEnabled   = true
+            isShrinkResources = true          // elimina resources no usados
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            isMinifyEnabled   = false
+            isShrinkResources = false
+            applicationIdSuffix = ".debug"
+            versionNameSuffix   = "-debug"
         }
     }
 
@@ -39,10 +45,23 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.animation.ExperimentalAnimationApi",
+            "-Xbackend-threads=4"             // compilación paralela en CI
+        )
     }
 
     buildFeatures {
         compose = true
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "DebugProbesKt.bin"
+            excludes += "/META-INF/INDEX.LIST"
+        }
     }
 
     bundle {
@@ -51,11 +70,6 @@ android {
         abi      { enableSplit = true }
     }
 
-    bundle {
-        language {
-            enableSplit = false
-        }
-    }
 }
 
 dependencies {
