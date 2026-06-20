@@ -172,6 +172,14 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     // Umbral dinámico desde el perfil aprendido
                     val dynThreshold = profile.dynamicThreshold.takeIf { it > 35f } ?: 43f
 
+                    // Intervalo adaptativo de lectura según nivel térmico
+                    val effectiveInterval = when {
+                        snapshot.batteryTemp >= 52f -> 2_000L
+                        snapshot.batteryTemp >= 45f -> 3_000L
+                        snapshot.batteryTemp >= 38f -> 5_000L
+                        else                        -> intervalMs
+                    }
+
                     // Tracking de sesión de calor para medir cooldown
                     val isHotNow = snapshot.batteryTemp >= dynThreshold
                     if (isHotNow && !wasHot) {
@@ -192,7 +200,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     val forceUpdate = _uiState.value.isLoading || isHotNow || wasHot
                     if (!forceUpdate && tempDelta < 0.3f && cpuDelta < 3f) {
                         // Sin cambio relevante — saltar update de UI (ahorro ~30% recomposiciones)
-                        delay(intervalMs)
+                        delay(effectiveInterval)
                         continue
                     }
                     lastUiTemp   = snapshot.batteryTemp
@@ -309,13 +317,35 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // Flag para evitar physics overlapping
+    private var physicsRunning = false
+
     fun startMonitor() {
         _uiState.update { it.copy(isMonitoring = true) }
         viewModelScope.launch {
             while (_uiState.value.isMonitoring) {
-                refreshPhysicsAnalysis()
-                emergencyThrottleIfNeeded()
-                delay(10_000L) // cada 10s
+                val temp = _uiState.value.latest.let {
+                    if (it.cpuTemp > 20f) it.cpuTemp else it.batteryTemp
+                }
+                // Physics solo si no está corriendo otro ciclo
+                if (!physicsRunning) {
+                    physicsRunning = true
+                    try {
+                        refreshPhysicsAnalysis()
+                        // Throttle de emergencia solo en zona caliente (ahorra CPU en frio)
+                        if (temp >= 48f) emergencyThrottleIfNeeded()
+                    } finally {
+                        physicsRunning = false
+                    }
+                }
+                // Intervalo adaptativo: menos frecuente si temperatura es baja
+                val physicsInterval = when {
+                    temp >= 52f -> 5_000L   // crítico — cada 5s
+                    temp >= 45f -> 10_000L  // caliente — cada 10s
+                    temp >= 38f -> 20_000L  // tibio — cada 20s
+                    else        -> 45_000L  // frío — cada 45s (ahorra batería)
+                }
+                delay(physicsInterval)
             }
         }
     }
