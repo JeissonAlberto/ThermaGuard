@@ -234,6 +234,26 @@ fun ThermaGuardApp(context: Context, onStartService: () -> Unit) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  TABS — índices únicos y consistentes
+//  BARRA PRINCIPAL (visible): 0-4
+//  MENÚ "MÁS"               : 5-11
+//  SUBPANTALLAS (sin tab)   : 12=Legal (desde AboutScreen)
+// ─────────────────────────────────────────────────────────────────────────────
+private const val TAB_DASHBOARD  = 0
+private const val TAB_DIAGNOSIS  = 1
+private const val TAB_BEAST      = 2
+private const val TAB_OPTIMIZE   = 3
+private const val TAB_SETTINGS   = 4
+private const val TAB_HISTORY    = 5
+private const val TAB_STATS      = 6
+private const val TAB_ALERTS     = 7
+private const val TAB_LOGS       = 8
+private const val TAB_ABOUT      = 9
+private const val TAB_ROOT       = 10
+private const val TAB_PHYSICS    = 11
+private const val TAB_LEGAL      = 12   // subpantalla, no aparece en nav
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  SHELL PRINCIPAL — Bottom Nav + Contenido
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
@@ -245,112 +265,137 @@ fun MainAppShell(
     val uiState       by viewModel.uiState.collectAsState()
     val rootAvail     by viewModel.rootAvailable.collectAsState()
     val pendingUpdate by viewModel.pendingUpdate.collectAsState()
-    val level        = uiState.latest.batteryTemp.toThermalLevel()
-    val accent       = TG.accentFor(level)
-    var selectedTab  by remember { mutableStateOf(0) }
-    var showMoreMenu by remember { mutableStateOf(false) }
+    val level         = uiState.latest.batteryTemp.toThermalLevel()
+    val accent        = TG.accentFor(level)
+    var selectedTab   by remember { mutableStateOf(TAB_DASHBOARD) }
+    var showMoreMenu  by remember { mutableStateOf(false) }
 
-    val navItems = listOf(
+    // Barra principal — solo 5 tabs siempre visibles
+    val mainTabs = listOf(
         NavItem("Inicio",      Icons.Default.Home),
         NavItem("Diagnóstico", Icons.Default.Science),
         NavItem("Bestia",      Icons.Default.Bolt),
         NavItem("Optimizar",   Icons.Default.Tune),
         NavItem("Ajustes",     Icons.Default.Settings),
-        NavItem("Física",      Icons.Default.Science),
-        NavItem("Legal",       Icons.Default.Shield),
     )
+    // Menú "Más"
+    val moreTabs = buildList {
+        add(Triple(TAB_HISTORY, "Historial",  Icons.Default.History))
+        add(Triple(TAB_STATS,   "Estadísticas", Icons.Default.BarChart))
+        add(Triple(TAB_ALERTS,  "Alertas",    Icons.Default.Notifications))
+        add(Triple(TAB_LOGS,    "Registros",  Icons.Default.Terminal))
+        add(Triple(TAB_PHYSICS, "Física",     Icons.Default.Science))
+        add(Triple(TAB_ABOUT,   "Acerca de",  Icons.Default.Info))
+        if (rootAvail) add(Triple(TAB_ROOT, "Root ⚡", Icons.Default.Security))
+    }
+    val selectedInMore = selectedTab in moreTabs.map { it.first }
 
     Scaffold(
         containerColor = TG.bg,
         bottomBar = {
-            Column {
-                // Barra principal de 5 tabs
-                Box(
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(TG.bg)
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(TG.bg)
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0xFF0D1520))
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment     = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(26.dp))
-                            .background(Color(0x16FFFFFF))
-                            .padding(horizontal = 6.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment     = Alignment.CenterVertically
-                    ) {
-                        navItems.forEachIndexed { idx, item ->
-                            val selected   = selectedTab == idx
-                            val iconTint   = if (selected) accent else TG.textSec
-                            val showBadge  = idx == 2 && uiState.operationMode == OperationMode.GAMER
+                    // ── 5 tabs principales ────────────────────────────────
+                    mainTabs.forEachIndexed { idx, item ->
+                        val selected  = selectedTab == idx
+                        val iconTint  = if (selected) accent else TG.textSec
+                        val showBadge = idx == TAB_BEAST && uiState.operationMode == OperationMode.GAMER
 
-                            Box(
-                                modifier        = Modifier.weight(1f),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                IconButton(onClick = { selectedTab = idx }) {
-                                    Box(contentAlignment = Alignment.TopEnd) {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                        Box(
+                            modifier         = Modifier.weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            IconButton(onClick = { selectedTab = idx }) {
+                                Box(contentAlignment = Alignment.TopEnd) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(if (selected) accent.copy(alpha = 0.18f) else Color.Transparent)
+                                                .padding(horizontal = 10.dp, vertical = 5.dp)
                                         ) {
-                                            val pad = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                                            if (selected) {
-                                                Box(modifier = Modifier.clip(RoundedCornerShape(14.dp))
-                                                    .background(accent.copy(alpha = 0.15f)).then(pad)) {
-                                                    Icon(item.icon, null, tint = iconTint, modifier = Modifier.size(20.dp))
-                                                }
-                                            } else {
-                                                Box(modifier = pad) {
-                                                    Icon(item.icon, null, tint = iconTint, modifier = Modifier.size(20.dp))
-                                                }
-                                            }
-                                            Text(item.label, fontSize = 9.sp,
-                                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                                color = iconTint, letterSpacing = 0.3.sp)
+                                            Icon(
+                                                item.icon, null,
+                                                tint     = iconTint,
+                                                modifier = Modifier.size(20.dp)
+                                            )
                                         }
-                                        if (showBadge) {
-                                            Box(modifier = Modifier.size(8.dp).clip(RoundedCornerShape(4.dp))
-                                                .background(accent).offset(x = 2.dp, y = (-2).dp))
-                                        }
+                                        Text(
+                                            item.label,
+                                            fontSize   = 9.sp,
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                            color      = iconTint,
+                                            letterSpacing = 0.3.sp
+                                        )
+                                    }
+                                    if (showBadge) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(accent)
+                                                .offset(x = 2.dp, y = (-2).dp)
+                                        )
                                     }
                                 }
                             }
                         }
+                    }
 
-                        // Botón "Más"
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            IconButton(onClick = { showMoreMenu = !showMoreMenu }) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                    Icon(Icons.Default.MoreHoriz, null,
-                                        tint = if (selectedTab >= 5) accent else TG.textSec,
-                                        modifier = Modifier.size(20.dp))
-                                    Text("Más", fontSize = 9.sp,
-                                        color = if (selectedTab >= 5) accent else TG.textSec,
-                                        fontWeight = if (selectedTab >= 5) FontWeight.Bold else FontWeight.Normal)
-                                }
-                            }
-                            DropdownMenu(
-                                expanded = showMoreMenu,
-                                onDismissRequest = { showMoreMenu = false },
-                                modifier = Modifier.background(Color(0xFF0D1520))
+                    // ── Botón "Más" ───────────────────────────────────────
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        IconButton(onClick = { showMoreMenu = !showMoreMenu }) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
                             ) {
-                                (listOf(
-                                    Triple(5, "Historial", Icons.Default.History),
-                                    Triple(6, "Stats",     Icons.Default.BarChart),
-                                    Triple(7, "Alertas",   Icons.Default.Notifications),
-                                    Triple(8, "Logs",      Icons.Default.Terminal),
-                                    Triple(9, "Acerca",    Icons.Default.Info),
-                                ) + (if (rootAvail) listOf(Triple(10, "Root ⚡", Icons.Default.Security)) else emptyList())
-                                ).forEach { (tabIdx, label, icon) ->
-                                    DropdownMenuItem(
-                                        text        = { Text(label, color = TG.textPri, fontSize = 13.sp) },
-                                        leadingIcon = { Icon(icon, null, tint = accent, modifier = Modifier.size(18.dp)) },
-                                        onClick     = { selectedTab = tabIdx; showMoreMenu = false }
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(if (selectedInMore) accent.copy(alpha = 0.18f) else Color.Transparent)
+                                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.MoreHoriz, null,
+                                        tint     = if (selectedInMore) accent else TG.textSec,
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
+                                Text(
+                                    "Más",
+                                    fontSize   = 9.sp,
+                                    color      = if (selectedInMore) accent else TG.textSec,
+                                    fontWeight = if (selectedInMore) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                        DropdownMenu(
+                            expanded          = showMoreMenu,
+                            onDismissRequest  = { showMoreMenu = false },
+                            modifier          = Modifier.background(Color(0xFF0D1520))
+                        ) {
+                            moreTabs.forEach { (tabIdx, label, icon) ->
+                                DropdownMenuItem(
+                                    text        = { Text(label, color = TG.textPri, fontSize = 13.sp) },
+                                    leadingIcon = { Icon(icon, null, tint = accent, modifier = Modifier.size(18.dp)) },
+                                    onClick     = { selectedTab = tabIdx; showMoreMenu = false }
+                                )
                             }
                         }
                     }
@@ -363,15 +408,15 @@ fun MainAppShell(
                 targetState = selectedTab,
                 transitionSpec = {
                     val dir = if (targetState > initialState) 1 else -1
-                    (slideInHorizontally(tween(280, easing = EaseOutCubic)) { dir * it / 3 } +
-                     fadeIn(tween(280))) togetherWith
-                    (slideOutHorizontally(tween(220, easing = EaseInCubic)) { -dir * it / 3 } +
-                     fadeOut(tween(220)))
+                    (slideInHorizontally(tween(260, easing = EaseOutCubic)) { dir * it / 3 } +
+                     fadeIn(tween(260))) togetherWith
+                    (slideOutHorizontally(tween(200, easing = EaseInCubic)) { -dir * it / 3 } +
+                     fadeOut(tween(200)))
                 },
                 label = "screen"
             ) { tab ->
                 when (tab) {
-                    0  -> {
+                    TAB_DASHBOARD -> {
                         val uName by viewModel.userName.collectAsState()
                         DashboardScreen(
                             uiState          = uiState,
@@ -383,8 +428,8 @@ fun MainAppShell(
                             userName         = uName
                         )
                     }
-                    1  -> DiagnosisScreen(uiState = uiState)
-                    2  -> BeastModeScreen(
+                    TAB_DIAGNOSIS -> DiagnosisScreen(uiState = uiState)
+                    TAB_BEAST     -> BeastModeScreen(
                         uiState   = uiState,
                         onSetMode = {
                             viewModel.setOperationMode(it)
@@ -393,44 +438,54 @@ fun MainAppShell(
                             else viewModel.applyPhysicsGovernor()
                         }
                     )
-                    3  -> OptimizeScreen(uiState = uiState, onSetMode = { viewModel.setOperationMode(it) },
-                    onKillApps = { viewModel.killAppsNow() }
-                )
-                    4  -> {
-                        val telOn      by viewModel.telemetryEnabled.collectAsState()
-                        val uName      by viewModel.userName.collectAsState()
-                        val devNick    by viewModel.deviceNickname.collectAsState()
-                        val uProfile   by viewModel.usageProfile.collectAsState()
+                    TAB_OPTIMIZE  -> OptimizeScreen(
+                        uiState    = uiState,
+                        onSetMode  = { viewModel.setOperationMode(it) },
+                        onKillApps = { viewModel.killAppsNow() }
+                    )
+                    TAB_SETTINGS  -> {
+                        val telOn   by viewModel.telemetryEnabled.collectAsState()
+                        val uName   by viewModel.userName.collectAsState()
+                        val devNick by viewModel.deviceNickname.collectAsState()
+                        val uProf   by viewModel.usageProfile.collectAsState()
                         SettingsScreen(
-                            uiState              = uiState,
-                            onSetTheme           = { viewModel.setAppTheme(it) },
-                            onSetLanguage        = { viewModel.setAppLanguage(it) },
-                            telemetryEnabled     = telOn,
-                            onToggleTelemetry    = { viewModel.setTelemetryEnabled(it) },
-                            onCheckUpdateNow     = { viewModel.checkForUpdates() },
-                            userName             = uName,
-                            deviceNickname       = devNick,
-                            usageProfile         = uProfile,
-                            onSetUserName        = { viewModel.setUserName(it) },
-                            onSetDeviceNickname  = { viewModel.setDeviceNickname(it) },
-                            onSetUsageProfile    = { viewModel.setUsageProfile(it) }
+                            uiState             = uiState,
+                            onSetTheme          = { viewModel.setAppTheme(it) },
+                            onSetLanguage       = { viewModel.setAppLanguage(it) },
+                            telemetryEnabled    = telOn,
+                            onToggleTelemetry   = { viewModel.setTelemetryEnabled(it) },
+                            onCheckUpdateNow    = { viewModel.checkForUpdates() },
+                            userName            = uName,
+                            deviceNickname      = devNick,
+                            usageProfile        = uProf,
+                            onSetUserName       = { viewModel.setUserName(it) },
+                            onSetDeviceNickname = { viewModel.setDeviceNickname(it) },
+                            onSetUsageProfile   = { viewModel.setUsageProfile(it) }
                         )
                     }
-                    5  -> HistoryScreen(uiState = uiState, onExportCsv = onExportCsv)
-                    6  -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
-                    7  -> AlertsScreen(uiState = uiState, onThresholdChange = viewModel::setAlertThreshold, onClearLog = viewModel::clearAutoLog)
-                    8  -> LogsScreen(uiState = uiState)
-                    9  -> AboutScreen(onLegalClick = { selectedTab = 13 })
-                    10 -> RootControlScreen(viewModel = viewModel)
-                    13 -> LegalScreen()
-                    12 -> PhysicsScreen(
-                        uiState              = uiState,
-                        onApplyGovernor      = { viewModel.applyPhysicsGovernor() },
-                        onEmergencyThrottle  = { viewModel.emergencyThrottleIfNeeded() },
-                        onUnlockMaxPerf      = { viewModel.unlockMaxPerformance() }
+                    TAB_HISTORY -> HistoryScreen(uiState = uiState, onExportCsv = onExportCsv)
+                    TAB_STATS   -> StatsScreen(uiState = uiState, onResetLearning = viewModel::resetLearning)
+                    TAB_ALERTS  -> AlertsScreen(
+                        uiState           = uiState,
+                        onThresholdChange = viewModel::setAlertThreshold,
+                        onClearLog        = viewModel::clearAutoLog
                     )
-                    11 -> ThermalOptimizationScreen(uiState = uiState)
-                    else -> DashboardScreen(uiState = uiState, onToggleMonitor = viewModel::startMonitor, onToggleAutoMode = {}, onSetMode = { viewModel.setOperationMode(it) })
+                    TAB_LOGS    -> LogsScreen(uiState = uiState)
+                    TAB_ABOUT   -> AboutScreen(onLegalClick = { selectedTab = TAB_LEGAL })
+                    TAB_ROOT    -> RootControlScreen(viewModel = viewModel)
+                    TAB_PHYSICS -> PhysicsScreen(
+                        uiState             = uiState,
+                        onApplyGovernor     = { viewModel.applyPhysicsGovernor() },
+                        onEmergencyThrottle = { viewModel.emergencyThrottleIfNeeded() },
+                        onUnlockMaxPerf     = { viewModel.unlockMaxPerformance() }
+                    )
+                    TAB_LEGAL   -> LegalScreen()
+                    else        -> DashboardScreen(
+                        uiState          = uiState,
+                        onToggleMonitor  = viewModel::startMonitor,
+                        onToggleAutoMode = {},
+                        onSetMode        = { viewModel.setOperationMode(it) }
+                    )
                 }
             }
         }
