@@ -20,7 +20,18 @@ class SensorRepository(private val context: Context) {
     // ── Cache de zonas térmicas (evita leer /sys cada ciclo corto) ──
     private var zoneCacheTime: Long = 0L
     private var zoneCacheData: Map<String, Float> = emptyMap()
-    private val ZONE_CACHE_TTL = 2_000L  // 2 segundos
+    // TTL adaptativo: se ajusta externamente según temperatura actual
+    var ZONE_CACHE_TTL = 3_000L  // 3s por defecto (era 2s)
+
+    /** Ajusta el TTL del cache según nivel térmico para reducir I/O en estado frío */
+    fun adaptCacheTtl(tempC: Float) {
+        ZONE_CACHE_TTL = when {
+            tempC >= 52f -> 1_500L   // crítico — datos frescos cada 1.5s
+            tempC >= 45f -> 2_500L   // caliente — 2.5s
+            tempC >= 38f -> 4_000L   // tibio — 4s
+            else         -> 8_000L   // frío — 8s (mínimo I/O)
+        }
+    }
 
     // Cola de logs — últimas 500 entradas (circular)
     private val _sensorLogs = ArrayDeque<SensorLog>(500)
@@ -54,6 +65,11 @@ class SensorRepository(private val context: Context) {
     }
 
     private suspend fun readSnapshotInternal(): ThermalSnapshot = withContext(Dispatchers.IO) {
+        // Adaptar TTL del cache según última temperatura conocida
+        if (zoneCacheData.isNotEmpty()) {
+            val lastTemp = zoneCacheData.values.maxOrNull() ?: 0f
+            if (lastTemp > 0f) adaptCacheTtl(lastTemp)
+        }
         val batteryIntent = try { context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)) } catch (_: Exception) { null }
 
         val batteryTemp  = (batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0) / 10f
