@@ -32,7 +32,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Compilar APK Debug
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --info 2>&1 | tail -200
 
       - name: Compilar AAB Release (sin firma — para Play Store App Signing)
         run: ./gradlew bundleRelease -x lintRelease --stacktrace
