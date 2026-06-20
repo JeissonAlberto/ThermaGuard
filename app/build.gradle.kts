@@ -14,8 +14,8 @@ android {
         applicationId = "com.jeissonalberto.thermaguard"
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "3.9.26"
+        versionCode = 10
+        versionName = "3.9.27"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
@@ -47,8 +47,7 @@ android {
         jvmTarget = "17"
         freeCompilerArgs += listOf(
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-opt-in=androidx.compose.animation.ExperimentalAnimationApi",
-            "-Xbackend-threads=4"             // compilación paralela en CI
+            "-opt-in=androidx.compose.animation.ExperimentalAnimationApi"
         )
     }
 
