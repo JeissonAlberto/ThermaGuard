@@ -137,8 +137,11 @@ fun DashboardScreen(
             HeaderBar(uiState = uiState, accent = accent, userName = userName)
 
             // ── AVATAR INTERACTIVO ───────────────────────────────────────
-            AvatarCard(level = level, temp = mainTemp,
-                modifier = Modifier.fillMaxWidth())
+            ThermaAvatar(
+                level    = level,
+                temp     = mainTemp,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
 
             // ── HERO: temperatura grande + estado ────────────────────────
             TempHeroCard(snap = snap, mainTemp = mainTemp, level = level, accent = accent, uiState = uiState)
