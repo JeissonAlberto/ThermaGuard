@@ -206,6 +206,7 @@ fun LogsScreen(uiState: ThermalUiState) {
 
 @Composable
 fun LogEntryCard(log: SensorLog, fmt: SimpleDateFormat) {
+    val tg = LocalTgColors.current
     val color = logTagColor(log.tag)
     val ts = fmt.format(Date(log.timestamp))
     Column(
