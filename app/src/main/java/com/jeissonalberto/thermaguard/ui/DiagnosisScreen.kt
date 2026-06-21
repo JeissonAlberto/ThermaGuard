@@ -185,6 +185,7 @@ fun DiagnosisScreen(uiState: ThermalUiState) {
 // ─── RADAR ────────────────────────────────────────────────────────────────────
 @Composable
 fun ComponentRadar(diags: List<ComponentDiagnosis>, accent: Color) {
+    val tg = LocalTgColors.current
     Column(modifier = Modifier.fillMaxWidth()
         .clip(RoundedCornerShape(20.dp)).background(tg.glass)
         .border(1.dp, tg.glassBorder, RoundedCornerShape(20.dp))
@@ -258,6 +259,7 @@ fun ComponentRadar(diags: List<ComponentDiagnosis>, accent: Color) {
 
 @Composable
 fun LegendDot(color: Color, label: String) {
+    val tg = LocalTgColors.current
     Row(verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(3.dp)) {
         Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(color))
@@ -268,6 +270,7 @@ fun LegendDot(color: Color, label: String) {
 // ─── CARD COMPACTO (grid) ────────────────────────────────────────────────────
 @Composable
 fun ComponentCardCompact(diag: ComponentDiagnosis, modifier: Modifier = Modifier) {
+    val tg = LocalTgColors.current
     val c = diag.heatColor
     val scoreAnim by animateFloatAsState(diag.heatScore, tween(800, easing = EaseOutCubic), label = "sc")
     Column(modifier = modifier
@@ -299,6 +302,7 @@ fun ComponentCardCompact(diag: ComponentDiagnosis, modifier: Modifier = Modifier
 // ─── CARD LISTA ──────────────────────────────────────────────────────────────
 @Composable
 fun ComponentCard(diag: ComponentDiagnosis) {
+    val tg = LocalTgColors.current
     val c = diag.heatColor
     val scoreAnim by animateFloatAsState(diag.heatScore, tween(800, easing = EaseOutCubic), label = "sca")
     Row(modifier = Modifier.fillMaxWidth()
@@ -339,6 +343,7 @@ fun ComponentCard(diag: ComponentDiagnosis) {
 // ─── TOP APP ─────────────────────────────────────────────────────────────────
 @Composable
 fun TopAppCard(appName: String, cpuPct: Float) {
+    val tg = LocalTgColors.current
     val c = when { cpuPct > 75f -> TG.red; cpuPct > 45f -> TG.amber; else -> TG.teal }
     val barAnim by animateFloatAsState(cpuPct / 100f, tween(700, easing = EaseOutCubic), label = "b")
     Row(modifier = Modifier.fillMaxWidth()
