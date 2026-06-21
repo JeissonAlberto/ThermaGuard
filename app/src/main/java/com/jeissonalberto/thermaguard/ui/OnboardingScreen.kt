@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 data class OnboardingPage(
     val emoji: String,
@@ -43,13 +44,14 @@ private val PAGES = listOf(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(onFinish: () -> Unit) {
+    val tg = LocalTgColors.current
     val pager  = rememberPagerState { PAGES.size }
     val scope  = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TG.bg)
+            .background(tg.bg)
     ) {
         // Fondo animado con color del slide actual
         val accentColor = PAGES[pager.currentPage].accent
@@ -73,7 +75,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 contentAlignment = Alignment.CenterEnd
             ) {
                 TextButton(onClick = onFinish) {
-                    Text("Omitir", color = TG.textSec, fontSize = 13.sp)
+                    Text("Omitir", color = tg.textSec, fontSize = 13.sp)
                 }
             }
 
@@ -104,7 +106,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                                 .width(if (isActive) 24.dp else 6.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (isActive) PAGES[pager.currentPage].accent else TG.textDim
+                                    if (isActive) PAGES[pager.currentPage].accent else tg.textDim
                                 )
                                 .animateContentSize(tween(300))
                         )
@@ -175,7 +177,7 @@ private fun OnboardingPageContent(page: OnboardingPage) {
             page.title,
             fontSize    = 26.sp,
             fontWeight  = FontWeight.ExtraBold,
-            color       = TG.textPri,
+            color       = tg.textPri,
             textAlign   = TextAlign.Center,
             lineHeight  = 32.sp
         )
@@ -185,7 +187,7 @@ private fun OnboardingPageContent(page: OnboardingPage) {
         Text(
             page.body,
             fontSize    = 15.sp,
-            color       = TG.textSec,
+            color       = tg.textSec,
             textAlign   = TextAlign.Center,
             lineHeight  = 22.sp
         )
