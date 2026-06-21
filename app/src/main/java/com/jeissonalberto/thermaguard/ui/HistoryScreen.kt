@@ -192,6 +192,7 @@ fun HistoryScreen(
 
 @Composable
 private fun HistStatItem(label: String, value: String, color: Color) {
+    val tg = LocalTgColors.current
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, fontSize = 10.sp, color = tg.textDim, letterSpacing = 0.5.sp)
         Text(value, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = color)
@@ -200,6 +201,7 @@ private fun HistStatItem(label: String, value: String, color: Color) {
 
 @Composable
 private fun HistoryRowCard(snap: ThermalSnapshot, sdf: SimpleDateFormat) {
+    val tg = LocalTgColors.current
     val level  = snap.batteryTemp.toThermalLevel()
     val accent = TG.accentFor(level)
     Row(
@@ -280,6 +282,7 @@ private fun shareFile(context: Context, file: File, mimeType: String) {
 // Mantener compatibilidad con llamadas legacy desde MainActivity que usan HistoryScreen(history = ...)
 @Composable
 fun HistoryScreen(history: List<ThermalSnapshot>) {
+    val tg = LocalTgColors.current
     HistoryScreen(
         uiState      = com.jeissonalberto.thermaguard.domain.ThermalUiState(history = history),
         onExportCsv  = { "" }
