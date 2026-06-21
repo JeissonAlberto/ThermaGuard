@@ -146,6 +146,7 @@ fun AlertsScreen(
 
 @Composable
 fun ActionLogCard(action: AutoAction) {
+    val tg = LocalTgColors.current
     val sdf = remember { SimpleDateFormat("HH:mm · dd/MM", Locale.getDefault()) }
     val isWarning = action.description.startsWith("⚠️")
     val color = if (isWarning) TG.amber else TG.green
@@ -180,6 +181,7 @@ fun ActionLogCard(action: AutoAction) {
 
 @Composable
 fun EmptyLogState() {
+    val tg = LocalTgColors.current
     Box(
         modifier = Modifier.fillMaxWidth().height(200.dp),
         contentAlignment = Alignment.Center
