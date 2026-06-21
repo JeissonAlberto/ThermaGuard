@@ -24,9 +24,11 @@ import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
 import kotlin.math.roundToInt
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 @Composable
 fun StatsScreen(uiState: ThermalUiState, onResetLearning: () -> Unit) {
+    val tg = LocalTgColors.current
     val context = LocalContext.current
     val scroll  = rememberScrollState()
     val mainTemp by remember(uiState.latest) { derivedStateOf {
@@ -36,7 +38,7 @@ fun StatsScreen(uiState: ThermalUiState, onResetLearning: () -> Unit) {
     val accent  by remember(level)    { derivedStateOf { TG.accentFor(level) } }
     val profile = uiState.profile
 
-    Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(tg.bg)) {
         // Orb de fondo
         Box(modifier = Modifier
             .size(300.dp).align(Alignment.TopEnd)
@@ -54,12 +56,12 @@ fun StatsScreen(uiState: ThermalUiState, onResetLearning: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
                     Text("Estadísticas", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold,
-                        color = TG.textPri, letterSpacing = (-0.8).sp)
+                        color = tg.textPri, letterSpacing = (-0.8).sp)
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Box(modifier = Modifier.size(5.dp).clip(CircleShape).background(accent))
                         Text("Motor v5  ·  Análisis de Moore", fontSize = 10.sp,
-                            color = TG.textDim, letterSpacing = 0.3.sp)
+                            color = tg.textDim, letterSpacing = 0.3.sp)
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -96,12 +98,12 @@ fun StatsScreen(uiState: ThermalUiState, onResetLearning: () -> Unit) {
                     Box(
                         modifier = Modifier.size(38.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(TG.glass)
-                            .border(1.dp, TG.glassBorder, RoundedCornerShape(12.dp))
+                            .background(tg.glass)
+                            .border(1.dp, tg.glassBorder, RoundedCornerShape(12.dp))
                             .clickable { onResetLearning() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Refresh, null, tint = TG.textDim, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Refresh, null, tint = tg.textDim, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -110,7 +112,7 @@ fun StatsScreen(uiState: ThermalUiState, onResetLearning: () -> Unit) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 val snap = uiState.latest
                 StatMini("Temp actual", "${snap.batteryTemp.toInt()}°C", TG.accentFor(level), Modifier.weight(1f))
-                StatMini("Lecturas", "${uiState.history.size}", TG.blue, Modifier.weight(1f))
+                StatMini("Lecturas", "${uiState.history.size}", tg.blue, Modifier.weight(1f))
                 StatMini("Riesgo", "${profile?.riskScore ?: 0}%",
                     if ((profile?.riskScore ?: 0) > 50) TG.red else TG.green, Modifier.weight(1f))
             }
@@ -146,14 +148,14 @@ fun StatMini(label: String, value: String, color: Color, modifier: Modifier) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(TG.glass)
+            .background(tg.glass)
             .border(1.dp, color.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
             .padding(vertical = 10.dp, horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         Text(value, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = color)
-        Text(label, fontSize = 9.sp, color = TG.textSec, textAlign = TextAlign.Center)
+        Text(label, fontSize = 9.sp, color = tg.textSec, textAlign = TextAlign.Center)
     }
 }
 
@@ -163,13 +165,13 @@ fun TempChart24h(history: List<ThermalSnapshot>, accent: Color) {
     if (history.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxWidth().height(120.dp)
-                .clip(RoundedCornerShape(16.dp)).background(TG.glass),
+                .clip(RoundedCornerShape(16.dp)).background(tg.glass),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("El historial aparecera cuando el motor lleve activo unos minutos",
-                    fontSize = 11.sp, color = TG.textDim,
+                    fontSize = 11.sp, color = tg.textDim,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 16.dp))
             }
@@ -186,8 +188,8 @@ fun TempChart24h(history: List<ThermalSnapshot>, accent: Color) {
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
-            .border(1.dp, TG.glassBorder, RoundedCornerShape(20.dp))
+            .background(tg.glass)
+            .border(1.dp, tg.glassBorder, RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -195,7 +197,7 @@ fun TempChart24h(history: List<ThermalSnapshot>, accent: Color) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.Timeline, null, tint = accent, modifier = Modifier.size(16.dp))
             Text("Temperatura últimas 24h", fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                fontWeight = FontWeight.SemiBold, color = tg.textPri)
             Spacer(Modifier.weight(1f))
             Box(modifier = Modifier.clip(RoundedCornerShape(8.dp))
                 .background(accent.copy(alpha = 0.12f))
@@ -245,9 +247,9 @@ fun TempChart24h(history: List<ThermalSnapshot>, accent: Color) {
             drawCircle(accent, 5f, Offset(lx, ly))
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("${minTemp.toInt()}°", fontSize = 9.sp, color = TG.textDim)
+            Text("${minTemp.toInt()}°", fontSize = 9.sp, color = tg.textDim)
             Text("43° zona riesgo", fontSize = 9.sp, color = TG.red.copy(alpha = 0.6f))
-            Text("${maxTemp.toInt()}°", fontSize = 9.sp, color = TG.textDim)
+            Text("${maxTemp.toInt()}°", fontSize = 9.sp, color = tg.textDim)
         }
     }
 }
@@ -258,12 +260,12 @@ fun AppRankingCard(ranking: List<Pair<String, Float>>) {
     if (ranking.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp)).background(TG.glass)
+                .clip(RoundedCornerShape(16.dp)).background(tg.glass)
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
             Text("Sin datos de apps aun — monitorea por unos minutos",
-                fontSize = 11.sp, color = TG.textDim,
+                fontSize = 11.sp, color = tg.textDim,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         }
         return
@@ -273,8 +275,8 @@ fun AppRankingCard(ranking: List<Pair<String, Float>>) {
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
-            .border(1.dp, TG.glassBorder, RoundedCornerShape(20.dp))
+            .background(tg.glass)
+            .border(1.dp, tg.glassBorder, RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -282,7 +284,7 @@ fun AppRankingCard(ranking: List<Pair<String, Float>>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.Whatshot, null, tint = TG.amber, modifier = Modifier.size(16.dp))
             Text("Apps que más calientan", fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                fontWeight = FontWeight.SemiBold, color = tg.textPri)
         }
         ranking.take(5).forEachIndexed { idx, (app, avgTemp) ->
             val barColor = when {
@@ -303,11 +305,11 @@ fun AppRankingCard(ranking: List<Pair<String, Float>>) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(if (isTop) "🔥" else "${idx + 1}",
-                    fontSize = if (isTop) 16.sp else 11.sp, color = TG.textDim,
+                    fontSize = if (isTop) 16.sp else 11.sp, color = tg.textDim,
                     modifier = Modifier.width(18.dp))
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text(app, fontSize = 12.sp, fontWeight = if (isTop) FontWeight.Bold else FontWeight.Normal,
-                        color = TG.textPri)
+                        color = tg.textPri)
                     Box(modifier = Modifier.fillMaxWidth().height(3.dp)
                         .clip(RoundedCornerShape(2.dp))
                         .background(Color.White.copy(alpha = 0.07f))) {
@@ -328,8 +330,8 @@ fun HourlyProfileCard(hourlyProfile: List<HourlyDataPoint>, accent: Color) {
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
-            .border(1.dp, TG.glassBorder, RoundedCornerShape(20.dp))
+            .background(tg.glass)
+            .border(1.dp, tg.glassBorder, RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -337,11 +339,11 @@ fun HourlyProfileCard(hourlyProfile: List<HourlyDataPoint>, accent: Color) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.Schedule, null, tint = accent, modifier = Modifier.size(16.dp))
             Text("Perfil horario aprendido", fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                fontWeight = FontWeight.SemiBold, color = tg.textPri)
         }
         val validHours = hourlyProfile.filter { it.avgTemp > 0f }
         if (validHours.isEmpty()) {
-            Text("Recopilando datos horarios...", fontSize = 12.sp, color = TG.textSec)
+            Text("Recopilando datos horarios...", fontSize = 12.sp, color = tg.textSec)
         } else {
             val maxT = validHours.maxOf { it.avgTemp }
             val minT = validHours.minOf { it.avgTemp }
@@ -371,9 +373,9 @@ fun HourlyProfileCard(hourlyProfile: List<HourlyDataPoint>, accent: Color) {
             }
             Row(modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("00h", fontSize = 8.sp, color = TG.textDim)
-                Text("12h", fontSize = 8.sp, color = TG.textDim)
-                Text("23h", fontSize = 8.sp, color = TG.textDim)
+                Text("00h", fontSize = 8.sp, color = tg.textDim)
+                Text("12h", fontSize = 8.sp, color = tg.textDim)
+                Text("23h", fontSize = 8.sp, color = tg.textDim)
             }
             // Pico del día
             validHours.maxByOrNull { it.avgTemp }?.let { peak ->
@@ -385,7 +387,7 @@ fun HourlyProfileCard(hourlyProfile: List<HourlyDataPoint>, accent: Color) {
                     verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Schedule, null, tint = TG.red, modifier = Modifier.size(12.dp))
                     Text("Pico máximo a las ${peak.hour}h  ·  ${peak.avgTemp.toInt()}°C promedio",
-                        fontSize = 11.sp, color = TG.textSec)
+                        fontSize = 11.sp, color = tg.textSec)
                 }
             }
         }
@@ -398,8 +400,8 @@ fun HeatSessionsCard(profile: LearnedProfile, accent: Color) {
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
-            .border(1.dp, TG.glassBorder, RoundedCornerShape(20.dp))
+            .background(tg.glass)
+            .border(1.dp, tg.glassBorder, RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -407,7 +409,7 @@ fun HeatSessionsCard(profile: LearnedProfile, accent: Color) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.LocalFireDepartment, null, tint = TG.red, modifier = Modifier.size(16.dp))
             Text("Sesiones de calor hoy", fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                fontWeight = FontWeight.SemiBold, color = tg.textPri)
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatChip("Sesiones", "${profile.heatSessionsToday}", TG.red, Modifier.weight(1f))
@@ -429,7 +431,7 @@ fun StatChip(label: String, value: String, color: Color, modifier: Modifier = Mo
         verticalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         Text(value, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = color)
-        Text(label, fontSize = 9.sp, color = TG.textSec, textAlign = TextAlign.Center)
+        Text(label, fontSize = 9.sp, color = tg.textSec, textAlign = TextAlign.Center)
     }
 }
 
@@ -452,7 +454,7 @@ fun RiskScoreCard(profile: LearnedProfile, accent: Color) {
     Row(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
+            .background(tg.glass)
             .border(1.dp, scoreColor.copy(alpha = 0.22f), RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -472,12 +474,12 @@ fun RiskScoreCard(profile: LearnedProfile, accent: Color) {
             Text("$score", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = scoreColor)
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text("Risk Score  ·  Motor v5", fontSize = 10.sp, color = TG.textSec, letterSpacing = 0.4.sp)
+            Text("Risk Score  ·  Motor v5", fontSize = 10.sp, color = tg.textSec, letterSpacing = 0.4.sp)
             Text(when {
                 score >= 70 -> "Nivel alto — tomar acción"
                 score >= 40 -> "Moderado — monitorear"
                 else        -> "Normal — todo bien"
-            }, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+            }, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
             Spacer(Modifier.height(4.dp))
             // Mini barra
             Box(modifier = Modifier.fillMaxWidth().height(4.dp)
@@ -488,7 +490,7 @@ fun RiskScoreCard(profile: LearnedProfile, accent: Color) {
             }
             Spacer(Modifier.height(2.dp))
             Text("${profile.samplesCollected} lecturas  ·  umbral ${profile.dynamicThreshold.toInt()}°C",
-                fontSize = 10.sp, color = TG.textDim)
+                fontSize = 10.sp, color = tg.textDim)
         }
     }
 }
@@ -504,7 +506,7 @@ fun BatteryHealthCard(health: BatteryHealthScore) {
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
+            .background(tg.glass)
             .border(1.dp, c.copy(alpha = 0.2f), RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -513,7 +515,7 @@ fun BatteryHealthCard(health: BatteryHealthScore) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.BatteryFull, null, tint = c, modifier = Modifier.size(16.dp))
             Text("Salud de la batería", fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                fontWeight = FontWeight.SemiBold, color = tg.textPri)
             Spacer(Modifier.weight(1f))
             Box(modifier = Modifier.clip(RoundedCornerShape(8.dp))
                 .background(c.copy(alpha = 0.12f)).padding(horizontal = 9.dp, vertical = 4.dp)) {
@@ -529,7 +531,7 @@ fun BatteryHealthCard(health: BatteryHealthScore) {
         health.factors.take(2).forEach { tip ->
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("•", fontSize = 11.sp, color = c)
-                Text(tip, fontSize = 11.sp, color = TG.textSec, lineHeight = 15.sp)
+                Text(tip, fontSize = 11.sp, color = tg.textSec, lineHeight = 15.sp)
             }
         }
     }
