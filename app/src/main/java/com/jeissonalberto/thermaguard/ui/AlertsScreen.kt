@@ -25,6 +25,7 @@ import com.jeissonalberto.thermaguard.domain.AutoAction
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
 import java.text.SimpleDateFormat
 import java.util.*
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 @Composable
 fun AlertsScreen(
@@ -32,6 +33,7 @@ fun AlertsScreen(
     onThresholdChange: (Float) -> Unit,
     onClearLog: () -> Unit
 ) {
+    val tg = LocalTgColors.current
     val snap   = uiState.latest
     val mainTemp = if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
     val level  = mainTemp.toThermalLevel()
@@ -41,7 +43,7 @@ fun AlertsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.radialGradient(
-                colors  = listOf(TG.glowFor(level).copy(alpha = 0.15f), TG.bg),
+                colors  = listOf(TG.glowFor(level).copy(alpha = 0.15f), tg.bg),
                 center  = Offset(0.5f, 0.0f),
                 radius  = 700f
             ))
@@ -57,7 +59,7 @@ fun AlertsScreen(
             ) {
                 Column {
                     Text("Alertas", fontSize = 22.sp, fontWeight = FontWeight.Bold,
-                        color = TG.textPri, letterSpacing = (-0.5).sp)
+                        color = tg.textPri, letterSpacing = (-0.5).sp)
                     Text("Motor autónomo — siempre activo", fontSize = 12.sp, color = TG.green)
                 }
                 ModeBadge(mode = uiState.operationMode, accent = accent)
@@ -74,7 +76,7 @@ fun AlertsScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Default.AutoAwesome, null, tint = TG.purple, modifier = Modifier.size(16.dp))
-                            Text("Umbral de acción", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                            Text("Umbral de acción", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
                         }
                         Surface(shape = RoundedCornerShape(10.dp), color = accent.copy(alpha = 0.15f)) {
                             Text("${uiState.alertThreshold.toInt()}°C",
@@ -83,7 +85,7 @@ fun AlertsScreen(
                         }
                     }
                     Text("El motor actúa automáticamente al superar este valor. Se calibra solo con el uso.",
-                        fontSize = 11.sp, color = TG.textSec, lineHeight = 16.sp)
+                        fontSize = 11.sp, color = tg.textSec, lineHeight = 16.sp)
                     Slider(
                         value = uiState.alertThreshold,
                         onValueChange = onThresholdChange,
@@ -96,8 +98,8 @@ fun AlertsScreen(
                         )
                     )
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("38°C Conservador", fontSize = 9.sp, color = TG.textDim)
-                        Text("50°C Agresivo", fontSize = 9.sp, color = TG.textDim)
+                        Text("38°C Conservador", fontSize = 9.sp, color = tg.textDim)
+                        Text("50°C Agresivo", fontSize = 9.sp, color = tg.textDim)
                     }
                 }
             }
@@ -111,8 +113,8 @@ fun AlertsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Default.History, null, tint = TG.textSec, modifier = Modifier.size(15.dp))
-                    Text("Acciones del motor", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                    Icon(Icons.Default.History, null, tint = tg.textSec, modifier = Modifier.size(15.dp))
+                    Text("Acciones del motor", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
                     if (uiState.autoActionsLog.isNotEmpty()) {
                         Surface(shape = CircleShape, color = accent.copy(alpha = 0.15f)) {
                             Text("${uiState.autoActionsLog.size}",
@@ -123,7 +125,7 @@ fun AlertsScreen(
                 }
                 if (uiState.autoActionsLog.isNotEmpty()) {
                     TextButton(onClick = onClearLog, contentPadding = PaddingValues(0.dp)) {
-                        Text("Limpiar", fontSize = 11.sp, color = TG.textDim)
+                        Text("Limpiar", fontSize = 11.sp, color = tg.textDim)
                     }
                 }
             }
@@ -168,10 +170,10 @@ fun ActionLogCard(action: AutoAction) {
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(action.description, fontSize = 13.sp, fontWeight = FontWeight.Medium,
-                color = TG.textPri, lineHeight = 18.sp)
-            Text("Activado por: ${action.trigger}", fontSize = 10.sp, color = TG.textSec)
+                color = tg.textPri, lineHeight = 18.sp)
+            Text("Activado por: ${action.trigger}", fontSize = 10.sp, color = tg.textSec)
         }
-        Text(sdf.format(Date(action.timestamp)), fontSize = 9.sp, color = TG.textDim,
+        Text(sdf.format(Date(action.timestamp)), fontSize = 9.sp, color = tg.textDim,
             modifier = Modifier.padding(top = 2.dp))
     }
 }
@@ -189,9 +191,9 @@ fun EmptyLogState() {
             ) {
                 Icon(Icons.Default.CheckCircle, null, tint = TG.green, modifier = Modifier.size(28.dp))
             }
-            Text("Todo en orden", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+            Text("Todo en orden", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
             Text("El motor actúa cuando detecta calor anormal.\nAquí verás cada acción que ejecute.",
-                fontSize = 12.sp, color = TG.textSec, lineHeight = 17.sp, textAlign = TextAlign.Center)
+                fontSize = 12.sp, color = tg.textSec, lineHeight = 17.sp, textAlign = TextAlign.Center)
         }
     }
 }
