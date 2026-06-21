@@ -33,6 +33,7 @@ import android.provider.Settings
 import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
 import com.jeissonalberto.thermaguard.service.FloatingWidgetService
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 @Composable
 fun SettingsScreen(
@@ -50,7 +51,8 @@ fun SettingsScreen(
     onSetDeviceNickname:(String) -> Unit      = {},
     onSetUsageProfile:  (String) -> Unit      = {}
 ) {
-    val accent  = TG.blue
+    val tg      = LocalTgColors.current
+    val accent  = tg.blue
     val scroll  = rememberScrollState()
     val context = LocalContext.current
 
@@ -62,11 +64,11 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { needsOverlayPerm = false },
             containerColor   = Color(0xFF0A0F1E),
-            title  = { Text("Permiso necesario", color = TG.textPri) },
+            title  = { Text("Permiso necesario", color = tg.textPri) },
             text   = {
                 Text(
                     "Para mostrar el widget flotante, ThermaGuard necesita permiso de superposición de apps.",
-                    color = TG.textSec, fontSize = 13.sp
+                    color = tg.textSec, fontSize = 13.sp
                 )
             },
             confirmButton = {
@@ -78,17 +80,17 @@ fun SettingsScreen(
                             Uri.parse("package:${context.packageName}")
                         )
                     )
-                }) { Text("Permitir", color = TG.blue) }
+                }) { Text("Permitir", color = tg.blue) }
             },
             dismissButton = {
                 TextButton(onClick = { needsOverlayPerm = false }) {
-                    Text("Cancelar", color = TG.textDim)
+                    Text("Cancelar", color = tg.textDim)
                 }
             }
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(tg.bg)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -103,7 +105,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Icon(Icons.Default.Settings, null, tint = accent, modifier = Modifier.size(22.dp))
-                Text("Ajustes", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = TG.textPri)
+                Text("Ajustes", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = tg.textPri)
             }
 
             // ── PERFIL DE USUARIO ─────────────────────────────────────────────
@@ -113,14 +115,14 @@ fun SettingsScreen(
                 var editingName by remember { mutableStateOf(false) }
                 var nameInput   by remember(userName) { mutableStateOf(userName) }
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Tu nombre", fontSize = 11.sp, color = TG.textSec, fontWeight = FontWeight.Medium)
+                    Text("Tu nombre", fontSize = 11.sp, color = tg.textSec, fontWeight = FontWeight.Medium)
                     if (editingName) {
                         OutlinedTextField(
                             value         = nameInput,
                             onValueChange = { nameInput = it },
                             modifier      = Modifier.fillMaxWidth(),
                             singleLine    = true,
-                            placeholder   = { Text("Ej: Jeisson", color = TG.textDim, fontSize = 13.sp) },
+                            placeholder   = { Text("Ej: Jeisson", color = tg.textDim, fontSize = 13.sp) },
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Words,
                                 imeAction      = ImeAction.Done
@@ -130,9 +132,9 @@ fun SettingsScreen(
                             }),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor   = accent,
-                                unfocusedBorderColor = TG.textDim.copy(alpha = 0.3f),
-                                focusedTextColor     = TG.textPri,
-                                unfocusedTextColor   = TG.textPri,
+                                unfocusedBorderColor = tg.textDim.copy(alpha = 0.3f),
+                                focusedTextColor     = tg.textPri,
+                                unfocusedTextColor   = tg.textPri,
                                 cursorColor          = accent
                             ),
                             trailingIcon = {
@@ -146,8 +148,8 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(TG.glass)
-                                .border(1.dp, TG.textDim.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
+                                .background(tg.glass)
+                                .border(1.dp, tg.textDim.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
                                 .clickable { editingName = true }
                                 .padding(horizontal = 14.dp, vertical = 10.dp),
                             verticalAlignment     = Alignment.CenterVertically,
@@ -156,7 +158,7 @@ fun SettingsScreen(
                             Text(
                                 if (userName.isEmpty()) "Toca para agregar tu nombre" else userName,
                                 fontSize = 14.sp,
-                                color    = if (userName.isEmpty()) TG.textDim else TG.textPri
+                                color    = if (userName.isEmpty()) tg.textDim else tg.textPri
                             )
                             Icon(Icons.Default.Edit, null,
                                 tint = accent.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
@@ -168,23 +170,23 @@ fun SettingsScreen(
                 var editingDevice by remember { mutableStateOf(false) }
                 var deviceInput   by remember(deviceNickname) { mutableStateOf(deviceNickname) }
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Nombre del dispositivo", fontSize = 11.sp, color = TG.textSec, fontWeight = FontWeight.Medium)
+                    Text("Nombre del dispositivo", fontSize = 11.sp, color = tg.textSec, fontWeight = FontWeight.Medium)
                     if (editingDevice) {
                         OutlinedTextField(
                             value         = deviceInput,
                             onValueChange = { deviceInput = it },
                             modifier      = Modifier.fillMaxWidth(),
                             singleLine    = true,
-                            placeholder   = { Text("Ej: Mi S22 Ultra", color = TG.textDim, fontSize = 13.sp) },
+                            placeholder   = { Text("Ej: Mi S22 Ultra", color = tg.textDim, fontSize = 13.sp) },
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                             keyboardActions = KeyboardActions(onDone = {
                                 onSetDeviceNickname(deviceInput.trim()); editingDevice = false
                             }),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor   = accent,
-                                unfocusedBorderColor = TG.textDim.copy(alpha = 0.3f),
-                                focusedTextColor     = TG.textPri,
-                                unfocusedTextColor   = TG.textPri,
+                                unfocusedBorderColor = tg.textDim.copy(alpha = 0.3f),
+                                focusedTextColor     = tg.textPri,
+                                unfocusedTextColor   = tg.textPri,
                                 cursorColor          = accent
                             ),
                             trailingIcon = {
@@ -198,14 +200,14 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(TG.glass)
-                                .border(1.dp, TG.textDim.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
+                                .background(tg.glass)
+                                .border(1.dp, tg.textDim.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
                                 .clickable { editingDevice = true }
                                 .padding(horizontal = 14.dp, vertical = 10.dp),
                             verticalAlignment     = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(deviceNickname, fontSize = 14.sp, color = TG.textPri)
+                            Text(deviceNickname, fontSize = 14.sp, color = tg.textPri)
                             Icon(Icons.Default.Edit, null,
                                 tint = accent.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
                         }
@@ -215,7 +217,7 @@ fun SettingsScreen(
                 // Perfil de uso
                 val usageOptions = listOf("Gamer", "Trabajo", "Fotógrafo", "Casual", "Desarrollador")
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Perfil de uso", fontSize = 11.sp, color = TG.textSec, fontWeight = FontWeight.Medium)
+                    Text("Perfil de uso", fontSize = 11.sp, color = tg.textSec, fontWeight = FontWeight.Medium)
                     androidx.compose.foundation.lazy.LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -224,15 +226,15 @@ fun SettingsScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
-                                    .background(if (sel) accent.copy(alpha = 0.20f) else TG.glass)
+                                    .background(if (sel) accent.copy(alpha = 0.20f) else tg.glass)
                                     .border(1.dp,
-                                        if (sel) accent else TG.textDim.copy(alpha = 0.20f),
+                                        if (sel) accent else tg.textDim.copy(alpha = 0.20f),
                                         RoundedCornerShape(20.dp))
                                     .clickable { onSetUsageProfile(option) }
                                     .padding(horizontal = 14.dp, vertical = 7.dp)
                             ) {
                                 Text(option, fontSize = 12.sp,
-                                    color      = if (sel) accent else TG.textSec,
+                                    color      = if (sel) accent else tg.textSec,
                                     fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal)
                             }
                         }
@@ -256,7 +258,7 @@ fun SettingsScreen(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(if (sel) accent.copy(alpha = 0.12f) else Color.Transparent)
                                 .border(1.dp,
-                                    if (sel) accent.copy(alpha = 0.4f) else TG.glass,
+                                    if (sel) accent.copy(alpha = 0.4f) else tg.glass,
                                     RoundedCornerShape(12.dp))
                                 .clickable { onSetTheme(theme) }
                                 .padding(horizontal = 14.dp, vertical = 12.dp),
@@ -266,10 +268,10 @@ fun SettingsScreen(
                             Row(verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Icon(icon, null,
-                                    tint = if (sel) accent else TG.textSec,
+                                    tint = if (sel) accent else tg.textSec,
                                     modifier = Modifier.size(18.dp))
                                 Text(label, fontSize = 13.sp,
-                                    color = if (sel) TG.textPri else TG.textSec)
+                                    color = if (sel) tg.textPri else tg.textSec)
                             }
                             if (sel) Box(Modifier.size(8.dp).clip(CircleShape).background(accent))
                         }
@@ -289,7 +291,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (sel) accent.copy(alpha = 0.15f) else TG.glass)
+                                .background(if (sel) accent.copy(alpha = 0.15f) else tg.glass)
                                 .border(1.dp,
                                     if (sel) accent.copy(alpha = 0.5f) else Color.Transparent,
                                     RoundedCornerShape(12.dp))
@@ -303,7 +305,7 @@ fun SettingsScreen(
                                     fontSize = 24.sp)
                                 Text(lang.label, fontSize = 12.sp,
                                     fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (sel) accent else TG.textSec)
+                                    color = if (sel) accent else tg.textSec)
                             }
                         }
                     }
@@ -316,7 +318,7 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(TG.glass)
+                        .background(tg.glass)
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment     = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -325,9 +327,9 @@ fun SettingsScreen(
                         modifier = Modifier.weight(1f).padding(end = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        Text("Burbuja de temperatura", fontSize = 13.sp, color = TG.textPri)
+                        Text("Burbuja de temperatura", fontSize = 13.sp, color = tg.textPri)
                         Text("Muestra la temp. sobre cualquier app",
-                            fontSize = 10.sp, color = TG.textDim)
+                            fontSize = 10.sp, color = tg.textDim)
                     }
                     Switch(
                         checked = widgetEnabled,
@@ -366,7 +368,7 @@ fun SettingsScreen(
                     ) {
                         Icon(Icons.Default.Info, null, tint = accent, modifier = Modifier.size(14.dp))
                         Text("Requiere permiso de superposición de apps",
-                            fontSize = 10.sp, color = TG.textSec)
+                            fontSize = 10.sp, color = tg.textSec)
                     }
                 }
             }
@@ -382,9 +384,9 @@ fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                         Text("Telemetría de rendimiento",
-                            fontSize = 13.sp, color = TG.textPri)
+                            fontSize = 13.sp, color = tg.textPri)
                         Text("Envía datos anónimos para mejorar ThermaGuard",
-                            fontSize = 11.sp, color = TG.textSec)
+                            fontSize = 11.sp, color = tg.textSec)
                     }
                     Switch(
                         checked         = telemetryEnabled,
@@ -410,7 +412,7 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(TG.glass)
+                        .background(tg.glass)
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
@@ -421,15 +423,15 @@ fun SettingsScreen(
                         Text("🛡️", fontSize = 32.sp)
                         Column {
                             Text("ThermaGuard", fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold, color = TG.textPri)
-                            Text("v3.9.28 · Jasol Group", fontSize = 11.sp, color = TG.textSec)
+                                fontWeight = FontWeight.ExtraBold, color = tg.textPri)
+                            Text("v3.9.28 · Jasol Group", fontSize = 11.sp, color = tg.textSec)
                         }
                     }
-                    HorizontalDivider(color = TG.glass, thickness = 1.dp)
+                    HorizontalDivider(color = tg.glass, thickness = 1.dp)
                     Text("Ing. Jeisson Alberto Sarmiento Cabrera",
-                        fontSize = 12.sp, color = TG.textSec)
+                        fontSize = 12.sp, color = tg.textSec)
                     Text("Coordinador NOC Líder · Avidtel S.A.S.",
-                        fontSize = 11.sp, color = TG.textDim)
+                        fontSize = 11.sp, color = tg.textDim)
                 }
             }
 
