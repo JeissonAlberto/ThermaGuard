@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.*
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 
 fun applyCpuLimit(enable: Boolean, context: Context) {
@@ -107,6 +108,7 @@ fun BeastModeScreen(
     uiState: ThermalUiState,
     onSetMode: (OperationMode) -> Unit = {}
 ) {
+    val tg = LocalTgColors.current
     val context   = LocalContext.current
     val snap      = uiState.latest
     val isActive  = uiState.operationMode == OperationMode.GAMER
@@ -207,7 +209,7 @@ fun BeastModeScreen(
                         Icon(Icons.Default.Speed, null, tint = accent,
                             modifier = Modifier.size(16.dp))
                         Text("Rendimiento en tiempo real",
-                            fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TG.textSec)
+                            fontSize = 12.sp, fontWeight = FontWeight.Bold, color = tg.textSec)
                     }
 
                     // Fila 1: Throttle estimado + Presión térmica
@@ -487,11 +489,11 @@ private fun GamerStatCard(
         .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(label, fontSize = 9.sp, color = TG.textDim,
+            Text(label, fontSize = 9.sp, color = tg.textDim,
                 fontWeight = FontWeight.SemiBold, letterSpacing = 0.5.sp)
             Text(value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold,
                 color = valueColor)
-            Text(sub, fontSize = 9.sp, color = TG.textSec, maxLines = 1)
+            Text(sub, fontSize = 9.sp, color = tg.textSec, maxLines = 1)
         }
     }
 }
