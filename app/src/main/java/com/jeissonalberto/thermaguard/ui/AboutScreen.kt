@@ -19,11 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 @Composable
 fun AboutScreen(
     onLegalClick: () -> Unit = {}
 ) {
+    val tg = LocalTgColors.current
     val context = LocalContext.current
     val scroll  = rememberScrollState()
 
@@ -34,7 +36,7 @@ fun AboutScreen(
         infiniteRepeatable(tween(3000, easing = EaseInOut), RepeatMode.Reverse), label = "os")
 
     Box(
-        modifier = Modifier.fillMaxSize().background(TG.bg)
+        modifier = Modifier.fillMaxSize().background(tg.bg)
     ) {
         // Orb de fondo
         Box(
@@ -72,7 +74,7 @@ fun AboutScreen(
                     "ThermaGuard",
                     fontSize     = 26.sp,
                     fontWeight   = FontWeight.ExtraBold,
-                    color        = TG.textPri,
+                    color        = tg.textPri,
                     letterSpacing = (-0.5).sp
                 )
                 Text(
@@ -112,7 +114,7 @@ fun AboutScreen(
                         Text(
                             "Propiedad de",
                             fontSize  = 11.sp,
-                            color     = TG.textSec,
+                            color     = tg.textSec,
                             letterSpacing = 1.5.sp
                         )
                     }
@@ -126,7 +128,7 @@ fun AboutScreen(
                     Text(
                         "Esta aplicación pertenece al ecosistema de productos\ndesarrollados por Jasol Group.",
                         fontSize  = 12.sp,
-                        color     = TG.textSec,
+                        color     = tg.textSec,
                         textAlign = TextAlign.Center,
                         lineHeight = 18.sp
                     )
@@ -150,7 +152,7 @@ fun AboutScreen(
                     ) {
                         Icon(Icons.Default.Person, null,
                             tint = Color(0xFF00E5FF), modifier = Modifier.size(18.dp))
-                        Text("Creador", fontSize = 11.sp, color = TG.textSec, letterSpacing = 1.5.sp)
+                        Text("Creador", fontSize = 11.sp, color = tg.textSec, letterSpacing = 1.5.sp)
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -158,14 +160,14 @@ fun AboutScreen(
                             "Ing. Jeisson Alberto Sarmiento Cabrera",
                             fontSize   = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color      = TG.textPri
+                            color      = tg.textPri
                         )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text("🇨🇴", fontSize = 14.sp)
-                            Text("Colombia", fontSize = 12.sp, color = TG.textSec)
+                            Text("Colombia", fontSize = 12.sp, color = tg.textSec)
                         }
                     }
 
@@ -201,7 +203,7 @@ fun AboutScreen(
                 border   = BorderStroke(1.dp, Color.White.copy(alpha = 0.06f))
             ) {
                 Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Información técnica", fontSize = 11.sp, color = TG.textSec, letterSpacing = 1.sp)
+                    Text("Información técnica", fontSize = 11.sp, color = tg.textSec, letterSpacing = 1.sp)
                     listOf(
                         "Versión"    to "3.4.0",
                         "Motor"      to "v5 — Ley de Moore (P=V²·F)",
@@ -212,8 +214,8 @@ fun AboutScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(label, fontSize = 13.sp, color = TG.textSec)
-                            Text(value,  fontSize = 13.sp, color = TG.textPri, fontWeight = FontWeight.Medium)
+                            Text(label, fontSize = 13.sp, color = tg.textSec)
+                            Text(value,  fontSize = 13.sp, color = tg.textPri, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -223,7 +225,7 @@ fun AboutScreen(
             Text(
                 "© 2026 Jasol Group · Todos los derechos reservados",
                 fontSize  = 10.sp,
-                color     = TG.textDim,
+                color     = tg.textDim,
                 textAlign = TextAlign.Center,
                 lineHeight = 14.sp
             )
