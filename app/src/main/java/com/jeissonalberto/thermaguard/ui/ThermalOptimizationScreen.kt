@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  ThermalOptimizationScreen — Guía de optimización térmica
@@ -33,6 +34,7 @@ import com.jeissonalberto.thermaguard.domain.ThermalUiState
 
 @Composable
 fun ThermalOptimizationScreen(uiState: ThermalUiState) {
+val tg = LocalTgColors.current
 
     // Detección de dispositivo
     val deviceInfo = remember { detectDevice() }
@@ -41,7 +43,7 @@ fun ThermalOptimizationScreen(uiState: ThermalUiState) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(TG.bg)
+            .background(tg.bg)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -111,7 +113,7 @@ private fun OptHeader(deviceInfo: DeviceInfo, currentTemp: Float) {
                         "Optimización Térmica",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = TG.textPri
+                        color = tg.textPri
                     )
                     Text(
                         deviceInfo.fullName,
@@ -132,7 +134,7 @@ private fun OptHeader(deviceInfo: DeviceInfo, currentTemp: Float) {
                 Text(
                     "Temp. actual",
                     fontSize = 12.sp,
-                    color = TG.textSec
+                    color = tg.textSec
                 )
                 Text(
                     if (currentTemp > 0f) "%.1f°C".format(currentTemp) else "—",
@@ -215,14 +217,14 @@ private fun OptSection(
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(title, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TG.textPri)
-                    Text(subtitle, fontSize = 11.sp, color = TG.textSec)
+                    Text(title, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = tg.textPri)
+                    Text(subtitle, fontSize = 11.sp, color = tg.textSec)
                 }
 
                 Icon(
                     if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = null,
-                    tint = TG.textSec,
+                    tint = tg.textSec,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -277,7 +279,7 @@ private fun OptTipCard(tip: OptTip, accentColor: Color) {
                             tip.title,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TG.textPri,
+                            color = tg.textPri,
                             modifier = Modifier.weight(1f)
                         )
                         if (tip.impact != null) {
@@ -296,7 +298,7 @@ private fun OptTipCard(tip: OptTip, accentColor: Color) {
                             }
                         }
                     }
-                    Text(tip.description, fontSize = 12.sp, color = TG.textSec, lineHeight = 17.sp)
+                    Text(tip.description, fontSize = 12.sp, color = tg.textSec, lineHeight = 17.sp)
                 }
             }
 
@@ -310,7 +312,7 @@ private fun OptTipCard(tip: OptTip, accentColor: Color) {
                             .background(accentColor.copy(alpha = 0.07f))
                             .padding(10.dp)
                     ) {
-                        Text(tip.detail, fontSize = 11.sp, color = TG.textSec, lineHeight = 16.sp)
+                        Text(tip.detail, fontSize = 11.sp, color = tg.textSec, lineHeight = 16.sp)
                     }
                 }
                 Row(
