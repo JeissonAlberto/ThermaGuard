@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
 import kotlinx.coroutines.delay
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 @Composable
 fun OptimizeScreen(
@@ -31,6 +32,7 @@ fun OptimizeScreen(
     onSetMode: (OperationMode) -> Unit = {},
     onKillApps: () -> Unit = {}
 ) {
+    val tg = LocalTgColors.current
     val snap      = uiState.latest
     val mainTemp by remember(snap) { derivedStateOf {
         if (snap.cpuTemp > 20f) snap.cpuTemp else snap.batteryTemp
@@ -47,7 +49,7 @@ fun OptimizeScreen(
         if (killFeedback) { delay(3000); killFeedback = false }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(tg.bg)) {
         Box(
             modifier = Modifier.size(300.dp).align(Alignment.TopEnd).offset(x = 60.dp, y = (-60).dp)
                 .background(accent.copy(alpha = 0.08f), androidx.compose.foundation.shape.CircleShape)
@@ -62,8 +64,8 @@ fun OptimizeScreen(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Icon(Icons.Default.Tune, null, tint = accent, modifier = Modifier.size(22.dp))
                 Column {
-                    Text("Optimizar", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = TG.textPri)
-                    Text("Control del motor térmico", fontSize = 11.sp, color = TG.textDim)
+                    Text("Optimizar", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = tg.textPri)
+                    Text("Control del motor térmico", fontSize = 11.sp, color = tg.textDim)
                 }
             }
 
@@ -71,14 +73,14 @@ fun OptimizeScreen(
             Row(
                 modifier = Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(TG.glass)
+                    .background(tg.glass)
                     .border(1.dp, accent.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
                     .padding(14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("Estado actual", fontSize = 10.sp, color = TG.textDim)
+                    Text("Estado actual", fontSize = 10.sp, color = tg.textDim)
                     Text("${mainTemp.toInt()}°C", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = accent)
                     Text(
                         when (level) {
@@ -87,7 +89,7 @@ fun OptimizeScreen(
                             ThermalLevel.HOT       -> "Temperatura alta"
                             ThermalLevel.CRITICAL  -> "Temperatura crítica"
                             ThermalLevel.EMERGENCY -> "Emergencia térmica"
-                        }, fontSize = 11.sp, color = TG.textSec
+                        }, fontSize = 11.sp, color = tg.textSec
                     )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -100,7 +102,7 @@ fun OptimizeScreen(
                     ) {
                         Text("${uiState.profile?.riskScore ?: 0}", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = accent)
                     }
-                    Text("Riesgo", fontSize = 9.sp, color = TG.textDim)
+                    Text("Riesgo", fontSize = 9.sp, color = tg.textDim)
                 }
             }
 
@@ -116,7 +118,7 @@ fun OptimizeScreen(
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (level == ThermalLevel.NORMAL) TG.glass else accent.copy(alpha = 0.85f),
+                    containerColor = if (level == ThermalLevel.NORMAL) tg.glass else accent.copy(alpha = 0.85f),
                     contentColor   = Color.White
                 ),
                 shape = RoundedCornerShape(14.dp),
@@ -147,13 +149,13 @@ fun OptimizeScreen(
                     Text("✅", fontSize = 16.sp)
                     Column {
                         Text("Apps cerradas y RAM liberada", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TG.green)
-                        Text("El motor automático registró la acción", fontSize = 10.sp, color = TG.textDim)
+                        Text("El motor automático registró la acción", fontSize = 10.sp, color = tg.textDim)
                     }
                 }
             }
 
             // ── Selector de modo ──────────────────────────────────────────
-            Text("Modo de operación", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+            Text("Modo de operación", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
             ModeSelector(mode = uiState.operationMode, onSetMode = onSetMode, accent = accent)
 
             // ── Recomendaciones ────────────────────────────────────────────
@@ -182,7 +184,7 @@ fun OptimizeScreen(
             }
 
             if (effectiveRecs.isNotEmpty()) {
-                Text("Acciones recomendadas", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                Text("Acciones recomendadas", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
                 CoolingRecsCard(recs = effectiveRecs)
             } else {
                 Box(
@@ -197,7 +199,7 @@ fun OptimizeScreen(
                         Text("✅", fontSize = 32.sp)
                         Text("Todo en orden", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TG.green)
                         Text("${mainTemp.toInt()}°C — temperatura normal, sin acción necesaria",
-                            fontSize = 11.sp, color = TG.textDim, textAlign = TextAlign.Center,
+                            fontSize = 11.sp, color = tg.textDim, textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 8.dp))
                     }
                 }
@@ -206,7 +208,7 @@ fun OptimizeScreen(
             // ── Tips inteligentes ─────────────────────────────────────────
             val tips = uiState.smartTips.take(3)
             if (tips.isNotEmpty()) {
-                Text("Consejos inteligentes", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                Text("Consejos inteligentes", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
                 SmartTipsCard(tips = tips)
             }
 
