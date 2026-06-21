@@ -66,6 +66,7 @@ private fun SetupPinScreen(
     prefs: android.content.SharedPreferences,
     onDone: () -> Unit
 ) {
+    val tg = LocalTgColors.current
     var pin1     by remember { mutableStateOf("") }
     var pin2     by remember { mutableStateOf("") }
     var showPass by remember { mutableStateOf(false) }
@@ -157,6 +158,7 @@ private fun DoLoginScreen(
     prefs: android.content.SharedPreferences,
     onAuthenticated: () -> Unit
 ) {
+    val tg = LocalTgColors.current
     val savedHash = prefs.getString(KEY_PIN, "skip") ?: "skip"
     if (savedHash == "skip") { onAuthenticated(); return }
 
@@ -245,6 +247,7 @@ private fun AuthScaffold(
     icon: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val tg = LocalTgColors.current
     Box(
         modifier = Modifier
             .fillMaxSize()
