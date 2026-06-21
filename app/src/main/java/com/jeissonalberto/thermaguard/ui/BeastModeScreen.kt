@@ -464,6 +464,7 @@ fun BeastModeScreen(
 
 @Composable
 fun TempMetricRow(icon: String, label: String, value: String, alert: Boolean) {
+    val tg = LocalTgColors.current
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically) {
         Text(icon, fontSize = 12.sp)
@@ -482,6 +483,7 @@ private fun GamerStatCard(
     sub: String,
     valueColor: Color
 ) {
+    val tg = LocalTgColors.current
     Box(modifier = modifier
         .clip(RoundedCornerShape(12.dp))
         .background(Color.White.copy(alpha = 0.05f))
@@ -509,6 +511,7 @@ fun BeastToggle(
     disabledReason: String = "",
     onToggle: (Boolean) -> Unit
 ) {
+    val tg = LocalTgColors.current
     var expanded by remember { mutableStateOf(false) }
     val borderColor = when {
         !enabled -> Color(0x15FFFFFF)
