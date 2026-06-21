@@ -89,6 +89,7 @@ val tg = LocalTgColors.current
 // ─── Header ──────────────────────────────────────────────────────────────────
 @Composable
 private fun OptHeader(deviceInfo: DeviceInfo, currentTemp: Float) {
+    val tg = LocalTgColors.current
     val tempColor = when {
         currentTemp >= 45f -> Color(0xFFFF1744)
         currentTemp >= 40f -> Color(0xFFFFD740)
@@ -182,6 +183,7 @@ private fun OptSection(
     subtitle: String,
     tips: List<OptTip>
 ) {
+    val tg = LocalTgColors.current
     var expanded by remember { mutableStateOf(level == 1) } // nivel 1 abierto por defecto
 
     Box(
@@ -253,6 +255,7 @@ private fun OptSection(
 // ─── Card de tip individual ───────────────────────────────────────────────────
 @Composable
 private fun OptTipCard(tip: OptTip, accentColor: Color) {
+    val tg = LocalTgColors.current
     var showDetail by remember { mutableStateOf(false) }
 
     Box(
