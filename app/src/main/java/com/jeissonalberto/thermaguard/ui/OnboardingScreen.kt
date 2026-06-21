@@ -152,6 +152,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
 
 @Composable
 private fun OnboardingPageContent(page: OnboardingPage) {
+    val tg = LocalTgColors.current
     Column(
         modifier            = Modifier
             .fillMaxSize()
