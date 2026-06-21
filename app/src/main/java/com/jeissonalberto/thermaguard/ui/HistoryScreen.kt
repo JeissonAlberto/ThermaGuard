@@ -30,12 +30,14 @@ import com.jeissonalberto.thermaguard.domain.ThermalUiState
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 @Composable
 fun HistoryScreen(
     uiState: ThermalUiState,
     onExportCsv: () -> String,
 ) {
+    val tg = LocalTgColors.current
     val history = uiState.history
     val sdf     = remember { SimpleDateFormat("dd/MM HH:mm:ss", Locale.getDefault()) }
     val context = LocalContext.current
@@ -52,7 +54,7 @@ fun HistoryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(TG.bg)
+            .background(tg.bg)
             .padding(horizontal = 16.dp)
     ) {
         // ── Header ────────────────────────────────────────────────────────
@@ -64,8 +66,8 @@ fun HistoryScreen(
             verticalAlignment     = Alignment.CenterVertically
         ) {
             Column {
-                Text("Historial", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = TG.textPri)
-                Text("${history.size} lecturas guardadas", fontSize = 12.sp, color = TG.textSec)
+                Text("Historial", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = tg.textPri)
+                Text("${history.size} lecturas guardadas", fontSize = 12.sp, color = tg.textSec)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
@@ -88,7 +90,7 @@ fun HistoryScreen(
                         modifier         = Modifier.background(Color(0xFF0D1520))
                     ) {
                         DropdownMenuItem(
-                            text        = { Text("Exportar CSV", color = TG.textPri) },
+                            text        = { Text("Exportar CSV", color = tg.textPri) },
                             leadingIcon = { Icon(Icons.Default.TableChart, null, tint = TG.cyan, modifier = Modifier.size(18.dp)) },
                             onClick     = {
                                 showExportMenu = false
@@ -102,7 +104,7 @@ fun HistoryScreen(
                             }
                         )
                         DropdownMenuItem(
-                            text        = { Text("Exportar JSON", color = TG.textPri) },
+                            text        = { Text("Exportar JSON", color = tg.textPri) },
                             leadingIcon = { Icon(Icons.Default.Code, null, tint = TG.green, modifier = Modifier.size(18.dp)) },
                             onClick     = {
                                 showExportMenu = false
@@ -154,7 +156,7 @@ fun HistoryScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
-                    .background(TG.glass)
+                    .background(tg.glass)
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
@@ -174,7 +176,7 @@ fun HistoryScreen(
                     Spacer(Modifier.height(8.dp))
                     Text(
                         if (filterHot) "Sin eventos calientes registrados" else "Sin datos — activa el monitor",
-                        color = TG.textSec, fontSize = 14.sp
+                        color = tg.textSec, fontSize = 14.sp
                     )
                 }
             }
@@ -191,7 +193,7 @@ fun HistoryScreen(
 @Composable
 private fun HistStatItem(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, fontSize = 10.sp, color = TG.textDim, letterSpacing = 0.5.sp)
+        Text(label, fontSize = 10.sp, color = tg.textDim, letterSpacing = 0.5.sp)
         Text(value, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = color)
     }
 }
@@ -204,7 +206,7 @@ private fun HistoryRowCard(snap: ThermalSnapshot, sdf: SimpleDateFormat) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(TG.surface)
+            .background(tg.surface)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -219,20 +221,20 @@ private fun HistoryRowCard(snap: ThermalSnapshot, sdf: SimpleDateFormat) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 "${level.emoji} ${snap.batteryTemp}°C  ·  CPU ${snap.cpuUsage.toInt()}%",
-                fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri
+                fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri
             )
             Text(
                 sdf.format(Date(snap.timestamp)),
-                fontSize = 11.sp, color = TG.textSec
+                fontSize = 11.sp, color = tg.textSec
             )
         }
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 if (snap.isCharging) "⚡ Cargando" else "🔋 ${snap.batteryLevel}%",
-                fontSize = 11.sp, color = TG.textSec
+                fontSize = 11.sp, color = tg.textSec
             )
             if (snap.topApp.isNotEmpty()) {
-                Text(snap.topApp.take(18), fontSize = 10.sp, color = TG.textDim)
+                Text(snap.topApp.take(18), fontSize = 10.sp, color = tg.textDim)
             }
         }
     }
