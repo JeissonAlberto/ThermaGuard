@@ -28,16 +28,15 @@ import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.AutoAction
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  DESIGN TOKENS
+//  DESIGN TOKENS — reactivos al tema claro/oscuro
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Alias global de acceso (solo para funciones puras no-Composable)
 object TG {
-    val bg          = Color(0xFF070B12)
-    val surface     = Color(0xFF0D1520)
-    val glass       = Color(0x12FFFFFF)
-    val glassBorder = Color(0x18FFFFFF)
-
+    // Colores fijos de temperatura — estos no cambian con el tema
     fun accentFor(level: ThermalLevel) = when (level) {
         ThermalLevel.NORMAL    -> Color(0xFF00E5FF)
         ThermalLevel.WARM      -> Color(0xFFFFD740)
@@ -52,17 +51,29 @@ object TG {
         ThermalLevel.CRITICAL,
         ThermalLevel.EMERGENCY -> Color(0xFFFF1744).copy(alpha = 0.20f)
     }
-    val green   = Color(0xFF00E676)
-    val amber   = Color(0xFFFFAB40)
-    val red     = Color(0xFFFF5252)
-    val purple  = Color(0xFFCE93D8)
-    val teal    = Color(0xFF80CBC4)
-    val blue    = Color(0xFF82B1FF)
-    val textPri = Color(0xFFF0F4FF)
-    val textSec = Color(0x80F0F4FF)
-    val textDim = Color(0x40F0F4FF)
-    val cyan    = Color(0xFF00D4FF)
+    // Colores neutros fijos (acento/estado — no bg/texto)
+    val green  = Color(0xFF00E676)
+    val amber  = Color(0xFFFFAB40)
+    val red    = Color(0xFFFF5252)
+    val purple = Color(0xFFCE93D8)
+    val teal   = Color(0xFF80CBC4)
+    val cyan   = Color(0xFF00D4FF)
+
+    // ── PROPIEDADES REACTIVAS (solo usar dentro de @Composable via tg) ──────
+    // Fallback oscuro para compatibilidad con código Canvas/legacy
+    val bg          get() = Color(0xFF070B12)
+    val surface     get() = Color(0xFF0D1520)
+    val glass       get() = Color(0x12FFFFFF)
+    val glassBorder get() = Color(0x18FFFFFF)
+    val textPri     get() = Color(0xFFF0F4FF)
+    val textSec     get() = Color(0x80F0F4FF)
+    val textDim     get() = Color(0x40F0F4FF)
+    val blue        get() = Color(0xFF82B1FF)
 }
+
+// Helper @Composable para obtener los tokens reactivos del tema actual
+@Composable
+fun tgColors() = LocalTgColors.current
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  GLASS CARD
