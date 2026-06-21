@@ -14,9 +14,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 @Composable
 fun SplashScreen(onFinished: () -> Unit) {
+    val tg = LocalTgColors.current
     val inf = rememberInfiniteTransition(label = "splash")
 
     val orbAlpha by inf.animateFloat(0.3f, 0.7f,
@@ -47,7 +49,7 @@ fun SplashScreen(onFinished: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TG.bg),
+            .background(tg.bg),
         contentAlignment = Alignment.Center
     ) {
         // Orb de fondo
@@ -114,7 +116,7 @@ fun SplashScreen(onFinished: () -> Unit) {
             Text(
                 "Innovación · Tecnología · Futuro",
                 fontSize = 11.sp,
-                color = TG.textDim,
+                color = tg.textDim,
                 letterSpacing = 1.5.sp,
                 modifier = Modifier.alpha(taglineAlphaAnim)
             )
@@ -124,7 +126,7 @@ fun SplashScreen(onFinished: () -> Unit) {
         Text(
             "v3.9.12",
             fontSize = 10.sp,
-            color = TG.textDim,
+            color = tg.textDim,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 32.dp)
