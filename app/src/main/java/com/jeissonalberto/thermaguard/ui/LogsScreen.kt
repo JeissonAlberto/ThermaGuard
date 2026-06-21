@@ -32,9 +32,11 @@ import com.jeissonalberto.thermaguard.ui.TG
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 @Composable
 fun LogsScreen(uiState: ThermalUiState) {
+    val tg = LocalTgColors.current
     val allLogs: List<SensorLog> = uiState.sensorLogs.reversed()
     val clipboard = LocalClipboardManager.current
     val context   = LocalContext.current
@@ -68,7 +70,7 @@ fun LogsScreen(uiState: ThermalUiState) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(tg.bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
 
             // Header
@@ -78,8 +80,8 @@ fun LogsScreen(uiState: ThermalUiState) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Sensor Logs", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = TG.textPri)
-                    Text("${filtered.size} lecturas reales del hardware", fontSize = 10.sp, color = TG.textDim)
+                    Text("Sensor Logs", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = tg.textPri)
+                    Text("${filtered.size} lecturas reales del hardware", fontSize = 10.sp, color = tg.textDim)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(onClick = { clipboard.setText(AnnotatedString(exportText)) }) {
@@ -119,7 +121,7 @@ fun LogsScreen(uiState: ThermalUiState) {
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Text(tag, fontSize = 10.sp, fontWeight = FontWeight.Bold,
-                            color = if (sel) tagCol else TG.textDim)
+                            color = if (sel) tagCol else tg.textDim)
                     }
                 }
             }
@@ -140,7 +142,7 @@ fun LogsScreen(uiState: ThermalUiState) {
                         checkedTrackColor = TG.teal.copy(alpha = 0.3f)
                     )
                 )
-                Text("Mostrar zonas RAW del kernel", fontSize = 10.sp, color = TG.textSec)
+                Text("Mostrar zonas RAW del kernel", fontSize = 10.sp, color = tg.textSec)
             }
 
             Spacer(Modifier.height(6.dp))
@@ -160,11 +162,11 @@ fun LogsScreen(uiState: ThermalUiState) {
                     ) {
                         Text("📋", fontSize = 36.sp)
                         Text("Sin registros", fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                            fontWeight = FontWeight.SemiBold, color = tg.textPri)
                         Text(
                             if (filterTag == "ALL") "Los logs aparecerán cuando el motor esté activo"
                             else "Sin entradas con el filtro $filterTag",
-                            fontSize = 11.sp, color = TG.textDim,
+                            fontSize = 11.sp, color = tg.textDim,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
@@ -186,9 +188,9 @@ fun LogsScreen(uiState: ThermalUiState) {
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text("📡", fontSize = 40.sp)
-                                Text("Sin lecturas aun", color = TG.textDim, fontSize = 13.sp)
+                                Text("Sin lecturas aun", color = tg.textDim, fontSize = 13.sp)
                                 Text("El motor leerá en el próximo ciclo",
-                                    color = TG.textDim, fontSize = 10.sp)
+                                    color = tg.textDim, fontSize = 10.sp)
                             }
                         }
                     }
@@ -232,10 +234,10 @@ fun LogEntryCard(log: SensorLog, fmt: SimpleDateFormat) {
                     Text(log.tag, fontSize = 8.sp, fontWeight = FontWeight.Bold,
                         color = color, letterSpacing = 0.5.sp)
                 }
-                Text(log.field, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                Text(log.field, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
                 if (log.isEstimated) Text("⚠ estimado", fontSize = 8.sp, color = TG.amber)
             }
-            Text(ts, fontSize = 9.sp, color = TG.textDim, fontFamily = FontFamily.Monospace)
+            Text(ts, fontSize = 9.sp, color = tg.textDim, fontFamily = FontFamily.Monospace)
         }
         Spacer(Modifier.height(4.dp))
         Row(
@@ -253,11 +255,11 @@ fun LogEntryCard(log: SensorLog, fmt: SimpleDateFormat) {
                     fontSize = 14.sp, fontWeight = FontWeight.ExtraBold,
                     color = color, fontFamily = FontFamily.Monospace
                 )
-                Text(log.source, fontSize = 8.sp, color = TG.textDim,
+                Text(log.source, fontSize = 8.sp, color = tg.textDim,
                     fontFamily = FontFamily.Monospace)
             }
             if (log.rawValue != log.parsedValue) {
-                Text("raw: ${log.rawValue}", fontSize = 8.sp, color = TG.textDim,
+                Text("raw: ${log.rawValue}", fontSize = 8.sp, color = tg.textDim,
                     fontFamily = FontFamily.Monospace)
             }
         }
