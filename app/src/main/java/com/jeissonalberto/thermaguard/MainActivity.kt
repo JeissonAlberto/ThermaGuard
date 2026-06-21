@@ -39,6 +39,7 @@ import com.jeissonalberto.thermaguard.ui.theme.ThermaGuardTheme
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 private const val PREFS_ONBOARD = "tg_onboarding"
 private const val KEY_ONBOARD   = "done"
@@ -262,6 +263,7 @@ fun MainAppShell(
     context:     Context,
     onExportCsv: () -> String,
 ) {
+    val tg            = LocalTgColors.current
     val uiState       by viewModel.uiState.collectAsState()
     val rootAvail     by viewModel.rootAvailable.collectAsState()
     val pendingUpdate by viewModel.pendingUpdate.collectAsState()
@@ -291,19 +293,19 @@ fun MainAppShell(
     val selectedInMore = selectedTab in moreTabs.map { it.first }
 
     Scaffold(
-        containerColor = TG.bg,
+        containerColor = tg.bg,
         bottomBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TG.bg)
+                    .background(tg.bg)
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFF0D1520))
+                        .background(tg.surface)
                         .padding(horizontal = 4.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment     = Alignment.CenterVertically
