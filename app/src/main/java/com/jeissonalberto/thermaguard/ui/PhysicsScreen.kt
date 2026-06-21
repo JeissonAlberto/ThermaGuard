@@ -267,6 +267,7 @@ private fun PhysicsSection(
     accent: Color,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val tg = LocalTgColors.current
     Column(modifier = Modifier.fillMaxWidth()
         .clip(RoundedCornerShape(18.dp))
         .background(tg.glass)
@@ -291,6 +292,7 @@ private fun PhysicsRow(
     sub: String,
     valueColor: Color = tg.textPri
 ) {
+    val tg = LocalTgColors.current
     Row(modifier=Modifier.fillMaxWidth(),
         verticalAlignment=Alignment.CenterVertically,
         horizontalArrangement=Arrangement.SpaceBetween) {
