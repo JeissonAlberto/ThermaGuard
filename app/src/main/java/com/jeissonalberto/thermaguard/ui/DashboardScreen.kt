@@ -81,7 +81,7 @@ fun tgColors() = LocalTgColors.current
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    accent: Color = tg.glassBorder,
+    accent: Color = Color(0x18FFFFFF),
     cornerRadius: Dp = 20.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -1608,6 +1608,7 @@ private fun UpdateBanner(
     update: com.jeissonalberto.thermaguard.data.AppUpdate,
     onDismiss: () -> Unit
 ) {
+    val tg = LocalTgColors.current
     val context = androidx.compose.ui.platform.LocalContext.current
     androidx.compose.material3.Card(
         modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
