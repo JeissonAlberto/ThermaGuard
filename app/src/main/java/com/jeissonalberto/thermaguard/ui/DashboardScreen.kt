@@ -253,68 +253,138 @@ fun TempHeroCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(28.dp))
             .background(tg.glass)
-            .border(1.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(24.dp))
-            .padding(20.dp)
+            .border(1.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(28.dp))
     ) {
-        // Glow interior
-        Box(modifier = Modifier
-            .size(200.dp).align(Alignment.TopEnd).offset(x = 40.dp, y = (-40).dp).blur(60.dp)
-            .background(accent.copy(alpha = 0.12f), CircleShape))
+        // Glow de fondo degradado
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .align(Alignment.TopCenter)
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(accent.copy(alpha = 0.10f), androidx.compose.ui.graphics.Color.Transparent)
+                    )
+                )
+        )
 
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            // Temperatura grande
+        Column(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Fila superior: temperatura + score de riesgo
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
+                modifier              = Modifier.fillMaxWidth(),
+                verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text(
-                        "${tempAnim.toInt()}°C",
-                        fontSize = 64.sp,
-                        fontWeight = FontWeight.Black,
-                        color = accent,
-                        letterSpacing = (-2).sp
-                    )
-                    Text(statusText, fontSize = 13.sp, color = tg.textSec,
-                        fontWeight = FontWeight.Medium)
-                }
-                // Riesgo circular
-                Box(
-                    modifier = Modifier.size(72.dp)
-                        .clip(CircleShape)
-                        .background(accent.copy(alpha = 0.1f))
-                        .border(2.dp, accent.copy(alpha = 0.3f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("$riskScore", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = accent)
-                        Text("riesgo", fontSize = 8.sp, color = tg.textDim)
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    // Temperatura principal
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            "${tempAnim.toInt()}",
+                            fontSize      = 72.sp,
+                            fontWeight    = FontWeight.Black,
+                            color         = accent,
+                            letterSpacing = (-3).sp,
+                            lineHeight    = 72.sp
+                        )
+                        Text(
+                            "°C",
+                            fontSize      = 28.sp,
+                            fontWeight    = FontWeight.Bold,
+                            color         = accent.copy(alpha = 0.7f),
+                            modifier      = Modifier.padding(bottom = 10.dp, start = 2.dp)
+                        )
                     }
+                    Text(
+                        statusText,
+                        fontSize   = 13.sp,
+                        color      = tg.textSec,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                // Score de riesgo — gauge semicircular simple
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier         = Modifier
+                            .size(68.dp)
+                            .clip(CircleShape)
+                            .background(accent.copy(alpha = 0.10f))
+                            .border(2.dp, accent.copy(alpha = 0.35f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "$riskScore",
+                                fontSize   = 24.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color      = accent,
+                                lineHeight = 24.sp
+                            )
+                            Text("/ 100", fontSize = 8.sp, color = tg.textDim)
+                        }
+                    }
+                    Text(
+                        "Índice de riesgo",
+                        fontSize = 8.sp,
+                        color    = tg.textDim,
+                        letterSpacing = 0.2.sp
+                    )
                 }
             }
 
-            // Barra de umbrales de temperatura (estilo Samsung)
+            // Barra de umbrales
             ThermalThresholdBar(mainTemp = mainTemp, isCharging = snap.isCharging)
 
-            // Mini-barra de riesgo
-            RiskMiniBar(risk = riskScore.toFloat(), accent = accent)
-
-            // Chip de app activa (si hay)
-            if (snap.topApp.isNotEmpty()) {
-                val appName = snap.topApp.split(".").last().replaceFirstChar { it.uppercase() }
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
-                        .padding(horizontal = 10.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(Icons.Default.PhoneAndroid, null, tint = tg.textDim, modifier = Modifier.size(12.dp))
-                    Text("App activa: $appName", fontSize = 10.sp, color = tg.textSec)
+            // Fila inferior: app activa + carga
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment     = Alignment.CenterVertically
+            ) {
+                if (snap.topApp.isNotEmpty()) {
+                    val appName = snap.topApp.split(".").last()
+                        .replaceFirstChar { it.uppercase() }
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(tg.glass)
+                            .border(1.dp, tg.glassBorder, RoundedCornerShape(20.dp))
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                        verticalAlignment     = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Icon(Icons.Default.PhoneAndroid, null,
+                            tint = tg.textDim, modifier = Modifier.size(11.dp))
+                        Text(appName, fontSize = 10.sp, color = tg.textSec)
+                    }
+                }
+                if (snap.isCharging) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(androidx.compose.ui.graphics.Color(0xFF00E676).copy(alpha = 0.10f))
+                            .border(1.dp,
+                                androidx.compose.ui.graphics.Color(0xFF00E676).copy(alpha = 0.25f),
+                                RoundedCornerShape(20.dp))
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                        verticalAlignment     = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Default.BatteryChargingFull, null,
+                            tint     = androidx.compose.ui.graphics.Color(0xFF00E676),
+                            modifier = Modifier.size(11.dp))
+                        Text("Cargando ${snap.batteryLevel}%",
+                            fontSize = 10.sp,
+                            color    = androidx.compose.ui.graphics.Color(0xFF00E676))
+                    }
                 }
             }
         }
@@ -643,26 +713,63 @@ fun QuickStatusBar(snap: ThermalSnapshot, level: ThermalLevel, accent: Color) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  HEADER BAR
+//  HEADER BAR — premium
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun HeaderBar(uiState: ThermalUiState, accent: Color, userName: String = "") {
     val tg = LocalTgColors.current
+    val greeting = when (java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)) {
+        in 5..11  -> "Buenos días"
+        in 12..17 -> "Buenas tardes"
+        else      -> "Buenas noches"
+    }
+    val displayName = if (userName.isNotBlank()) userName else "Jeisson"
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+        modifier              = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column {
-            Text("ThermaGuard", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold,
-                color = tg.textPri, letterSpacing = (-0.8).sp)
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
+        Row(
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Avatar inicial con glow
+            Box(
+                modifier         = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = 0.15f))
+                    .border(1.5.dp, accent.copy(alpha = 0.4f), CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                Box(modifier = Modifier.size(5.dp).clip(CircleShape).background(accent))
-                Text(if (userName.isNotBlank()) "Hola, $userName  ·  Motor v6" else "Jasol Group  ·  Motor v6", fontSize = 10.sp,
-                    color = tg.textDim, letterSpacing = 0.3.sp)
+                Text(
+                    displayName.take(1).uppercase(),
+                    fontSize   = 18.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color      = accent
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(
+                    "$greeting, $displayName",
+                    fontSize   = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color      = tg.textPri,
+                    letterSpacing = (-0.3).sp
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment     = Alignment.CenterVertically
+                ) {
+                    Box(Modifier.size(5.dp).clip(CircleShape).background(accent))
+                    Text(
+                        "ThermaGuard  ·  Motor v6",
+                        fontSize = 9.sp,
+                        color    = tg.textDim,
+                        letterSpacing = 0.3.sp
+                    )
+                }
             }
         }
         ModeBadge(mode = uiState.operationMode, accent = accent)
