@@ -81,14 +81,15 @@ fun tgColors() = LocalTgColors.current
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    accent: Color = TG.glassBorder,
+    accent: Color = tg.glassBorder,
     cornerRadius: Dp = 20.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val tg = LocalTgColors.current
     Surface(
         modifier = modifier.border(1.dp, accent.copy(alpha = 0.16f), RoundedCornerShape(cornerRadius)),
         shape    = RoundedCornerShape(cornerRadius),
-        color    = TG.glass
+        color    = tg.glass
     ) { Column(content = content) }
 }
 
@@ -105,6 +106,7 @@ fun DashboardScreen(
     onDismissUpdate: () -> Unit = {},
     userName: String = ""
 ) {
+    val tg = LocalTgColors.current
     val snap   = uiState.latest
     // derivedStateOf: sólo recalcula cuando cpuTemp/modemTemp/batteryTemp cambian realmente
     val mainTemp by remember(snap) {
@@ -126,7 +128,7 @@ fun DashboardScreen(
     val orbAlpha by inf.animateFloat(0.4f, 0.85f,
         infiniteRepeatable(tween(3000, easing = EaseInOut), RepeatMode.Reverse), label = "oa")
 
-    Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(tg.bg)) {
         // Orb de fondo reactivo a temperatura
         Box(modifier = Modifier
             .size(400.dp).align(Alignment.TopCenter).offset(y = (-80).dp).blur(110.dp)
@@ -189,7 +191,7 @@ fun DashboardScreen(
             Box(
                 modifier = Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(TG.glass)
+                    .background(tg.glass)
                     .border(1.dp, accent.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
                     .clickable { showSilicon = !showSilicon }
                     .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -204,14 +206,14 @@ fun DashboardScreen(
                         Text("🔬", fontSize = 16.sp)
                         Column {
                             Text("Motor v6 — Análisis del silicio",
-                                fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                                fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
                             Text("Dennard · Pollack · Amdahl · Moore",
-                                fontSize = 9.sp, color = TG.textDim)
+                                fontSize = 9.sp, color = tg.textDim)
                         }
                     }
                     Icon(
                         if (showSilicon) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        null, tint = TG.textDim, modifier = Modifier.size(18.dp)
+                        null, tint = tg.textDim, modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -236,6 +238,7 @@ fun TempHeroCard(
     accent: Color,
     uiState: ThermalUiState
 ) {
+    val tg = LocalTgColors.current
     val tempAnim by animateFloatAsState(mainTemp, tween(1000, easing = EaseOutCubic), label = "t")
     val riskScore = uiState.profile?.riskScore ?: 0
 
@@ -251,7 +254,7 @@ fun TempHeroCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(TG.glass)
+            .background(tg.glass)
             .border(1.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(24.dp))
             .padding(20.dp)
     ) {
@@ -275,7 +278,7 @@ fun TempHeroCard(
                         color = accent,
                         letterSpacing = (-2).sp
                     )
-                    Text(statusText, fontSize = 13.sp, color = TG.textSec,
+                    Text(statusText, fontSize = 13.sp, color = tg.textSec,
                         fontWeight = FontWeight.Medium)
                 }
                 // Riesgo circular
@@ -288,7 +291,7 @@ fun TempHeroCard(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("$riskScore", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = accent)
-                        Text("riesgo", fontSize = 8.sp, color = TG.textDim)
+                        Text("riesgo", fontSize = 8.sp, color = tg.textDim)
                     }
                 }
             }
@@ -310,8 +313,8 @@ fun TempHeroCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Icon(Icons.Default.PhoneAndroid, null, tint = TG.textDim, modifier = Modifier.size(12.dp))
-                    Text("App activa: $appName", fontSize = 10.sp, color = TG.textSec)
+                    Icon(Icons.Default.PhoneAndroid, null, tint = tg.textDim, modifier = Modifier.size(12.dp))
+                    Text("App activa: $appName", fontSize = 10.sp, color = tg.textSec)
                 }
             }
         }
@@ -323,6 +326,7 @@ fun TempHeroCard(
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun HardwareMetricsRow(snap: ThermalSnapshot, accent: Color) {
+    val tg = LocalTgColors.current
     // Construir métricas disponibles dinámicamente
     data class Metric(val label: String, val value: String, val sub: String, val color: Color)
 
@@ -414,15 +418,15 @@ fun HardwareMetricsRow(snap: ThermalSnapshot, accent: Color) {
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(TG.glass)
+                            .background(tg.glass)
                             .border(1.dp, m.color.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
                             .padding(horizontal = 10.dp, vertical = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(m.label, fontSize = 9.sp, color = TG.textDim,
+                        Text(m.label, fontSize = 9.sp, color = tg.textDim,
                             fontWeight = FontWeight.Medium, letterSpacing = 0.3.sp)
                         Text(m.value, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = m.color)
-                        Text(m.sub, fontSize = 9.sp, color = TG.textSec)
+                        Text(m.sub, fontSize = 9.sp, color = tg.textSec)
                     }
                 }
                 // Rellenar si la fila tiene menos de 3
@@ -443,6 +447,7 @@ fun MooreMetric(
     value: String,
     color: Color
 ) {
+    val tg = LocalTgColors.current
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -454,7 +459,7 @@ fun MooreMetric(
     ) {
         Icon(icon, null, tint = color, modifier = Modifier.size(15.dp))
         Text(value, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = color, textAlign = TextAlign.Center)
-        Text(label, fontSize = 8.sp, color = TG.textSec, textAlign = TextAlign.Center, lineHeight = 10.sp)
+        Text(label, fontSize = 8.sp, color = tg.textSec, textAlign = TextAlign.Center, lineHeight = 10.sp)
     }
 }
 
@@ -468,6 +473,7 @@ fun PremiumGauge(
     accent: Color,
     uiState: ThermalUiState
 ) {
+    val tg = LocalTgColors.current
     val isCritical = level == ThermalLevel.CRITICAL || level == ThermalLevel.EMERGENCY
     val pulse = rememberInfiniteTransition(label = "gauge")
     val tempAnim by animateFloatAsState(snap.batteryTemp, tween(900, easing = EaseOutCubic), label = "t")
@@ -583,12 +589,12 @@ fun PremiumGauge(
             Spacer(Modifier.height(5.dp))
             RiskMiniBar(risk = riskScore.toFloat().coerceIn(0f, 100f), accent = accent)
             Spacer(Modifier.height(2.dp))
-            Text("Riesgo ${riskScore}%", fontSize = 8.sp, color = TG.textDim)
+            Text("Riesgo ${riskScore}%", fontSize = 8.sp, color = tg.textDim)
         }
 
         // Labels 25° / 55°
         Box(modifier = Modifier.fillMaxSize()) {
-            Text("25°", fontSize = 9.sp, color = TG.textDim,
+            Text("25°", fontSize = 9.sp, color = tg.textDim,
                 modifier = Modifier.align(Alignment.BottomStart).padding(start = 18.dp, bottom = 8.dp))
             Text("55°", fontSize = 9.sp, color = TG.red.copy(alpha = 0.65f),
                 modifier = Modifier.align(Alignment.BottomEnd).padding(end = 18.dp, bottom = 8.dp))
@@ -598,6 +604,7 @@ fun PremiumGauge(
 
 @Composable
 fun RiskMiniBar(risk: Float, accent: Color) {
+    val tg = LocalTgColors.current
     Box(modifier = Modifier.width(86.dp).height(4.dp)
         .clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.08f))) {
         Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(risk / 100f)
@@ -611,6 +618,7 @@ fun RiskMiniBar(risk: Float, accent: Color) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun QuickStatusBar(snap: ThermalSnapshot, level: ThermalLevel, accent: Color) {
+    val tg = LocalTgColors.current
     val msg = when {
         level == ThermalLevel.EMERGENCY -> "🚨 Temperatura crítica — pon el teléfono a descansar"
         level == ThermalLevel.CRITICAL  -> "🔴 Demasiado caliente — cierra apps y quita la funda"
@@ -630,7 +638,7 @@ fun QuickStatusBar(snap: ThermalSnapshot, level: ThermalLevel, accent: Color) {
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(accent))
-        Text(msg, fontSize = 13.sp, color = TG.textPri, lineHeight = 18.sp, modifier = Modifier.weight(1f))
+        Text(msg, fontSize = 13.sp, color = tg.textPri, lineHeight = 18.sp, modifier = Modifier.weight(1f))
     }
 }
 
@@ -639,6 +647,7 @@ fun QuickStatusBar(snap: ThermalSnapshot, level: ThermalLevel, accent: Color) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun HeaderBar(uiState: ThermalUiState, accent: Color, userName: String = "") {
+    val tg = LocalTgColors.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -646,14 +655,14 @@ fun HeaderBar(uiState: ThermalUiState, accent: Color, userName: String = "") {
     ) {
         Column {
             Text("ThermaGuard", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold,
-                color = TG.textPri, letterSpacing = (-0.8).sp)
+                color = tg.textPri, letterSpacing = (-0.8).sp)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(modifier = Modifier.size(5.dp).clip(CircleShape).background(accent))
                 Text(if (userName.isNotBlank()) "Hola, $userName  ·  Motor v6" else "Jasol Group  ·  Motor v6", fontSize = 10.sp,
-                    color = TG.textDim, letterSpacing = 0.3.sp)
+                    color = tg.textDim, letterSpacing = 0.3.sp)
             }
         }
         ModeBadge(mode = uiState.operationMode, accent = accent)
@@ -665,6 +674,7 @@ fun HeaderBar(uiState: ThermalUiState, accent: Color, userName: String = "") {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun ModeBadge(mode: OperationMode, accent: Color) {
+    val tg = LocalTgColors.current
     val (label, color) = when (mode) {
         OperationMode.LEARNING -> Pair("APRENDIENDO", Color(0xFF4FC3F7))
         OperationMode.AUTO     -> Pair("AUTO",        accent)
@@ -699,10 +709,11 @@ fun MetricTile(
     sublabel: String = "",
     badge: String? = null
 ) {
+    val tg = LocalTgColors.current
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(TG.glass)
+            .background(tg.glass)
             .border(1.dp, color.copy(alpha = 0.18f), RoundedCornerShape(16.dp))
             .padding(horizontal = 10.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -719,8 +730,8 @@ fun MetricTile(
                     modifier = Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-4).dp))
         }
         Text(value, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold,
-            color = TG.textPri, textAlign = TextAlign.Center)
-        Text(label, fontSize = 9.sp, color = TG.textSec, letterSpacing = 0.4.sp,
+            color = tg.textPri, textAlign = TextAlign.Center)
+        Text(label, fontSize = 9.sp, color = tg.textSec, letterSpacing = 0.4.sp,
             textAlign = TextAlign.Center)
         if (sublabel.isNotEmpty())
             Text(sublabel, fontSize = 8.sp, color = color.copy(alpha = 0.75f),
@@ -733,6 +744,7 @@ fun MetricTile(
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun PredictionCard(pred: TempPrediction, accent: Color) {
+    val tg = LocalTgColors.current
     val rising = pred.slope > 0
     val tColor = if (rising) TG.red else TG.green
     Row(
@@ -752,10 +764,10 @@ fun PredictionCard(pred: TempPrediction, accent: Color) {
                 null, tint = tColor, modifier = Modifier.size(22.dp))
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text("Predicción del motor", fontSize = 10.sp, color = TG.textSec, letterSpacing = 0.4.sp)
+            Text("Predicción del motor", fontSize = 10.sp, color = tg.textSec, letterSpacing = 0.4.sp)
             Text("${"%.1f".format(pred.predictedTemp)}°C esperados",
-                fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
-            Text(pred.trendText, fontSize = 11.sp, color = TG.textSec)
+                fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
+            Text(pred.trendText, fontSize = 11.sp, color = tg.textSec)
         }
         Box(modifier = Modifier.clip(RoundedCornerShape(9.dp))
             .background(tColor.copy(alpha = 0.13f))
@@ -774,11 +786,12 @@ fun PredictionCard(pred: TempPrediction, accent: Color) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun HeatCausesCard(causes: List<HeatCause>) {
+    val tg = LocalTgColors.current
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
-            .border(1.dp, TG.glassBorder, RoundedCornerShape(20.dp))
+            .background(tg.glass)
+            .border(1.dp, tg.glassBorder, RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -786,7 +799,7 @@ fun HeatCausesCard(causes: List<HeatCause>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.Whatshot, null, tint = TG.amber, modifier = Modifier.size(16.dp))
             Text("¿Por qué está caliente?", fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                fontWeight = FontWeight.SemiBold, color = tg.textPri)
         }
         causes.take(3).forEach { cause ->
             val c = when {
@@ -805,9 +818,9 @@ fun HeatCausesCard(causes: List<HeatCause>) {
             ) {
                 Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(c))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(cause.title, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TG.textPri)
+                    Text(cause.title, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = tg.textPri)
                     if (cause.description.isNotEmpty())
-                        Text(cause.description, fontSize = 10.sp, color = TG.textSec, lineHeight = 14.sp)
+                        Text(cause.description, fontSize = 10.sp, color = tg.textSec, lineHeight = 14.sp)
                 }
             }
         }
@@ -819,6 +832,7 @@ fun HeatCausesCard(causes: List<HeatCause>) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun AutoActionBanner(action: AutoAction) {
+    val tg = LocalTgColors.current
     Row(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
@@ -836,7 +850,7 @@ fun AutoActionBanner(action: AutoAction) {
         Column(modifier = Modifier.weight(1f)) {
             Text("Motor actuó automáticamente",
                 fontSize = 10.sp, color = TG.green.copy(alpha = 0.7f), letterSpacing = 0.3.sp)
-            Text(action.description, fontSize = 12.sp, color = TG.textPri, lineHeight = 16.sp)
+            Text(action.description, fontSize = 12.sp, color = tg.textPri, lineHeight = 16.sp)
         }
     }
 }
@@ -846,11 +860,12 @@ fun AutoActionBanner(action: AutoAction) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun SmartTipsCard(tips: List<SmartTip>) {
+    val tg = LocalTgColors.current
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
-            .border(1.dp, TG.glassBorder, RoundedCornerShape(20.dp))
+            .background(tg.glass)
+            .border(1.dp, tg.glassBorder, RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -858,7 +873,7 @@ fun SmartTipsCard(tips: List<SmartTip>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.AutoAwesome, null, tint = TG.purple, modifier = Modifier.size(16.dp))
             Text("Sugerencias del motor", fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                fontWeight = FontWeight.SemiBold, color = tg.textPri)
         }
         tips.forEach { tip ->
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
@@ -866,8 +881,8 @@ fun SmartTipsCard(tips: List<SmartTip>) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(tip.icon, fontSize = 18.sp, modifier = Modifier.padding(top = 1.dp))
                 Column {
-                    Text(tip.title, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TG.textPri)
-                    Text(tip.detail, fontSize = 11.sp, color = TG.textSec, lineHeight = 15.sp)
+                    Text(tip.title, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = tg.textPri)
+                    Text(tip.detail, fontSize = 11.sp, color = tg.textSec, lineHeight = 15.sp)
                 }
             }
         }
@@ -879,6 +894,7 @@ fun SmartTipsCard(tips: List<SmartTip>) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun GameModeBanner(gameMode: GameModeState) {
+    val tg = LocalTgColors.current
     val inf = rememberInfiniteTransition(label = "game")
     val glow by inf.animateFloat(0.25f, 0.65f,
         infiniteRepeatable(tween(900, easing = EaseInOut), RepeatMode.Reverse), label = "g")
@@ -897,9 +913,9 @@ fun GameModeBanner(gameMode: GameModeState) {
     ) {
         Text("🎮", fontSize = 22.sp)
         Column(modifier = Modifier.weight(1f)) {
-            Text("Modo Juego activo", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TG.textPri)
+            Text("Modo Juego activo", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = tg.textPri)
             Text("Umbrales ajustados  ·  ${gameMode.detectedGame.take(22)}",
-                fontSize = 10.sp, color = TG.textSec)
+                fontSize = 10.sp, color = tg.textSec)
         }
         Box(modifier = Modifier.clip(RoundedCornerShape(8.dp))
             .background(Color(0xFFCE93D8).copy(alpha = 0.13f))
@@ -914,6 +930,7 @@ fun GameModeBanner(gameMode: GameModeState) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun SafeChargeBanner(safeCharge: SafeChargeState) {
+    val tg = LocalTgColors.current
     val color = if (safeCharge.isOverheating) TG.amber else TG.green
     Row(
         modifier = Modifier.fillMaxWidth()
@@ -927,8 +944,8 @@ fun SafeChargeBanner(safeCharge: SafeChargeState) {
         Icon(if (safeCharge.isOverheating) Icons.Default.Warning else Icons.Default.BatteryChargingFull,
             null, tint = color, modifier = Modifier.size(22.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text("Carga Segura", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TG.textPri)
-            Text(safeCharge.recommendation, fontSize = 10.sp, color = TG.textSec, lineHeight = 14.sp)
+            Text("Carga Segura", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = tg.textPri)
+            Text(safeCharge.recommendation, fontSize = 10.sp, color = tg.textSec, lineHeight = 14.sp)
         }
         Text("${safeCharge.chargingTemp.toInt()}°C",
             fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = color)
@@ -940,6 +957,7 @@ fun SafeChargeBanner(safeCharge: SafeChargeState) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun CoolingAnimation() {
+    val tg = LocalTgColors.current
     val inf = rememberInfiniteTransition(label = "cool")
     val scale by inf.animateFloat(0.92f, 1.06f,
         infiniteRepeatable(tween(1000, easing = EaseInOut), RepeatMode.Reverse), label = "s")
@@ -958,7 +976,7 @@ fun CoolingAnimation() {
         Column(modifier = Modifier.weight(1f)) {
             Text("Enfriando...", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TG.teal)
             Text("Temperatura bajando — el motor lo está gestionando.",
-                fontSize = 10.sp, color = TG.textSec, lineHeight = 14.sp)
+                fontSize = 10.sp, color = tg.textSec, lineHeight = 14.sp)
         }
     }
 }
@@ -968,18 +986,19 @@ fun CoolingAnimation() {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun JasolFooter() {
+    val tg = LocalTgColors.current
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(modifier = Modifier.size(4.dp).clip(CircleShape)
-            .background(TG.textDim.copy(alpha = 0.5f)))
+            .background(tg.textDim.copy(alpha = 0.5f)))
         Spacer(Modifier.width(6.dp))
         Text("Jasol Group  ·  Motor v6", fontSize = 9.sp,
-            color = TG.textDim, letterSpacing = 0.6.sp)
+            color = tg.textDim, letterSpacing = 0.6.sp)
         Spacer(Modifier.width(6.dp))
         Box(modifier = Modifier.size(4.dp).clip(CircleShape)
-            .background(TG.textDim.copy(alpha = 0.5f)))
+            .background(tg.textDim.copy(alpha = 0.5f)))
     }
 }
 
@@ -992,6 +1011,7 @@ fun JasolFooter() {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun SiliconPanel(snap: ThermalSnapshot, accent: Color, silicon: SiliconAnalysis?) {
+    val tg = LocalTgColors.current
     // Fallback: si silicon es null (aún no calculado), usar Moore simple
     val power  = silicon?.moorePower  ?: run {
         val f = (snap.cpuUsage / 100f).coerceIn(0f, 1f)
@@ -1019,7 +1039,7 @@ fun SiliconPanel(snap: ThermalSnapshot, accent: Color, silicon: SiliconAnalysis?
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
+            .background(tg.glass)
             .border(1.dp, panelColor.copy(alpha = 0.22f), RoundedCornerShape(20.dp))
     ) {
         // Glow de fondo
@@ -1047,16 +1067,16 @@ fun SiliconPanel(snap: ThermalSnapshot, accent: Color, silicon: SiliconAnalysis?
                     Column {
                         Text("Motor v6  ·  3 Leyes del Silicio",
                             fontSize = 13.sp, fontWeight = FontWeight.Bold,
-                            color = TG.textPri, letterSpacing = (-0.2).sp)
+                            color = tg.textPri, letterSpacing = (-0.2).sp)
                         Text(silicon?.dominantLaw ?: "Moore  ·  Dennard  ·  Pollack  ·  Amdahl",
-                            fontSize = 9.sp, color = TG.textSec)
+                            fontSize = 9.sp, color = tg.textSec)
                     }
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text("${power.toInt()}%",
                         fontSize = 28.sp, fontWeight = FontWeight.ExtraBold,
                         color = panelColor, letterSpacing = (-1).sp)
-                    Text("/ 100", fontSize = 9.sp, color = TG.textDim,
+                    Text("/ 100", fontSize = 9.sp, color = tg.textDim,
                         modifier = Modifier.offset(y = (-4).dp))
                 }
             }
@@ -1069,7 +1089,7 @@ fun SiliconPanel(snap: ThermalSnapshot, accent: Color, silicon: SiliconAnalysis?
                     .padding(horizontal = 10.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                DataSourceChip("CPU", "${snap.cpuUsage.toInt()}%", TG.blue)
+                DataSourceChip("CPU", "${snap.cpuUsage.toInt()}%", tg.blue)
                 DataSourceChip("Temp bat.", "${snap.batteryTemp.toInt()}°C", panelColor)
                 DataSourceChip("CPU°", if (snap.cpuTemp > 0f) "${snap.cpuTemp.toInt()}°C" else "—", TG.teal)
                 DataSourceChip("Modem°", if (snap.modemTemp > 0f) "${snap.modemTemp.toInt()}°C" else "—", TG.purple)
@@ -1106,7 +1126,7 @@ fun SiliconPanel(snap: ThermalSnapshot, accent: Color, silicon: SiliconAnalysis?
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(silicon?.recommendation ?: "Calculando análisis del silicio...",
-                    fontSize = 11.sp, color = TG.textSec, lineHeight = 16.sp)
+                    fontSize = 11.sp, color = tg.textSec, lineHeight = 16.sp)
             }
         }
     }
@@ -1114,13 +1134,14 @@ fun SiliconPanel(snap: ThermalSnapshot, accent: Color, silicon: SiliconAnalysis?
 
 @Composable
 fun LawBar(title: String, subtitle: String, pct: Float, color: Color, valueLabel: String) {
+    val tg = LocalTgColors.current
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TG.textPri)
-                Text(subtitle, fontSize = 9.sp, color = TG.textSec, lineHeight = 12.sp)
+                Text(title, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri)
+                Text(subtitle, fontSize = 9.sp, color = tg.textSec, lineHeight = 12.sp)
             }
             Text(valueLabel, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, color = color,
                 modifier = Modifier.padding(start = 8.dp))
@@ -1135,9 +1156,10 @@ fun LawBar(title: String, subtitle: String, pct: Float, color: Color, valueLabel
 
 @Composable
 fun DataSourceChip(label: String, value: String, color: Color) {
+    val tg = LocalTgColors.current
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = color)
-        Text(label, fontSize = 8.sp, color = TG.textDim)
+        Text(label, fontSize = 8.sp, color = tg.textDim)
     }
 }
 
@@ -1146,13 +1168,14 @@ fun DataSourceChip(label: String, value: String, color: Color) {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent: Color) {
+    val tg = LocalTgColors.current
     val modes = listOf(
         Triple(OperationMode.LEARNING, "Aprendizaje", "🧠"),
         Triple(OperationMode.AUTO,     "Automático",  "⚙️"),
         Triple(OperationMode.ACTIVE,   "Activo",      "🔥")
     )
     val modeColor = when (mode) {
-        OperationMode.LEARNING -> TG.blue
+        OperationMode.LEARNING -> tg.blue
         OperationMode.AUTO     -> TG.green
         OperationMode.ACTIVE   -> TG.red
         OperationMode.GAMER    -> TG.red  // igual que ACTIVE
@@ -1166,7 +1189,7 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(TG.glass)
+            .background(tg.glass)
             .border(1.dp, modeColor.copy(alpha = 0.22f), RoundedCornerShape(16.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -1175,7 +1198,7 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
             Text("Modo de operación", fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-                color = TG.textPri)
+                color = tg.textPri)
             Text(when (mode) {
                 OperationMode.LEARNING -> "🧠 Aprendizaje"
                 OperationMode.AUTO     -> "⚙️ Automático"
@@ -1187,7 +1210,7 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
             modes.forEach { (m, label, icon) ->
                 val isSelected = m == mode
                 val btnColor = when (m) {
-                    OperationMode.LEARNING -> TG.blue
+                    OperationMode.LEARNING -> tg.blue
                     OperationMode.AUTO     -> TG.green
                     OperationMode.ACTIVE   -> TG.red
                     OperationMode.GAMER    -> TG.red  // igual que ACTIVE
@@ -1209,7 +1232,7 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
                         Text(icon, fontSize = 16.sp)
                         Text(label, fontSize = 10.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) btnColor else TG.textSec)
+                            color = if (isSelected) btnColor else tg.textSec)
                     }
                 }
             }
@@ -1221,7 +1244,7 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
                 .background(modeColor.copy(alpha = 0.07f))
                 .padding(horizontal = 10.dp, vertical = 6.dp)
         ) {
-            Text(modeDesc, fontSize = 10.sp, color = TG.textSec,
+            Text(modeDesc, fontSize = 10.sp, color = tg.textSec,
                 modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         }
     }
@@ -1232,10 +1255,11 @@ fun ModeSelector(mode: OperationMode, onSetMode: (OperationMode) -> Unit, accent
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun CoolingRecsCard(recs: List<CoolingRecommendation>) {
+    val tg = LocalTgColors.current
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(TG.glass)
+            .background(tg.glass)
             .border(1.dp, TG.teal.copy(alpha = 0.22f), RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -1244,9 +1268,9 @@ fun CoolingRecsCard(recs: List<CoolingRecommendation>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Default.Spa, null, tint = TG.teal, modifier = Modifier.size(16.dp))
             Text("Recomendaciones para enfriar", fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold, color = TG.textPri)
+                fontWeight = FontWeight.SemiBold, color = tg.textPri)
             Spacer(Modifier.weight(1f))
-            Text("${recs.size} acciones", fontSize = 10.sp, color = TG.textSec)
+            Text("${recs.size} acciones", fontSize = 10.sp, color = tg.textSec)
         }
         recs.take(4).forEach { rec ->
             val impactColor = when {
@@ -1269,7 +1293,7 @@ fun CoolingRecsCard(recs: List<CoolingRecommendation>) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(rec.title, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-                            color = TG.textPri, modifier = Modifier.weight(1f))
+                            color = tg.textPri, modifier = Modifier.weight(1f))
                         Row(verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             Icon(Icons.Default.ArrowDownward, null,
@@ -1278,7 +1302,7 @@ fun CoolingRecsCard(recs: List<CoolingRecommendation>) {
                                 fontWeight = FontWeight.Bold, color = impactColor)
                         }
                     }
-                    Text(rec.detail, fontSize = 10.sp, color = TG.textSec, lineHeight = 14.sp)
+                    Text(rec.detail, fontSize = 10.sp, color = tg.textSec, lineHeight = 14.sp)
                     // Effort indicator
                     Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                         repeat(rec.effort) {
@@ -1291,14 +1315,14 @@ fun CoolingRecsCard(recs: List<CoolingRecommendation>) {
                         }
                         Spacer(Modifier.width(4.dp))
                         Text(when (rec.effort) { 1 -> "Fácil"; 2 -> "Medio"; else -> "Ajuste" },
-                            fontSize = 8.sp, color = TG.textDim)
+                            fontSize = 8.sp, color = tg.textDim)
                     }
                 }
             }
         }
         if (recs.size > 4) {
             Text("+ ${recs.size - 4} acciones más disponibles",
-                fontSize = 10.sp, color = TG.textDim,
+                fontSize = 10.sp, color = tg.textDim,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center)
         }
@@ -1324,6 +1348,7 @@ private fun ramLabel(mb: Int) = when {
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun ThermalThresholdBar(mainTemp: Float, isCharging: Boolean) {
+    val tg = LocalTgColors.current
     val tempAnim by animateFloatAsState(mainTemp, tween(800, easing = EaseOutCubic), label = "tb")
 
     // Umbrales (igual que Samsung Thermal Guardian)
@@ -1504,7 +1529,7 @@ private fun UpdateBanner(
                 androidx.compose.material3.Text(
                     update.releaseNotes.take(80),
                     fontSize = 11.sp,
-                    color = TG.textSec
+                    color = tg.textSec
                 )
             }
             androidx.compose.material3.TextButton(onClick = {
@@ -1524,7 +1549,7 @@ private fun UpdateBanner(
             androidx.compose.material3.IconButton(onClick = onDismiss, modifier = androidx.compose.ui.Modifier.size(24.dp)) {
                 androidx.compose.material3.Icon(
                     androidx.compose.material.icons.Icons.Default.Close, null,
-                    tint = TG.textSec, modifier = androidx.compose.ui.Modifier.size(16.dp)
+                    tint = tg.textSec, modifier = androidx.compose.ui.Modifier.size(16.dp)
                 )
             }
         }
