@@ -145,6 +145,7 @@ fun StatsScreen(uiState: ThermalUiState, onResetLearning: () -> Unit) {
 
 @Composable
 fun StatMini(label: String, value: String, color: Color, modifier: Modifier) {
+    val tg = LocalTgColors.current
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
@@ -162,6 +163,7 @@ fun StatMini(label: String, value: String, color: Color, modifier: Modifier) {
 // ── Gráfico temperatura 24h ────────────────────────────────────────────────
 @Composable
 fun TempChart24h(history: List<ThermalSnapshot>, accent: Color) {
+    val tg = LocalTgColors.current
     if (history.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxWidth().height(120.dp)
@@ -257,6 +259,7 @@ fun TempChart24h(history: List<ThermalSnapshot>, accent: Color) {
 // ── Ranking de apps ────────────────────────────────────────────────────────
 @Composable
 fun AppRankingCard(ranking: List<Pair<String, Float>>) {
+    val tg = LocalTgColors.current
     if (ranking.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxWidth()
@@ -327,6 +330,7 @@ fun AppRankingCard(ranking: List<Pair<String, Float>>) {
 // ── Perfil horario ──────────────────────────────────────────────────────────
 @Composable
 fun HourlyProfileCard(hourlyProfile: List<HourlyDataPoint>, accent: Color) {
+    val tg = LocalTgColors.current
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
@@ -397,6 +401,7 @@ fun HourlyProfileCard(hourlyProfile: List<HourlyDataPoint>, accent: Color) {
 // ── Sesiones de calor ───────────────────────────────────────────────────────
 @Composable
 fun HeatSessionsCard(profile: LearnedProfile, accent: Color) {
+    val tg = LocalTgColors.current
     Column(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
@@ -421,6 +426,7 @@ fun HeatSessionsCard(profile: LearnedProfile, accent: Color) {
 
 @Composable
 fun StatChip(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
+    val tg = LocalTgColors.current
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -438,6 +444,7 @@ fun StatChip(label: String, value: String, color: Color, modifier: Modifier = Mo
 // ── Risk Score card ───────────────────────────────────────────────────────
 @Composable
 fun RiskScoreCard(profile: LearnedProfile, accent: Color) {
+    val tg = LocalTgColors.current
     val score = profile.riskScore.coerceIn(0, 100)
     val scoreColor = when {
         score >= 70 -> TG.red
@@ -498,6 +505,7 @@ fun RiskScoreCard(profile: LearnedProfile, accent: Color) {
 // ── Battery health card ────────────────────────────────────────────────────
 @Composable
 fun BatteryHealthCard(health: BatteryHealthScore) {
+    val tg = LocalTgColors.current
     val c = when {
         health.score < 40 -> TG.red
         health.score < 70 -> TG.amber
