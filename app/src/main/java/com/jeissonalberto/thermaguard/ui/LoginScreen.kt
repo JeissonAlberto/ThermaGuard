@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  LoginScreen — autenticación local con PIN / contraseña
@@ -36,6 +37,7 @@ private const val KEY_SETUP  = "setup_done"
 
 @Composable
 fun LoginScreen(onAuthenticated: () -> Unit) {
+    val tg = LocalTgColors.current
     val context = LocalContext.current
     val prefs   = remember { context.getSharedPreferences(PREFS_AUTH, Context.MODE_PRIVATE) }
     val isSetup = remember { prefs.getBoolean(KEY_SETUP, false) }
@@ -88,7 +90,7 @@ private fun SetupPinScreen(
                 IconButton(onClick = { showPass = !showPass }) {
                     Icon(
                         if (showPass) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = null, tint = TG.textSec
+                        contentDescription = null, tint = tg.textSec
                     )
                 }
             },
@@ -143,7 +145,7 @@ private fun SetupPinScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Omitir por ahora", color = TG.textSec, fontSize = 13.sp)
+            Text("Omitir por ahora", color = tg.textSec, fontSize = 13.sp)
         }
     }
 }
@@ -203,7 +205,7 @@ private fun DoLoginScreen(
                 IconButton(onClick = { showPass = !showPass }) {
                     Icon(
                         if (showPass) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = null, tint = TG.textSec
+                        contentDescription = null, tint = tg.textSec
                     )
                 }
             },
@@ -229,7 +231,7 @@ private fun DoLoginScreen(
             onClick  = { prefs.edit().clear().apply() },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("¿Olvidaste la contraseña? (borra datos)", color = TG.textSec.copy(alpha = 0.6f), fontSize = 11.sp)
+            Text("¿Olvidaste la contraseña? (borra datos)", color = tg.textSec.copy(alpha = 0.6f), fontSize = 11.sp)
         }
     }
 }
@@ -277,9 +279,9 @@ private fun AuthScaffold(
 
             Spacer(Modifier.height(24.dp))
             Text(title, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold,
-                color = TG.textPri, textAlign = TextAlign.Center)
+                color = tg.textPri, textAlign = TextAlign.Center)
             Spacer(Modifier.height(8.dp))
-            Text(subtitle, fontSize = 13.sp, color = TG.textSec,
+            Text(subtitle, fontSize = 13.sp, color = tg.textSec,
                 textAlign = TextAlign.Center, lineHeight = 18.sp)
             Spacer(Modifier.height(32.dp))
 
@@ -287,14 +289,14 @@ private fun AuthScaffold(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp))
-                    .background(TG.surface)
+                    .background(tg.surface)
                     .padding(24.dp)
             ) { content() }
 
             Spacer(Modifier.height(24.dp))
             Text(
                 "ThermaGuard · Todo local, nada en la nube",
-                fontSize = 11.sp, color = TG.textDim, textAlign = TextAlign.Center
+                fontSize = 11.sp, color = tg.textDim, textAlign = TextAlign.Center
             )
         }
     }
@@ -306,6 +308,6 @@ private fun authFieldColors() = OutlinedTextFieldDefaults.colors(
     unfocusedBorderColor = Color(0xFF1E2D4A),
     focusedLabelColor    = TG.cyan,
     cursorColor          = TG.cyan,
-    focusedTextColor     = TG.textPri,
-    unfocusedTextColor   = TG.textPri,
+    focusedTextColor     = tg.textPri,
+    unfocusedTextColor   = tg.textPri,
 )
