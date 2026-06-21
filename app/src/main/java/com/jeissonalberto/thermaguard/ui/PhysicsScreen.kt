@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
+import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
 
 /**
  * PhysicsScreen — Motor de Física del Silicio v2.0
@@ -33,6 +34,7 @@ fun PhysicsScreen(
     onEmergencyThrottle: () -> Unit = {},
     onUnlockMaxPerf: () -> Unit = {}
 ) {
+    val tg = LocalTgColors.current
     val snap     = uiState.latest
     val physics  = uiState.physicsAnalysis
     val govLog   = uiState.governorLog
@@ -41,7 +43,7 @@ fun PhysicsScreen(
     val accent   by remember(level) { derivedStateOf { TG.accentFor(level) } }
     val scroll   = rememberScrollState()
 
-    Box(modifier = Modifier.fillMaxSize().background(TG.bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(tg.bg)) {
 
         // Orb de fondo
         Box(modifier = Modifier.size(320.dp).align(Alignment.TopEnd).offset(x=60.dp, y=(-40).dp)
@@ -58,10 +60,10 @@ fun PhysicsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
                     Text("Motor de Física", fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold, color = TG.textPri,
+                        fontWeight = FontWeight.ExtraBold, color = tg.textPri,
                         letterSpacing = (-0.8).sp)
                     Text("19 leyes · Silicon Physics Engine v2.0",
-                        fontSize = 11.sp, color = TG.textSec)
+                        fontSize = 11.sp, color = tg.textSec)
                 }
                 Box(modifier = Modifier.clip(RoundedCornerShape(12.dp))
                     .background(accent.copy(alpha=0.12f))
@@ -80,7 +82,7 @@ fun PhysicsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         CircularProgressIndicator(color = accent)
                         Text("Calculando análisis de física...",
-                            fontSize = 13.sp, color = TG.textSec)
+                            fontSize = 13.sp, color = tg.textSec)
                         OutlinedButton(onClick = onApplyGovernor) {
                             Text("Iniciar análisis", color = accent)
                         }
@@ -161,13 +163,13 @@ fun PhysicsScreen(
                     Row(modifier=Modifier.fillMaxWidth(),
                         horizontalArrangement=Arrangement.SpaceBetween) {
                         Text("Índice degradación (NBTI/HCI)",
-                            fontSize=11.sp, color=TG.textSec)
+                            fontSize=11.sp, color=tg.textSec)
                         Text("$degPct%", fontSize=11.sp,
                             color=if(degPct>50) TG.red else TG.green,
                             fontWeight=FontWeight.Bold)
                     }
                     Box(modifier=Modifier.fillMaxWidth().height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)).background(TG.glass)) {
+                        .clip(RoundedCornerShape(3.dp)).background(tg.glass)) {
                         Box(modifier=Modifier.fillMaxHeight()
                             .fillMaxWidth(physics.degradationIndex.toFloat().coerceIn(0f,1f))
                             .clip(RoundedCornerShape(3.dp))
@@ -233,10 +235,10 @@ fun PhysicsScreen(
                         .padding(10.dp),
                         verticalArrangement=Arrangement.spacedBy(3.dp)) {
                         Text("Log de acciones",
-                            fontSize=9.sp, color=TG.textDim,
+                            fontSize=9.sp, color=tg.textDim,
                             fontWeight=FontWeight.SemiBold)
                         govLog.forEach { line ->
-                            Text(line, fontSize=10.sp, color=TG.textSec)
+                            Text(line, fontSize=10.sp, color=tg.textSec)
                         }
                     }
                 }
@@ -246,7 +248,7 @@ fun PhysicsScreen(
             if (physics.summaryLines.isNotEmpty()) {
                 PhysicsSection(title = "Resumen del análisis", icon = Icons.Default.Analytics, accent = accent) {
                     physics.summaryLines.forEach { line ->
-                        Text(line, fontSize=11.sp, color=TG.textSec,
+                        Text(line, fontSize=11.sp, color=tg.textSec,
                             modifier=Modifier.padding(vertical=1.dp))
                     }
                 }
@@ -267,7 +269,7 @@ private fun PhysicsSection(
 ) {
     Column(modifier = Modifier.fillMaxWidth()
         .clip(RoundedCornerShape(18.dp))
-        .background(TG.glass)
+        .background(tg.glass)
         .border(1.dp, accent.copy(alpha=0.12f), RoundedCornerShape(18.dp))
         .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -275,7 +277,7 @@ private fun PhysicsSection(
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(icon, null, tint = accent, modifier = Modifier.size(16.dp))
-            Text(title, fontSize=13.sp, fontWeight=FontWeight.Bold, color=TG.textPri)
+            Text(title, fontSize=13.sp, fontWeight=FontWeight.Bold, color=tg.textPri)
         }
         HorizontalDivider(color=accent.copy(alpha=0.1f))
         content()
@@ -287,14 +289,14 @@ private fun PhysicsRow(
     label: String,
     value: String,
     sub: String,
-    valueColor: Color = TG.textPri
+    valueColor: Color = tg.textPri
 ) {
     Row(modifier=Modifier.fillMaxWidth(),
         verticalAlignment=Alignment.CenterVertically,
         horizontalArrangement=Arrangement.SpaceBetween) {
         Column(modifier=Modifier.weight(1f).padding(end=8.dp)) {
-            Text(label, fontSize=11.sp, color=TG.textPri, fontWeight=FontWeight.Medium)
-            Text(sub, fontSize=9.sp, color=TG.textDim)
+            Text(label, fontSize=11.sp, color=tg.textPri, fontWeight=FontWeight.Medium)
+            Text(sub, fontSize=9.sp, color=tg.textDim)
         }
         Text(value, fontSize=14.sp, fontWeight=FontWeight.ExtraBold, color=valueColor)
     }
