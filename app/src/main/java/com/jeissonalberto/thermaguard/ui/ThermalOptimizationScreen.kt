@@ -1,4 +1,3 @@
-import com.jeissonalberto.thermaguard.root.HardwareProfiler
 package com.jeissonalberto.thermaguard.ui
 
 import android.os.Build
@@ -26,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
 import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
+import com.jeissonalberto.thermaguard.root.HardwareProfiler
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  ThermalOptimizationScreen — Guía de optimización térmica
