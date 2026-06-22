@@ -313,4 +313,23 @@ object CpuGpuGovernor {
             snap.perCoreUsage = cores
         }
     }
+    fun applyBalancedGovernor(): List<String> {
+        val results = mutableListOf<String>()
+        if (writeKernelFile("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor","schedutil"))
+            results.add("✅ Governor → schedutil") else results.add("⚠️ Governor sin root")
+        writeKernelFile("/sys/devices/system/cpu/cpu7/cpufreq/scaling_max_freq","3187200")
+        writeKernelFile("/sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq","2649600")
+        results.add("✅ Frecuencias restauradas")
+        writeKernelFile("/sys/class/kgsl/kgsl-3d0/devfreq/max_freq","818000000")
+        results.add("✅ GPU normal")
+        return results
+    }
+    fun applyThermalThrottle(): List<String> {
+        val r = mutableListOf<String>()
+        if (writeKernelFile("/sys/devices/system/cpu/cpu7/cpufreq/scaling_max_freq","1804800")) r.add("🌡 Prime core throttle") else r.add("⚠️ Throttle sin root")
+        writeKernelFile("/sys/class/kgsl/kgsl-3d0/devfreq/max_freq","490000000"); r.add("🌡 GPU throttle")
+        return r
+    }
+    fun setCpuGovernorDirect(g: String) = writeKernelFile("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor",g)
+
 }
