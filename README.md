@@ -1,3 +1,4 @@
+<!-- build: v3.9.35 -->
 # 🌡️ ThermaGuard
 
 > **App Android de monitoreo térmico y optimización autónoma** · by [Jasol Group](https://site.zapia.com/t2ible74)
