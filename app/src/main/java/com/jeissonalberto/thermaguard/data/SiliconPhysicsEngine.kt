@@ -81,8 +81,19 @@ data class DevicePhysicsParams(
     val tdpW:          Double,
     val clockGhzMax:   Double
 )
-/** Detecta parámetros físicos del dispositivo en runtime via HardwareProfiler */
+
+// ─── CACHE DE PARÁMETROS DE HARDWARE (se refresca cada 5 min) ─────────────────
+private var _cachedDeviceParams: DevicePhysicsParams? = null
+private var _cacheTimestamp: Long = 0L
+private const val DEVICE_PARAMS_TTL_MS = 5 * 60 * 1000L  // 5 minutos
+
+/** Detecta parámetros físicos del dispositivo en runtime via HardwareProfiler.
+ *  Resultado cacheado 5 min — el hardware no cambia entre muestras. */
 internal fun detectDevicePhysicsParams(): DevicePhysicsParams {
+    val now = System.currentTimeMillis()
+    _cachedDeviceParams?.takeIf { now - _cacheTimestamp < DEVICE_PARAMS_TTL_MS }
+        ?.let { return it }
+
     val p       = HardwareProfiler.getProfile()
     val peakKhz = p.cpuClusters.maxOfOrNull { c -> c.maxFreqKhz } ?: 3_000_000L
     val peakGhz = peakKhz / 1_000_000.0
@@ -104,13 +115,16 @@ internal fun detectDevicePhysicsParams(): DevicePhysicsParams {
         p.cpuCores >= 8                    -> 40.0
         else                               -> 35.0
     }
-    return DevicePhysicsParams(
+    val result = DevicePhysicsParams(
         dieAreaM2     = dieArea,
         chassisAreaM2 = 0.006,
         thermalMassJK = thermalMass,
         tdpW          = tdp,
         clockGhzMax   = peakGhz
     )
+    _cachedDeviceParams = result
+    _cacheTimestamp     = now
+    return result
 }
 
 // ─── RESULTADO DEL ANÁLISIS DE FÍSICA ────────────────────────────────────────
