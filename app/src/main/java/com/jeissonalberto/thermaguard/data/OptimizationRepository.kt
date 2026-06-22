@@ -80,13 +80,17 @@ class OptimizationRepository(private val context: Context) {
     } catch (e: Exception) { Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS) }
 
     /** Abre ajustes de rendimiento Samsung (modo de rendimiento) */
-    fun getPerformanceModeIntent(): Intent = try {
-        Intent("com.samsung.android.app.aodservice.ACTION_DEVICE_CARE").apply {
-            setPackage("com.samsung.android.lool")
-        } catch (_: Exception) {} }.also {
-            // fallback a ajustes de bateria si no existe
+    fun getPerformanceModeIntent(): Intent {
+        if (!android.os.Build.MANUFACTURER.equals("samsung", ignoreCase = true))
+            return android.provider.Settings.ACTION_BATTERY_SAVER_SETTINGS.let { android.content.Intent(it) }
+        return try {
+            android.content.Intent("com.samsung.android.app.aodservice.ACTION_DEVICE_CARE").apply {
+                setPackage("com.samsung.android.lool")
+            }
+        } catch (_: Exception) {
+            android.content.Intent(android.provider.Settings.ACTION_BATTERY_SAVER_SETTINGS)
         }
-    } catch (e: Exception) { Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS) }
+    }
 
     /** Abre ajustes de WiFi */
     fun getWifiSettingsIntent(): Intent = Intent(Settings.ACTION_WIFI_SETTINGS)
