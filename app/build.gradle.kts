@@ -11,6 +11,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
+        buildConfigField("String", "TELEMETRY_TOKEN", "\"\"")
         applicationId = "com.jeissonalberto.thermaguard"
         minSdk = 26
         targetSdk = 35
