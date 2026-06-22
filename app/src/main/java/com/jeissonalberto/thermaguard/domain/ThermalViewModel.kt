@@ -111,6 +111,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     // Modo de operación — persiste entre sesiones
     private var _operationMode = OperationMode.LEARNING
+    private var _alertFired    = false   // histéresis alertas automáticas
 
     fun setOperationMode(mode: OperationMode) {
         _operationMode = mode
