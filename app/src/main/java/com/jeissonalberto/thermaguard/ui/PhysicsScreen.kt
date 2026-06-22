@@ -35,6 +35,7 @@ fun PhysicsScreen(
     onEmergencyThrottle: () -> Unit = {},
     onUnlockMaxPerf: () -> Unit = {}
 ) {
+    val hwProfile = remember { HardwareProfiler.getProfile() }
     val tg = LocalTgColors.current
     val snap     = uiState.latest
     val physics  = uiState.physicsAnalysis
@@ -126,7 +127,7 @@ fun PhysicsScreen(
                     "Corriente de fuga × e^(ΔT/12°C)")
                 PhysicsRow("🔥 Total SoC",
                     "${"%.2f".format(physics.totalSocPower_W)} W",
-                    "de ${PhysicsConst.TDP_SNAPDRAGON} W TDP máximo",
+                    "de ${"%.0f".format(hwProfile.let { p -> val khz = p.cpuClusters.maxOfOrNull { c -> c.maxFreqKhz } ?: 3_000_000L; val ghz = khz / 1_000_000.0; when { ghz >= 3.2 -> 12.0; ghz >= 3.0 -> 10.5; ghz >= 2.5 -> 9.0; else -> 7.0 } })} W TDP estimado",
                     valueColor = when {
                         physics.totalSocPower_W >= 9.0 -> TG.red
                         physics.totalSocPower_W >= 6.0 -> TG.amber
@@ -189,7 +190,7 @@ fun PhysicsScreen(
                     "Tiempo a equilibrio térmico del die")
                 PhysicsRow("🎮 Throttle GPU",
                     if (physics.gpuThrottlePct > 0) "-${physics.gpuThrottlePct}%" else "Sin throttle",
-                    remember { HardwareProfiler.getProfile().let { p -> "${p.gpuPaths.vendor.name} (${p.chipset.take(20)})" } },
+                    "${hwProfile.gpuPaths.vendor.name} (${hwProfile.chipset.take(20)})",
                     valueColor = when {
                         physics.gpuThrottlePct >= 40 -> TG.red
                         physics.gpuThrottlePct >= 15 -> TG.amber
