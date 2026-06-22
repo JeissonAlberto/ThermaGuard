@@ -283,7 +283,7 @@ fun MainAppShell(
         NavItem("Ajustes",     Icons.Default.Settings),
     )
     // Menú "Más"
-    val moreTabs = buildList {
+    val moreTabs = remember(rootAvail) { buildList {
         add(Triple(TAB_HISTORY, "Historial",  Icons.Default.History))
         add(Triple(TAB_STATS,   "Estadísticas", Icons.Default.BarChart))
         add(Triple(TAB_ALERTS,  "Alertas",    Icons.Default.Notifications))
@@ -293,7 +293,7 @@ fun MainAppShell(
         add(Triple(TAB_THERMAL_OPT, "Optimización", Icons.Default.Thermostat))
         add(Triple(TAB_ABOUT,   "Acerca de",  Icons.Default.Info))
         if (rootAvail) add(Triple(TAB_ROOT, "Root ⚡", Icons.Default.Security))
-    }
+    } }
     val selectedInMore = selectedTab in moreTabs.map { it.first }
 
     Scaffold(
