@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
+import com.jeissonalberto.thermaguard.root.HardwareProfiler
 
 @Composable
 fun RootControlScreen(viewModel: ThermalViewModel) {
@@ -26,6 +27,7 @@ fun RootControlScreen(viewModel: ThermalViewModel) {
     val ultraActive = viewModel.ultraCoolActive.collectAsState().value
     val lastResult  = viewModel.superCoolResult.collectAsState().value
 
+    val chipsetName = remember { HardwareProfiler.getProfile().chipset.ifBlank { "Desconocido" } }
     val neonBlue  = Color(0xFF00B4FF)
     val neonGreen = Color(0xFF00FF9C)
     val neonRed   = Color(0xFFFF3B5C)
@@ -66,7 +68,7 @@ fun RootControlScreen(viewModel: ThermalViewModel) {
                         letterSpacing = 2.sp
                     )
                     Text(
-                        if (rootOk) "✓ Root activo — Snapdragon 8 Gen 1"
+                        if (rootOk) "✓ Root activo — $chipsetName"
                         else "✗ Sin root — funciones limitadas",
                         color = if (rootOk) neonGreen else Color.Gray,
                         fontSize = 12.sp
