@@ -72,6 +72,15 @@ object PhysicsConst {
 
 }
 
+
+// ─── PARÁMETROS FÍSICOS POR DISPOSITIVO ──────────────────────────────────────
+data class DevicePhysicsParams(
+    val dieAreaM2:     Double,
+    val chassisAreaM2: Double,
+    val thermalMassJK: Double,
+    val tdpW:          Double,
+    val clockGhzMax:   Double
+)
 /** Detecta parámetros físicos del dispositivo en runtime via HardwareProfiler */
 internal fun detectDevicePhysicsParams(): DevicePhysicsParams {
     val p       = HardwareProfiler.getProfile()
