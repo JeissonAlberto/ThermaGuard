@@ -1,3 +1,4 @@
+import com.jeissonalberto.thermaguard.root.HardwareProfiler
 package com.jeissonalberto.thermaguard.ui
 
 import android.os.Build
@@ -368,7 +369,7 @@ fun detectDevice(): DeviceInfo {
         isExynos2200      = profile.isExynos    && profile.chipset.contains("2200",   ignoreCase = true),
         isSamsung         = brand.contains("samsung"),
         isXiaomi          = brand.contains("xiaomi") || brand.contains("redmi") || brand.contains("poco"),
-        isHighEnd         = (profile.cpuClusters.maxOfOrNull { it.maxFreqKhz } ?: 0L) > 2_500_000L
+        isHighEnd         = (profile.cpuClusters.maxOfOrNull { c -> c.maxFreqKhz } ?: 0L) > 2_500_000L
     )
 }
 
