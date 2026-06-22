@@ -290,9 +290,10 @@ private fun PhysicsRow(
     label: String,
     value: String,
     sub: String,
-    valueColor: Color = tg.textPri
+    valueColor: Color = Color.Unspecified
 ) {
     val tg = LocalTgColors.current
+    val resolvedColor = if (valueColor == Color.Unspecified) tg.textPri else valueColor
     Row(modifier=Modifier.fillMaxWidth(),
         verticalAlignment=Alignment.CenterVertically,
         horizontalArrangement=Arrangement.SpaceBetween) {
