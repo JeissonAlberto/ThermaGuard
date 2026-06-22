@@ -286,7 +286,10 @@ fun BeastModeScreen(
                 enabled = true,
                 onToggle = { v ->
                     toggleCpuLimit = v
-                    applyCpuLimit(v, context)
+                    android.os.Process.setThreadPriority(
+                        if (v) android.os.Process.THREAD_PRIORITY_BACKGROUND
+                        else android.os.Process.THREAD_PRIORITY_DEFAULT
+                    )
                 }
             )
 
@@ -338,7 +341,11 @@ fun BeastModeScreen(
                 disabledReason = "Se activa a partir de 43°C",
                 onToggle = { v ->
                     toggle5G = v
-                    applyNetworkAction(v, context)
+                    try {
+                        val i = android.content.Intent(android.provider.Settings.Panel.ACTION_WIFI)
+                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(i)
+                    } catch (_: Exception) {}
                 }
             )
 
@@ -353,7 +360,17 @@ fun BeastModeScreen(
                 disabledReason = "Se activa a partir de 43°C",
                 onToggle = { v ->
                     toggleRefreshRate = v
-                    applyRefreshRate(v, context)
+                    try {
+                        val dm = context.getSystemService(android.content.Context.DISPLAY_SERVICE)
+                            as android.hardware.display.DisplayManager
+                        val modes = dm.getDisplay(android.view.Display.DEFAULT_DISPLAY).supportedModes
+                        val mode = if (v) modes.minByOrNull { it.refreshRate }
+                                   else   modes.maxByOrNull { it.refreshRate }
+                        mode?.let {
+                            context.getSharedPreferences("beast_prefs", android.content.Context.MODE_PRIVATE)
+                                .edit().putInt("preferred_refresh_mode", it.modeId).apply()
+                        }
+                    } catch (_: Exception) {}
                 }
             )
 
