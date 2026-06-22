@@ -25,36 +25,18 @@ class ThermalLearningEngine(context: Context) {
         context.getSharedPreferences("thermaguard_learning_v3", Context.MODE_PRIVATE)
 
     // ---- Baseline ----
-    private var baselineTemp: Float
-        get() = prefs.getFloat("baseline_temp", 32f)
-        set(v) { prefs.edit().putFloat("baseline_temp", v).apply() }
-    private var baselineCpu: Float
-        get() = prefs.getFloat("baseline_cpu", 15f)
-        set(v) { prefs.edit().putFloat("baseline_cpu", v).apply() }
-    private var sampleCount: Int
-        get() = prefs.getInt("sample_count", 0)
-        set(v) { prefs.edit().putInt("sample_count", v).apply() }
-    private var totalTempSum: Float
-        get() = prefs.getFloat("total_temp_sum", 0f)
-        set(v) { prefs.edit().putFloat("total_temp_sum", v).apply() }
+    private var baselineTemp: Float = prefs.getFloat("baseline_temp", 32f)
+    private var baselineCpu: Float = prefs.getFloat("baseline_cpu", 15f)
+    private var sampleCount: Int = prefs.getInt("sample_count", 0)
+    private var totalTempSum: Float = prefs.getFloat("total_temp_sum", 0f)
 
-    private var totalCpuSum: Float
-        get() = prefs.getFloat("total_cpu_sum", 0f)
-        set(v) { prefs.edit().putFloat("total_cpu_sum", v).apply() }
-    private var maxRecordedTemp: Float
-        get() = prefs.getFloat("max_recorded_temp", 0f)
-        set(v) { prefs.edit().putFloat("max_recorded_temp", v).apply() }
-    private var minRecordedTemp: Float
-        get() = prefs.getFloat("min_recorded_temp", 60f)
-        set(v) { prefs.edit().putFloat("min_recorded_temp", v).apply() }
+    private var totalCpuSum: Float = prefs.getFloat("total_cpu_sum", 0f)
+    private var maxRecordedTemp: Float = prefs.getFloat("max_recorded_temp", 0f)
+    private var minRecordedTemp: Float = prefs.getFloat("min_recorded_temp", 60f)
 
     // ---- EMA temperatura (alpha=0.3 fija) ----
-    private var emaTemp: Float
-        get() = prefs.getFloat("ema_temp", -1f)
-        set(v) { prefs.edit().putFloat("ema_temp", v).apply() }
-    private var emaCpu: Float
-        get() = prefs.getFloat("ema_cpu", -1f)
-        set(v) { prefs.edit().putFloat("ema_cpu", v).apply() }
+    private var emaTemp: Float = prefs.getFloat("ema_temp", -1f)
+    private var emaCpu: Float = prefs.getFloat("ema_cpu", -1f)
     // EMA alpha adaptativo: conservador en zona normal, reactivo en anomalía
     private fun emaAlpha(current: Float, baseline: Float): Float {
         val deviation = kotlin.math.abs(current - baseline)
@@ -67,36 +49,20 @@ class ThermalLearningEngine(context: Context) {
     }
 
     // ---- Patron de calor ----
-    private var chargingHeatEvents: Int
-        get() = prefs.getInt("charging_heat_events", 0)
-        set(v) { prefs.edit().putInt("charging_heat_events", v).apply() }
-    private var highCpuHeatEvents: Int
-        get() = prefs.getInt("high_cpu_heat_events", 0)
-        set(v) { prefs.edit().putInt("high_cpu_heat_events", v).apply() }
-    private var idleHeatEvents: Int
-        get() = prefs.getInt("idle_heat_events", 0)
-        set(v) { prefs.edit().putInt("idle_heat_events", v).apply() }
-    private var consecutiveHotReadings: Int
-        get() = prefs.getInt("consec_hot", 0)
-        set(v) { prefs.edit().putInt("consec_hot", v).apply() }
+    private var chargingHeatEvents: Int = prefs.getInt("charging_heat_events", 0)
+    private var highCpuHeatEvents: Int = prefs.getInt("high_cpu_heat_events", 0)
+    private var idleHeatEvents: Int = prefs.getInt("idle_heat_events", 0)
+    private var consecutiveHotReadings: Int = prefs.getInt("consec_hot", 0)
     private var consecutiveCoolReadings: Int = 0  // no persistido — se reinicia con la app
 
     // ---- Ventana de prediccion EMA (ultimas 6 lecturas suavizadas) ----
-    private var windowTemps: String
-        get() = prefs.getString("window_temps", "") ?: ""
-        set(v) { prefs.edit().putString("window_temps", v).apply() }
-    private var windowCpus: String
-        get() = prefs.getString("window_cpus", "") ?: ""
-        set(v) { prefs.edit().putString("window_cpus", v).apply() }
+    private var windowTemps: String = prefs.getString("window_temps", "") ?: ""
+    private var windowCpus: String = prefs.getString("window_cpus", "") ?: ""
     private val WINDOW_SIZE = 6
 
     // ---- Rolling buffer de 20 muestras para deteccion de anomalias ----
-    private var rollingTemps: String
-        get() = prefs.getString("rolling_temps", "") ?: ""
-        set(v) { prefs.edit().putString("rolling_temps", v).apply() }
-    private var rollingCpus: String
-        get() = prefs.getString("rolling_cpus", "") ?: ""
-        set(v) { prefs.edit().putString("rolling_cpus", v).apply() }
+    private var rollingTemps: String = prefs.getString("rolling_temps", "") ?: ""
+    private var rollingCpus: String = prefs.getString("rolling_cpus", "") ?: ""
     private val ROLLING_SIZE = 20
 
     // ---- Ciclos horarios (24 slots, temp + CPU promedio por hora) ----
@@ -110,51 +76,27 @@ class ThermalLearningEngine(context: Context) {
     // ---- Correlacion app-temperatura ----
     private fun getAppHeatScore(app: String): Float = prefs.getFloat("app_heat_$app", 0f)
     private fun setAppHeatScore(app: String, v: Float) { prefs.edit().putFloat("app_heat_$app", v).apply() }
-    private var topHeatApp: String
-        get() = prefs.getString("top_heat_app", "") ?: ""
-        set(v) { prefs.edit().putString("top_heat_app", v).apply() }
-    private var topHeatAppScore: Float
-        get() = prefs.getFloat("top_heat_app_score", 0f)
-        set(v) { prefs.edit().putFloat("top_heat_app_score", v).apply() }
+    private var topHeatApp: String = prefs.getString("top_heat_app", "") ?: ""
+    private var topHeatAppScore: Float = prefs.getFloat("top_heat_app_score", 0f)
 
     // ---- Salud de bateria ----
-    private var totalHotMinutes: Int
-        get() = prefs.getInt("total_hot_minutes", 0)
-        set(v) { prefs.edit().putInt("total_hot_minutes", v).apply() }
-    private var totalCriticalMinutes: Int
-        get() = prefs.getInt("total_critical_minutes", 0)
-        set(v) { prefs.edit().putInt("total_critical_minutes", v).apply() }
+    private var totalHotMinutes: Int = prefs.getInt("total_hot_minutes", 0)
+    private var totalCriticalMinutes: Int = prefs.getInt("total_critical_minutes", 0)
 
     // ---- Umbral dinamico ----
-    private var dynamicThreshold: Float
-        get() = prefs.getFloat("dynamic_threshold", 43f)
-        set(v) { prefs.edit().putFloat("dynamic_threshold", v).apply() }
+    private var dynamicThreshold: Float = prefs.getFloat("dynamic_threshold", 43f)
 
     // ---- Sesiones de calor ----
-    private var heatSessionsToday: Int
-        get() = prefs.getInt("heat_sessions_today", 0)
-        set(v) { prefs.edit().putInt("heat_sessions_today", v).apply() }
-    private var lastSessionDay: Int
-        get() = prefs.getInt("last_session_day", -1)
-        set(v) { prefs.edit().putInt("last_session_day", v).apply() }
-    private var inHeatSession: Boolean
-        get() = prefs.getBoolean("in_heat_session", false)
-        set(v) { prefs.edit().putBoolean("in_heat_session", v).apply() }
+    private var heatSessionsToday: Int = prefs.getInt("heat_sessions_today", 0)
+    private var lastSessionDay: Int = prefs.getInt("last_session_day", -1)
+    private var inHeatSession: Boolean = prefs.getBoolean("in_heat_session", false)
 
     // ---- Cooldown adaptativo ----
-    private var avgCooldownMinutes: Float
-        get() = prefs.getFloat("avg_cooldown_minutes", 5f)
-        set(v) { prefs.edit().putFloat("avg_cooldown_minutes", v).apply() }
-    private var cooldownSamples: Int
-        get() = prefs.getInt("cooldown_samples", 0)
-        set(v) { prefs.edit().putInt("cooldown_samples", v).apply() }
+    private var avgCooldownMinutes: Float = prefs.getFloat("avg_cooldown_minutes", 5f)
+    private var cooldownSamples: Int = prefs.getInt("cooldown_samples", 0)
     // Temp al momento de la ultima auto-accion (para medir cooldown)
-    private var cooldownStartTemp: Float
-        get() = prefs.getFloat("cooldown_start_temp", -1f)
-        set(v) { prefs.edit().putFloat("cooldown_start_temp", v).apply() }
-    private var cooldownStartTime: Long
-        get() = prefs.getLong("cooldown_start_time", -1L)
-        set(v) { prefs.edit().putLong("cooldown_start_time", v).apply() }
+    private var cooldownStartTemp: Float = prefs.getFloat("cooldown_start_temp", -1f)
+    private var cooldownStartTime: Long = prefs.getLong("cooldown_start_time", -1L)
 
     // ========== APRENDIZAJE PRINCIPAL ==========
 
@@ -1008,6 +950,42 @@ class ThermalLearningEngine(context: Context) {
 
     companion object {
         const val ThermalMonitorIntervalMin = 1
+    }
+
+    /** Persiste todos los campos aprendidos en un único commit a SharedPreferences.
+     *  Llamar una sola vez al final de learn() en lugar de 33 commits separados. */
+    fun flush() {
+        prefs.edit()
+            .putFloat("baseline_temp", baselineTemp)
+            .putFloat("baseline_cpu", baselineCpu)
+            .putInt("sample_count", sampleCount)
+            .putFloat("total_temp_sum", totalTempSum)
+            .putFloat("total_cpu_sum", totalCpuSum)
+            .putFloat("max_recorded_temp", maxRecordedTemp)
+            .putFloat("min_recorded_temp", minRecordedTemp)
+            .putFloat("ema_temp", emaTemp)
+            .putFloat("ema_cpu", emaCpu)
+            .putInt("charging_heat_events", chargingHeatEvents)
+            .putInt("high_cpu_heat_events", highCpuHeatEvents)
+            .putInt("idle_heat_events", idleHeatEvents)
+            .putInt("consec_hot", consecutiveHotReadings)
+            .putString("window_temps", windowTemps)
+            .putString("window_cpus", windowCpus)
+            .putString("rolling_temps", rollingTemps)
+            .putString("rolling_cpus", rollingCpus)
+            .putString("top_heat_app", topHeatApp)
+            .putFloat("top_heat_app_score", topHeatAppScore)
+            .putInt("total_hot_minutes", totalHotMinutes)
+            .putInt("total_critical_minutes", totalCriticalMinutes)
+            .putFloat("dynamic_threshold", dynamicThreshold)
+            .putInt("heat_sessions_today", heatSessionsToday)
+            .putInt("last_session_day", lastSessionDay)
+            .putBoolean("in_heat_session", inHeatSession)
+            .putFloat("avg_cooldown_minutes", avgCooldownMinutes)
+            .putInt("cooldown_samples", cooldownSamples)
+            .putFloat("cooldown_start_temp", cooldownStartTemp)
+            .putLong("cooldown_start_time", cooldownStartTime)
+            .apply()
     }
 }
 
