@@ -115,6 +115,34 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     fun setOperationMode(mode: OperationMode) {
         _operationMode = mode
         _uiState.update { it.copy(operationMode = mode) }
+        // Aplicar configuración de hardware según el modo seleccionado
+        viewModelScope.launch {
+            when (mode) {
+                OperationMode.GAMER -> {
+                    // Modo Bestia: desbloquear CPU/GPU al máximo
+                    try {
+                        val results = CpuGpuGovernor.unlockMaxPerformance()
+                        _uiState.update { it.copy(governorLog = results) }
+                        android.util.Log.i("ThermaGuard", "GAMER MODE: ${results.joinToString()}")
+                    } catch (e: Exception) {
+                        android.util.Log.w("ThermaGuard", "GAMER MODE hw: ${e.message}")
+                    }
+                }
+                OperationMode.AUTO, OperationMode.LEARNING -> {
+                    // Modo normal: volver a governor balanceado
+                    try {
+                        val results = CpuGpuGovernor.applyBalancedGovernor()
+                        _uiState.update { it.copy(governorLog = results) }
+                    } catch (e: Exception) {
+                        android.util.Log.w("ThermaGuard", "AUTO MODE hw: ${e.message}")
+                    }
+                }
+                OperationMode.ACTIVE -> {
+                    // Modo activo: governor schedutil con seguimiento térmico
+                    try { CpuGpuGovernor.setCpuGovernorDirect("schedutil") } catch (_: Exception) {}
+                }
+            }
+        }
     }
 
     // Intervalo adaptativo: LEARNING=60s(bajo consumo), AUTO=30s, ACTIVE=15s
@@ -171,6 +199,30 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
                     // Umbral dinámico desde el perfil aprendido
                     val dynThreshold = profile.dynamicThreshold.takeIf { it > 35f } ?: 43f
+
+                    // ── ALERTA AUTOMÁTICA — acción real cuando supera umbral ────────
+                    val userThreshold = _uiState.value.alertThreshold
+                    val currentTemp   = snapshot.batteryTemp
+                    if (currentTemp >= userThreshold && !_alertFired) {
+                        _alertFired = true
+                        // Disparar acción: matar apps en segundo plano + throttle governor
+                        viewModelScope.launch {
+                            try {
+                                val killed = optRepo.killBackgroundApps()
+                                CpuGpuGovernor.applyThermalThrottle()
+                                val action = AutoAction(
+                                    description = "🚨 Alerta térmica: ${currentTemp.toInt()}°C — Cerré $killed apps · governor throttle activado",
+                                    trigger     = "Umbral automático (${userThreshold.toInt()}°C)"
+                                )
+                                _uiState.update { it.copy(autoActionsLog = (listOf(action) + it.autoActionsLog).take(20)) }
+                                android.util.Log.w("ThermaGuard", "ALERT: temp=$currentTemp threshold=$userThreshold killed=$killed")
+                            } catch (e: Exception) {
+                                android.util.Log.e("ThermaGuard", "alert action: ${e.message}")
+                            }
+                        }
+                    } else if (currentTemp < userThreshold - 2f) {
+                        _alertFired = false  // reset cuando baja 2° del umbral (histéresis)
+                    }
 
                     // Intervalo adaptativo de lectura según nivel térmico
                     val effectiveInterval = when {
