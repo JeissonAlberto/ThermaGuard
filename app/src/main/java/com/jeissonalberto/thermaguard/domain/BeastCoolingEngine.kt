@@ -36,10 +36,28 @@ import com.jeissonalberto.thermaguard.data.ThermalSnapshot
 object BeastCoolingEngine {
 
     // Umbrales térmicos calibrados para este SoC
-    private const val TEMP_LEVEL1 = 40f   // Tibio — activar prevención
-    private const val TEMP_LEVEL2 = 43f   // Caliente — intervención media
-    private const val TEMP_LEVEL3 = 46f   // Crítico — intervención máxima
-    private const val TEMP_LEVEL4 = 50f   // Emergencia — todo disponible
+    // Umbrales dinámicos según TDP del chip detectado
+    // Chip potente (TDP>10W) throttlea antes → umbrales más bajos
+    private val thermalThresholds: ThermalThresholds by lazy {
+        val tdp = try { com.jeissonalberto.thermaguard.data.detectDevicePhysicsParams().tdpW } catch (_: Exception) { 9.0 }
+        val offset = when {
+            tdp >= 12.0 -> -2f  // flagship potente: empieza a proteger antes
+            tdp >= 10.0 -> -1f  // high-end
+            tdp <= 6.0  -> +2f  // entry-level: puede aguantar más
+            else        -> 0f   // mid-range: sin ajuste
+        }
+        ThermalThresholds(
+            level1 = 40f + offset,
+            level2 = 43f + offset,
+            level3 = 46f + offset,
+            level4 = 50f + offset
+        )
+    }
+    private data class ThermalThresholds(val level1: Float, val level2: Float, val level3: Float, val level4: Float)
+    private val TEMP_LEVEL1 get() = thermalThresholds.level1
+    private val TEMP_LEVEL2 get() = thermalThresholds.level2
+    private val TEMP_LEVEL3 get() = thermalThresholds.level3
+    private val TEMP_LEVEL4 get() = thermalThresholds.level4   // Emergencia — todo disponible
 
     /**
      * Obtiene la lista de intervenciones activas para el nivel de temperatura dado.
