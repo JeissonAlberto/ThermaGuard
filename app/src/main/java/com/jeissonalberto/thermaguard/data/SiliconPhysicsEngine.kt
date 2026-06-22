@@ -160,6 +160,7 @@ object SiliconPhysicsEngine {
      * Integra las 19 leyes físicas para generar un diagnóstico preciso.
      */
     fun analyze(snap: ThermalSnapshot, ambientTemp: Float = 25f): PhysicsAnalysis {
+        val D     = K.getDeviceParams()   // parámetros físicos del dispositivo actual
         val T_die = snap.cpuTemp.toDouble().let { if (it > 20.0) it else snap.batteryTemp.toDouble() }
         val T_amb = ambientTemp.toDouble()
         val T_die_K = T_die + 273.15
@@ -169,20 +170,20 @@ object SiliconPhysicsEngine {
         // ── 1. CONDUCCIÓN (Fourier) ────────────────────────────────────────
         // Q = k·A·ΔT/Δx  (k=400 W/m·K cobre, Δx=0.3mm die-a-frame)
         val deltaX = 0.0003 // 0.3mm
-        val conductionFlux = K.HEATSPREADER_K * K.DIE_AREA_M2 * (T_die - T_amb) / deltaX
+        val conductionFlux = K.HEATSPREADER_K * D.dieAreaM2 * (T_die - T_amb) / deltaX
 
         // ── 2. CONVECCIÓN (Newton) ────────────────────────────────────────
         // h = 6 W/m²·K (convección natural), 12 con funda quitada (mejor flujo)
         val h_conv = if (T_die > 45.0) 8.0 else 6.0
-        val convectionLoss = h_conv * K.CHASSIS_AREA_M2 * (T_die - T_amb)
+        val convectionLoss = h_conv * D.chassisAreaM2 * (T_die - T_amb)
 
         // ── 3. RADIACIÓN (Stefan-Boltzmann) ───────────────────────────────
-        val radiationLoss = K.GLASS_EMISSIVITY * K.STEFAN_SIGMA * K.CHASSIS_AREA_M2 *
+        val radiationLoss = K.GLASS_EMISSIVITY * K.STEFAN_SIGMA * D.chassisAreaM2 *
             (T_die_K.pow(4) - T_amb_K.pow(4))
 
         // ── 4. CARGA TÉRMICA DINÁMICA (Moore/CMOS) ────────────────────────
         // P = α·C·V²·f   donde f = carga * f_max
-        val freq = cpuLoad * K.CLOCK_GHz_MAX * 1e9 // Hz
+        val freq = cpuLoad * D.clockGhzMax * 1e9 // Hz
         val dynamicPower = K.ACTIVITY_FACTOR * (K.CAPACITANCE_pF * 1e-12) *
             K.VDD_CORE.pow(2) * freq
 
@@ -202,7 +203,7 @@ object SiliconPhysicsEngine {
         // ── 7. RED TÉRMICA RC (Ohm Térmico) ──────────────────────────────
         // θ_ja (junction-to-ambient) estimado S22 SoC: ~8 K/W
         val R_ja = 8.0 // K/W
-        val C_th = K.THERMAL_MASS_J_K
+        val C_th = D.thermalMassJK
         val thermalTimeConst = R_ja * C_th // segundos
 
         // ── 8. CALOR NETO ACUMULADO ───────────────────────────────────────
@@ -218,7 +219,7 @@ object SiliconPhysicsEngine {
 
         // ── 10. RENDIMIENTO REAL (Pollack) ────────────────────────────────
         // Perf ∝ √Power relativo al peak
-        val performanceRatio = sqrt(totalSocPower / K.TDP_SNAPDRAGON).coerceIn(0.0, 1.0)
+        val performanceRatio = sqrt(totalSocPower / D.tdpW).coerceIn(0.0, 1.0)
 
         // ── 11. MTTF (Ley de Arrhenius) ───────────────────────────────────
         // MTTF = A·e^(Ea/(k·T))   Ea=0.7eV para NBTI en Si
