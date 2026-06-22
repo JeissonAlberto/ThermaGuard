@@ -301,8 +301,12 @@ fun BeastModeScreen(
                     Brush.horizontalGradient(listOf(Color(0xFF006064), Color(0xFF00E5FF))))
                 .clickable {
                     val newMode = if (isActive) OperationMode.AUTO else OperationMode.GAMER
-                    onSetMode(newMode)
-                    if (newMode == OperationMode.GAMER) applyBrightness(true)
+                    onSetMode(newMode)   // ← esto ahora activa hardware real via CpuGpuGovernor
+                    if (newMode == OperationMode.GAMER) {
+                        applyBrightness(true)
+                    } else {
+                        applyBrightness(false)
+                    }
                     else applyBrightness(false)
                 }, contentAlignment = Alignment.Center) {
                 Row(verticalAlignment = Alignment.CenterVertically,
