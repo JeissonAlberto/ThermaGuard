@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.data.*
 import com.jeissonalberto.thermaguard.domain.ThermalUiState
 import com.jeissonalberto.thermaguard.ui.theme.LocalTgColors
+import com.jeissonalberto.thermaguard.root.HardwareProfiler
 
 /**
  * PhysicsScreen — Motor de Física del Silicio v2.0
@@ -188,7 +189,7 @@ fun PhysicsScreen(
                     "Tiempo a equilibrio térmico del die")
                 PhysicsRow("🎮 Throttle GPU",
                     if (physics.gpuThrottlePct > 0) "-${physics.gpuThrottlePct}%" else "Sin throttle",
-                    "Adreno 730 / Xclipse 920",
+                    remember { HardwareProfiler.getProfile().let { p -> "${p.gpuPaths.vendor.name} (${p.chipset.take(20)})" } },
                     valueColor = when {
                         physics.gpuThrottlePct >= 40 -> TG.red
                         physics.gpuThrottlePct >= 15 -> TG.amber
