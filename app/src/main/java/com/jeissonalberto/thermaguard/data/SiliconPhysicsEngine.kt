@@ -1,4 +1,5 @@
 package com.jeissonalberto.thermaguard.data
+import com.jeissonalberto.thermaguard.root.HardwareProfiler
 
 import kotlin.math.*
 
@@ -61,19 +62,47 @@ object PhysicsConst {
     const val WIEDEMANN_L  = 2.44e-8        // W·Ω/K² (Lorenz number)
     const val ACTIVATION_EA = 0.7           // eV — energía activación Si (NBTI)
 
-    // Parámetros físicos del Samsung Galaxy S22 (estimados/medidos)
-    const val DIE_AREA_M2   = 78e-6 * 78e-6   // ~78mm² die Snapdragon 8 Gen 1
-    const val HEATSPREADER_K = 400.0           // W/m·K — conductividad cobre
-    const val GLASS_EMISSIVITY = 0.93          // ε vidrio Gorilla Glass 8
-    const val CHASSIS_AREA_M2 = 0.006          // m² — área carcasa trasera S22
-    const val THERMAL_MASS_J_K = 45.0          // J/K — masa térmica total S22
-    const val AMBIENT_TEMP_K   = 298.15        // 25°C en Kelvin
-    const val TDP_SNAPDRAGON   = 10.0          // W — TDP máximo SD 8 Gen 1
-    const val TDP_EXYNOS       = 9.5           // W — TDP Exynos 2200
-    const val VDD_CORE         = 0.85          // V — voltaje nominal
-    const val CLOCK_GHz_MAX    = 3.0           // GHz — Cortex-X2 prime core
-    const val CAPACITANCE_pF   = 120.0         // pF — capacitancia efectiva
-    const val ACTIVITY_FACTOR  = 0.3           // α promedio (0.15 idle, 0.5 gaming)
+    // Parámetros físicos del dispositivo (constantes universales + detección dinámica)
+    const val HEATSPREADER_K   = 400.0   // W/m·K — conductividad cobre (universal)
+    const val GLASS_EMISSIVITY = 0.93    // ε vidrio Gorilla Glass (universal)
+    const val AMBIENT_TEMP_K   = 298.15  // 25°C en Kelvin (referencia)
+    const val VDD_CORE         = 0.85    // V — voltaje nominal (estimado)
+    const val CAPACITANCE_pF   = 120.0   // pF — capacitancia efectiva (estimado)
+    const val ACTIVITY_FACTOR  = 0.3     // α promedio (0.15 idle, 0.5 gaming)
+
+    /** Parámetros que dependen del hardware real detectado */
+    fun getDeviceParams(): DevicePhysicsParams {
+        val p = HardwareProfiler.getProfile()
+        val peakKhz = p.cpuClusters.maxOfOrNull { c -> c.maxFreqKhz } ?: 3_000_000L
+        val peakGhz = peakKhz / 1_000_000.0
+        // TDP estimado: <2.5GHz=6W, <3GHz=9W, >=3GHz=11W
+        val tdp = when {
+            peakGhz >= 3.2 -> 12.0
+            peakGhz >= 3.0 -> 10.5
+            peakGhz >= 2.5 -> 9.0
+            peakGhz >= 2.0 -> 7.0
+            else           -> 5.5
+        }
+        // Die area proporcional a núcleos y frecuencia (estimación empírica)
+        val dieArea = when {
+            p.cpuCores >= 8 && peakGhz >= 3.0 -> 78e-6 * 78e-6  // flagship ~78mm²
+            p.cpuCores >= 8                    -> 70e-6 * 70e-6  // mid-high  ~70mm²
+            p.cpuCores >= 6                    -> 60e-6 * 60e-6  // mid       ~60mm²
+            else                               -> 50e-6 * 50e-6  // entry     ~50mm²
+        }
+        val thermalMass = when {
+            p.cpuCores >= 8 && peakGhz >= 3.0 -> 45.0   // flagship
+            p.cpuCores >= 8                    -> 40.0
+            else                               -> 35.0
+        }
+        return DevicePhysicsParams(
+            dieAreaM2      = dieArea,
+            chassisAreaM2  = 0.006,        // ~medio teléfono (6cm²)
+            thermalMassJK  = thermalMass,
+            tdpW           = tdp,
+            clockGhzMax    = peakGhz
+        )
+    }
 }
 
 // ─── RESULTADO DEL ANÁLISIS DE FÍSICA ────────────────────────────────────────
