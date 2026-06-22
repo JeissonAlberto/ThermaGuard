@@ -253,6 +253,7 @@ private const val TAB_ABOUT      = 9
 private const val TAB_ROOT       = 10
 private const val TAB_PHYSICS    = 11
 private const val TAB_LEGAL      = 12   // subpantalla, no aparece en nav
+private const val TAB_HARDWARE    = 13
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  SHELL PRINCIPAL — Bottom Nav + Contenido
@@ -287,6 +288,7 @@ fun MainAppShell(
         add(Triple(TAB_ALERTS,  "Alertas",    Icons.Default.Notifications))
         add(Triple(TAB_LOGS,    "Registros",  Icons.Default.Terminal))
         add(Triple(TAB_PHYSICS, "Física",     Icons.Default.Science))
+        add(Triple(TAB_HARDWARE,"Hardware",   Icons.Default.Memory))
         add(Triple(TAB_ABOUT,   "Acerca de",  Icons.Default.Info))
         if (rootAvail) add(Triple(TAB_ROOT, "Root ⚡", Icons.Default.Security))
     }
@@ -481,6 +483,7 @@ fun MainAppShell(
                         onEmergencyThrottle = { viewModel.emergencyThrottleIfNeeded() },
                         onUnlockMaxPerf     = { viewModel.unlockMaxPerformance() }
                     )
+                    TAB_HARDWARE-> HardwareScreen()
                     TAB_LEGAL   -> LegalScreen()
                     else        -> DashboardScreen(
                         uiState          = uiState,
