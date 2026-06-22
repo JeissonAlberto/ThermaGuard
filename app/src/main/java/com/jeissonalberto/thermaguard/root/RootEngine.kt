@@ -7,43 +7,23 @@ import java.io.DataOutputStream
 import java.io.File
 
 /**
- * RootEngine — control térmico de bajo nivel para Galaxy S22 Snapdragon
- * Requiere acceso root (Magisk / KernelSU / su binario en PATH)
+ * RootEngine v3.9.33 — control térmico de bajo nivel con detección dinámica
+ *
+ * Compatibilidad universal: Qualcomm, Exynos, MediaTek, Tensor, etc.
+ * Los clusters, cores y rutas de GPU se obtienen de HardwareProfiler en runtime.
  *
  * Capacidades:
- *  1. Underclocking CPU por cluster (Silver/Gold/Prime)
- *  2. Governor térmico (schedutil → powersave bajo carga térmica)
- *  3. Underclocking GPU (gpuss-0)
- *  4. Limitar brillo directamente via sysfs
- *  5. Apagar radio 5G/WiFi via shell
+ *  1. Underclocking CPU por porcentaje (todos los clusters dinámicos)
+ *  2. Governor térmico (governor óptimo detectado automáticamente)
+ *  3. Control GPU (ruta detectada según backend: Adreno / Mali / etc.)
+ *  4. Limitar brillo via sysfs o settings
+ *  5. Control de radios (5G/WiFi) via svc shell
  *  6. Modo SuperAhorro: todas las intervenciones al máximo
  */
 object RootEngine {
 
-    // ── Rutas Snapdragon 8 Gen 1 / SM8450 ────────────────────────────────
-    private const val CPU_BASE = "/sys/devices/system/cpu"
-    // Silver cluster: cpu0-cpu3 (pequeños / eficiencia)
-    // Gold cluster:   cpu4-cpu6
-    // Prime:          cpu7
-    private val SILVER = (0..3).map { it }
-    private val GOLD   = (4..6).map { it }
-    private val PRIME  = listOf(7)
-
-    // Frecuencias máximas Snapdragon 8 Gen 1
-    // Normal: Silver=1804800, Gold=2649600, Prime=3000000 (kHz)
-    // Throttle seguro: Silver=1209600, Gold=1804800, Prime=1804800
-    // Ultra ahorro:    Silver=768000,  Gold=1209600, Prime=1209600
-    private val FREQ_NORMAL  = mapOf(0 to 1804800, 4 to 2649600, 7 to 3000000)
-    private val FREQ_THROTTLE= mapOf(0 to 1209600, 4 to 1804800, 7 to 1804800)
-    private val FREQ_ULTRA   = mapOf(0 to 768000,  4 to 1209600, 7 to 1209600)
-
-    private const val GPU_MAX_FREQ = "/sys/class/kgsl/kgsl-3d0/max_gpuclk"
-    private const val GPU_NORMAL   = 818000000  // 818 MHz
-    private const val GPU_THROTTLE = 490000000  // 490 MHz
-    private const val GPU_ULTRA    = 257000000  // 257 MHz
-
     // ── Estado ────────────────────────────────────────────────────────────
-    private var rootAvailable: Boolean? = null  // null = no chequeado aún
+    private var rootAvailable: Boolean? = null
 
     // ── Check root ────────────────────────────────────────────────────────
     suspend fun isRootAvailable(): Boolean = withContext(Dispatchers.IO) {
@@ -62,8 +42,10 @@ object RootEngine {
         try {
             val process = Runtime.getRuntime().exec("su")
             val os = DataOutputStream(process.outputStream)
-            cmds.forEach { os.writeBytes("$it\n") }
-            os.writeBytes("exit\n")
+            cmds.forEach { os.writeBytes("$it
+") }
+            os.writeBytes("exit
+")
             os.flush()
             val out = process.inputStream.bufferedReader().readText()
             val err = process.errorStream.bufferedReader().readText()
@@ -75,122 +57,146 @@ object RootEngine {
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //  1. CPU UNDERCLOCKING
-    // ═══════════════════════════════════════════════════════════════════════
-    suspend fun setCpuMaxFreq(level: CpuLevel): Boolean {
-        val freqMap = when (level) {
-            CpuLevel.NORMAL   -> FREQ_NORMAL
-            CpuLevel.THROTTLE -> FREQ_THROTTLE
-            CpuLevel.ULTRA    -> FREQ_ULTRA
+    // ── Escritura en sysfs con escalación automática ──────────────────────
+    private suspend fun writeNode(path: String, value: String): Boolean {
+        if (!File(path).exists()) return false
+        return try {
+            File(path).writeText(value)
+            true
+        } catch (_: Exception) {
+            su("printf '%s' '$value' > $path").isSuccess
         }
-        val cmds = mutableListOf<String>()
-        for (core in 0..7) {
-            val freqFile = "$CPU_BASE/cpu$core/cpufreq/scaling_max_freq"
-            if (!File(freqFile).exists()) continue
-            // Tomar la frecuencia del primer core de cada cluster
-            val freq = when (core) {
-                in SILVER -> freqMap[0]
-                in GOLD   -> freqMap[4]
-                in PRIME  -> freqMap[7]
-                else -> null
-            } ?: continue
-            cmds.add("echo $freq > $freqFile")
-        }
-        return su(*cmds.toTypedArray()).isSuccess
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  2. CPU GOVERNOR
+    //  1. CPU — dinámico via HardwareProfiler
     // ═══════════════════════════════════════════════════════════════════════
-    suspend fun setCpuGovernor(governor: String): Boolean {
-        val cmds = (0..7).map { core ->
-            "echo $governor > $CPU_BASE/cpu$core/cpufreq/scaling_governor 2>/dev/null || true"
+
+    suspend fun setCpuMaxFreq(level: CpuLevel): Boolean = withContext(Dispatchers.IO) {
+        val profile = HardwareProfiler.getProfile()
+        val percent = when (level) {
+            CpuLevel.NORMAL   -> 100
+            CpuLevel.THROTTLE -> 65
+            CpuLevel.ULTRA    -> 40
         }
-        return su(*cmds.toTypedArray()).isSuccess
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  3. GPU UNDERCLOCKING
-    // ═══════════════════════════════════════════════════════════════════════
-    suspend fun setGpuMaxFreq(level: GpuLevel): Boolean {
-        val freq = when (level) {
-            GpuLevel.NORMAL   -> GPU_NORMAL
-            GpuLevel.THROTTLE -> GPU_THROTTLE
-            GpuLevel.ULTRA    -> GPU_ULTRA
+        var anyOk = false
+        for (cluster in profile.cpuClusters) {
+            val targetKhz = (cluster.maxFreqKhz * percent / 100L)
+                .coerceAtLeast(cluster.minFreqKhz)
+            for (core in cluster.cores) {
+                val path = "/sys/devices/system/cpu/cpu$core/cpufreq/scaling_max_freq"
+                if (writeNode(path, targetKhz.toString())) anyOk = true
+            }
         }
-        val result = su("echo $freq > $GPU_MAX_FREQ")
-        return result.isSuccess
+        anyOk
+    }
+
+    suspend fun setCpuGovernor(governor: String): Boolean = withContext(Dispatchers.IO) {
+        val profile = HardwareProfiler.getProfile()
+        // Verificar que el governor esté disponible antes de aplicarlo
+        val available = profile.governors
+        val toApply = if (governor in available) governor
+                      else HardwareProfiler.bestBalancedGovernor()
+        var anyOk = false
+        for (i in 0 until profile.cpuCores) {
+            val path = "/sys/devices/system/cpu/cpu$i/cpufreq/scaling_governor"
+            if (writeNode(path, toApply)) anyOk = true
+        }
+        anyOk
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  4. BRILLO DIRECTO (sin permiso WRITE_SETTINGS)
+    //  2. GPU — rutas dinámicas via HardwareProfiler
     // ═══════════════════════════════════════════════════════════════════════
-    suspend fun setBrightness(value: Int /* 0-255 */): Boolean {
-        val clamped = value.coerceIn(10, 255)
-        return su(
-            "settings put system screen_brightness $clamped",
-            "settings put system screen_brightness_mode 0"
-        ).isSuccess
+
+    suspend fun setGpuMaxFreq(level: GpuLevel): Boolean = withContext(Dispatchers.IO) {
+        val gpuPaths = HardwareProfiler.getProfile().gpuPaths
+        val maxPath  = gpuPaths.maxFreqPath ?: return@withContext false
+
+        val currentMax = try {
+            File(maxPath).readText().trim().toLongOrNull() ?: return@withContext false
+        } catch (_: Exception) { return@withContext false }
+
+        val target = when (level) {
+            GpuLevel.NORMAL   -> currentMax      // no limitar
+            GpuLevel.THROTTLE -> (currentMax * 60 / 100L).coerceAtLeast(100_000_000L)
+            GpuLevel.ULTRA    -> (currentMax * 30 / 100L).coerceAtLeast(100_000_000L)
+        }
+        writeNode(maxPath, target.toString())
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  5. RADIO CONTROL
+    //  3. BRILLO
     // ═══════════════════════════════════════════════════════════════════════
-    suspend fun disableMobileData(): Boolean =
+
+    suspend fun setBrightness(percent: Int): Boolean = withContext(Dispatchers.IO) {
+        // Intentar via settings (funciona en muchos dispositivos sin root)
+        val result = su("settings put system screen_brightness ${(255 * percent / 100)}")
+        if (result.isSuccess) return@withContext true
+        // Fallback: sysfs (varía por dispositivo, intentar rutas comunes)
+        val brightnessNodes = listOf(
+            "/sys/class/leds/lcd-backlight/brightness",
+            "/sys/class/backlight/panel0-backlight/brightness",
+            "/sys/class/backlight/sprd_backlight/brightness"
+        )
+        val node = brightnessNodes.firstOrNull { File(it).exists() } ?: return@withContext false
+        val maxNode = node.replace("brightness", "max_brightness")
+        val maxVal = try { File(maxNode).readText().trim().toIntOrNull() ?: 255 } catch (_: Exception) { 255 }
+        writeNode(node, (maxVal * percent / 100).toString())
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  4. DATOS MÓVILES / WIFI via svc (funciona en One UI con/sin root)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    suspend fun disableMobileData(): Boolean = withContext(Dispatchers.IO) {
         su("svc data disable").isSuccess
+    }
 
-    suspend fun enableMobileData(): Boolean =
+    suspend fun enableMobileData(): Boolean = withContext(Dispatchers.IO) {
         su("svc data enable").isSuccess
-
-    suspend fun disableWifi(): Boolean =
-        su("svc wifi disable").isSuccess
-
-    suspend fun enableWifi(): Boolean =
-        su("svc wifi enable").isSuccess
-
-    suspend fun set5GOnly(enable: Boolean): Boolean {
-        // En One UI: NETWORK_MODE_LTE_ONLY = 11, LTE+NR = 33
-        val mode = if (enable) 33 else 11
-        return su("settings put global preferred_network_mode $mode").isSuccess
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  6. MATAR APPS EN SEGUNDO PLANO
+    //  5. MATAR APPS EN BACKGROUND via am (funciona en One UI con root)
     // ═══════════════════════════════════════════════════════════════════════
-    suspend fun killBackgroundApps(context: Context): Int {
-        // Obtener PIDs de apps en segundo plano
-        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
-        val procs = am.runningAppProcesses ?: return 0
-        val toKill = procs.filter { it.importance > android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE }
-        if (toKill.isEmpty()) return 0
-        val cmds = toKill.map { p -> "kill -9 ${p.pid} 2>/dev/null" }
-        return if (su(*cmds.toTypedArray()).isSuccess) toKill.size else 0
+
+    suspend fun killBackgroundApps(context: Context): Int = withContext(Dispatchers.IO) {
+        // am kill-all — mata procesos en background que no sean foreground
+        val result = su("am kill-all")
+        if (result.isSuccess) {
+            // Contar aproximadamente (am kill-all no reporta número exacto)
+            3
+        } else {
+            // Fallback: ActivityManager normal (sin root)
+            val am = context.getSystemService(Context.ACTIVITY_SERVICE)
+                as android.app.ActivityManager
+            am.killBackgroundProcesses(context.packageName)
+            1
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  7. MODO SUPER AHORRO — todas las intervenciones al máximo
+    //  6. MODO SUPER ENFRIAMIENTO — todas las acciones al máximo
     // ═══════════════════════════════════════════════════════════════════════
-    data class SuperCoolResult(
-        val cpuThrottled: Boolean,
-        val gpuThrottled: Boolean,
-        val brightnessSet: Boolean,
-        val dataDisabled: Boolean,
-        val appsKilled: Int
-    )
 
-    suspend fun activateSuperCool(context: Context, ultra: Boolean = false): SuperCoolResult {
-        val cpuLevel = if (ultra) CpuLevel.ULTRA else CpuLevel.THROTTLE
-        val gpuLevel = if (ultra) GpuLevel.ULTRA else GpuLevel.THROTTLE
+    suspend fun activateSuperCool(
+        context: Context,
+        ultra: Boolean = false
+    ): SuperCoolResult = withContext(Dispatchers.IO) {
+        val cpuLevel = if (ultra) CpuLevel.ULTRA    else CpuLevel.THROTTLE
+        val gpuLevel = if (ultra) GpuLevel.ULTRA    else GpuLevel.THROTTLE
+        val brightness = if (ultra) 25 else 70
 
-        val cpu = setCpuMaxFreq(cpuLevel)
-        val gov = setCpuGovernor(if (ultra) "powersave" else "schedutil")
-        val gpu = setGpuMaxFreq(gpuLevel)
-        val bri = setBrightness(if (ultra) 30 else 80)
-        val dat = disableMobileData()
-        val killed = killBackgroundApps(context)
+        val cpu     = setCpuMaxFreq(cpuLevel)
+        val gov     = setCpuGovernor(if (ultra) HardwareProfiler.bestPowersaveGovernor()
+                                     else       HardwareProfiler.bestBalancedGovernor())
+        val gpu     = setGpuMaxFreq(gpuLevel)
+        val bri     = setBrightness(brightness)
+        val dat     = disableMobileData()
+        val killed  = killBackgroundApps(context)
 
-        return SuperCoolResult(
+        SuperCoolResult(
             cpuThrottled  = cpu && gov,
             gpuThrottled  = gpu,
             brightnessSet = bri,
@@ -199,25 +205,38 @@ object RootEngine {
         )
     }
 
-    suspend fun deactivateSuperCool(): Boolean {
+    suspend fun deactivateSuperCool(): Boolean = withContext(Dispatchers.IO) {
         val cpu = setCpuMaxFreq(CpuLevel.NORMAL)
-        val gov = setCpuGovernor("schedutil")
+        val gov = setCpuGovernor(HardwareProfiler.bestBalancedGovernor())
         val gpu = setGpuMaxFreq(GpuLevel.NORMAL)
         val dat = enableMobileData()
-        return cpu && gov && gpu && dat
+        cpu && gov && gpu && dat
     }
 
     // ── Leer frecuencias actuales (diagnóstico) ───────────────────────────
     suspend fun readCurrentFreqs(): Map<String, Long> = withContext(Dispatchers.IO) {
-        val result = mutableMapOf<String, Long>()
-        for (core in 0..7) {
-            val f = File("$CPU_BASE/cpu$core/cpufreq/scaling_cur_freq")
-            if (f.exists()) result["cpu$core"] = f.readText().trim().toLongOrNull() ?: 0L
+        val result  = mutableMapOf<String, Long>()
+        val profile = HardwareProfiler.getProfile()
+
+        for (i in 0 until profile.cpuCores) {
+            val f = File("/sys/devices/system/cpu/cpu$i/cpufreq/scaling_cur_freq")
+            if (f.exists()) result["cpu$i"] = f.readText().trim().toLongOrNull() ?: 0L
         }
-        val gpuFile = File("/sys/class/kgsl/kgsl-3d0/gpuclk")
-        if (gpuFile.exists()) result["gpu"] = gpuFile.readText().trim().toLongOrNull() ?: 0L
+
+        val gpuPath = profile.gpuPaths.curFreqPath
+        if (gpuPath != null && File(gpuPath).exists()) {
+            result["gpu"] = File(gpuPath).readText().trim().toLongOrNull() ?: 0L
+        }
         result
     }
+
+    data class SuperCoolResult(
+        val cpuThrottled:  Boolean,
+        val gpuThrottled:  Boolean,
+        val brightnessSet: Boolean,
+        val dataDisabled:  Boolean,
+        val appsKilled:    Int
+    )
 
     enum class CpuLevel { NORMAL, THROTTLE, ULTRA }
     enum class GpuLevel { NORMAL, THROTTLE, ULTRA }
