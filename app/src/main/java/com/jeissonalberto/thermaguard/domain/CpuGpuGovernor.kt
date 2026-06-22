@@ -150,11 +150,22 @@ object CpuGpuGovernor {
     // ────────────────────────────────────────────────────────────────────────────
 
     private fun writeKernelFile(path: String, value: String): Boolean {
+        // NIVEL 1 — escritura directa (funciona si la app tiene acceso al fs)
         return try {
             File(path).writeText(value)
             true
         } catch (_: Exception) {
-            // Si falla directamente, intentar via shell root
+            // NIVEL 2 — escalada a root via su (Magisk / KernelSU)
+            writeKernelFileRoot(path, value)
+        }
+    }
+
+    private fun writeKernelFileRoot(path: String, value: String): Boolean {
+        return try {
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "echo $value > $path"))
+            val exit = process.waitFor()
+            exit == 0
+        } catch (_: Exception) {
             false
         }
     }
