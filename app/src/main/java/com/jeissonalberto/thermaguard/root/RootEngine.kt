@@ -42,10 +42,8 @@ object RootEngine {
         try {
             val process = Runtime.getRuntime().exec("su")
             val os = DataOutputStream(process.outputStream)
-            cmds.forEach { os.writeBytes("$it
-") }
-            os.writeBytes("exit
-")
+            cmds.forEach { os.writeBytes("$it\n") }
+            os.writeBytes("exit\n")
             os.flush()
             val out = process.inputStream.bufferedReader().readText()
             val err = process.errorStream.bufferedReader().readText()
