@@ -190,7 +190,7 @@ fun PhysicsScreen(
                     "Tiempo a equilibrio térmico del die")
                 PhysicsRow("🎮 Throttle GPU",
                     if (physics.gpuThrottlePct > 0) "-${physics.gpuThrottlePct}%" else "Sin throttle",
-                    "${hwProfile.gpuPaths.vendor.name} (${hwProfile.chipset.take(20)})",
+                    "${hwProfile.gpuBackend.name} (${hwProfile.chipset.take(20)})",
                     valueColor = when {
                         physics.gpuThrottlePct >= 40 -> TG.red
                         physics.gpuThrottlePct >= 15 -> TG.amber
