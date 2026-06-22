@@ -163,7 +163,7 @@ private fun OptHeader(deviceInfo: DeviceInfo, currentTemp: Float) {
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        "${d.soc} detectado — SoC con alta densidad térmica. " +
+                        "${deviceInfo.soc} detectado — SoC con alta densidad térmica. " +
                         "Aplica especialmente los tips de nivel 2.",
                         fontSize = 11.sp,
                         color = Color(0xFFFF5252).copy(alpha = 0.9f)
