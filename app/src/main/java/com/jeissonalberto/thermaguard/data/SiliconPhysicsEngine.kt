@@ -70,39 +70,38 @@ object PhysicsConst {
     const val CAPACITANCE_pF   = 120.0   // pF — capacitancia efectiva (estimado)
     const val ACTIVITY_FACTOR  = 0.3     // α promedio (0.15 idle, 0.5 gaming)
 
-    /** Parámetros que dependen del hardware real detectado */
-    fun getDeviceParams(): DevicePhysicsParams {
-        val p = HardwareProfiler.getProfile()
-        val peakKhz = p.cpuClusters.maxOfOrNull { c -> c.maxFreqKhz } ?: 3_000_000L
-        val peakGhz = peakKhz / 1_000_000.0
-        // TDP estimado: <2.5GHz=6W, <3GHz=9W, >=3GHz=11W
-        val tdp = when {
-            peakGhz >= 3.2 -> 12.0
-            peakGhz >= 3.0 -> 10.5
-            peakGhz >= 2.5 -> 9.0
-            peakGhz >= 2.0 -> 7.0
-            else           -> 5.5
-        }
-        // Die area proporcional a núcleos y frecuencia (estimación empírica)
-        val dieArea = when {
-            p.cpuCores >= 8 && peakGhz >= 3.0 -> 78e-6 * 78e-6  // flagship ~78mm²
-            p.cpuCores >= 8                    -> 70e-6 * 70e-6  // mid-high  ~70mm²
-            p.cpuCores >= 6                    -> 60e-6 * 60e-6  // mid       ~60mm²
-            else                               -> 50e-6 * 50e-6  // entry     ~50mm²
-        }
-        val thermalMass = when {
-            p.cpuCores >= 8 && peakGhz >= 3.0 -> 45.0   // flagship
-            p.cpuCores >= 8                    -> 40.0
-            else                               -> 35.0
-        }
-        return DevicePhysicsParams(
-            dieAreaM2      = dieArea,
-            chassisAreaM2  = 0.006,        // ~medio teléfono (6cm²)
-            thermalMassJK  = thermalMass,
-            tdpW           = tdp,
-            clockGhzMax    = peakGhz
-        )
+}
+
+/** Detecta parámetros físicos del dispositivo en runtime via HardwareProfiler */
+internal fun detectDevicePhysicsParams(): DevicePhysicsParams {
+    val p       = HardwareProfiler.getProfile()
+    val peakKhz = p.cpuClusters.maxOfOrNull { c -> c.maxFreqKhz } ?: 3_000_000L
+    val peakGhz = peakKhz / 1_000_000.0
+    val tdp = when {
+        peakGhz >= 3.2 -> 12.0
+        peakGhz >= 3.0 -> 10.5
+        peakGhz >= 2.5 -> 9.0
+        peakGhz >= 2.0 -> 7.0
+        else           -> 5.5
     }
+    val dieArea = when {
+        p.cpuCores >= 8 && peakGhz >= 3.0 -> 78e-6 * 78e-6
+        p.cpuCores >= 8                    -> 70e-6 * 70e-6
+        p.cpuCores >= 6                    -> 60e-6 * 60e-6
+        else                               -> 50e-6 * 50e-6
+    }
+    val thermalMass = when {
+        p.cpuCores >= 8 && peakGhz >= 3.0 -> 45.0
+        p.cpuCores >= 8                    -> 40.0
+        else                               -> 35.0
+    }
+    return DevicePhysicsParams(
+        dieAreaM2     = dieArea,
+        chassisAreaM2 = 0.006,
+        thermalMassJK = thermalMass,
+        tdpW          = tdp,
+        clockGhzMax   = peakGhz
+    )
 }
 
 // ─── RESULTADO DEL ANÁLISIS DE FÍSICA ────────────────────────────────────────
@@ -160,7 +159,7 @@ object SiliconPhysicsEngine {
      * Integra las 19 leyes físicas para generar un diagnóstico preciso.
      */
     fun analyze(snap: ThermalSnapshot, ambientTemp: Float = 25f): PhysicsAnalysis {
-        val D     = K.getDeviceParams()   // parámetros físicos del dispositivo actual
+        val D     = detectDevicePhysicsParams()   // parámetros físicos del dispositivo actual
         val T_die = snap.cpuTemp.toDouble().let { if (it > 20.0) it else snap.batteryTemp.toDouble() }
         val T_amb = ambientTemp.toDouble()
         val T_die_K = T_die + 273.15
