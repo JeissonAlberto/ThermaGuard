@@ -39,8 +39,6 @@ object TelemetryRepository {
     // Token de solo escritura para issues (permisos: issues:write)
     // Se parte para evitar que GitHub lo revoque por estar en texto plano
     private val GH_TOKEN = BuildConfig.TELEMETRY_TOKEN  // Configurar en local.properties
-        "ghp_rjx0SubK1teoHbCY", "yXI8zT11y5KqQ20za5Mt"
-    ).joinToString("")
 
     /** Verifica si el usuario tiene habilitado el envío de telemetría */
     fun isEnabled(context: Context): Boolean {
