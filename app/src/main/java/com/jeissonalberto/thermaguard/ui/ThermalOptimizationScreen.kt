@@ -355,43 +355,20 @@ data class DeviceInfo(
 )
 
 fun detectDevice(): DeviceInfo {
-    val brand  = Build.BRAND.lowercase()
-    val model  = Build.MODEL
-    val hw     = Build.HARDWARE.lowercase()
-    val device = Build.DEVICE.lowercase()
-
-    val isSnapdragon8Gen1 = hw.contains("kalama") || hw.contains("waipio") ||
-        device.contains("b0q") || device.contains("r0q") ||
-        model.contains("SM-S901") || model.contains("SM-S906") || model.contains("SM-S908")
-    val isExynos2200 = hw.contains("s5e9925") || device.contains("r0q") && brand.contains("samsung")
-    val isSamsung    = brand.contains("samsung")
-    val isXiaomi     = brand.contains("xiaomi") || brand.contains("redmi") || brand.contains("poco")
-
-    val soc = when {
-        isSnapdragon8Gen1 -> "Snapdragon 8 Gen 1"
-        isExynos2200      -> "Exynos 2200"
-        hw.contains("sm8550") || hw.contains("taro")    -> "Snapdragon 8 Gen 2"
-        hw.contains("sm8650") || hw.contains("pineapple")-> "Snapdragon 8 Gen 3"
-        hw.contains("mt6895") || hw.contains("mt6983")  -> "MediaTek Dimensity"
-        else -> Build.HARDWARE.uppercase().take(20)
-    }
-
-    val isHighEnd = isSnapdragon8Gen1 || isExynos2200 ||
-        hw.contains("sm8550") || hw.contains("sm8650") ||
-        hw.contains("mt6983")
-
-    val brandDisplay = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
-
+    val profile      = HardwareProfiler.getProfile()
+    val brand        = android.os.Build.BRAND.lowercase()
+    val model        = android.os.Build.MODEL
+    val brandDisplay = android.os.Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
     return DeviceInfo(
-        brand            = brand,
-        model            = model,
-        soc              = soc,
-        fullName         = "$brandDisplay $model · $soc",
-        isSnapdragon8Gen1 = isSnapdragon8Gen1,
-        isExynos2200     = isExynos2200,
-        isSamsung        = isSamsung,
-        isXiaomi         = isXiaomi,
-        isHighEnd        = isHighEnd
+        brand             = brand,
+        model             = model,
+        soc               = profile.chipset,
+        fullName          = "$brandDisplay $model · ${profile.chipset}",
+        isSnapdragon8Gen1 = profile.isQualcomm && profile.chipset.contains("8 Gen 1", ignoreCase = true),
+        isExynos2200      = profile.isExynos    && profile.chipset.contains("2200",   ignoreCase = true),
+        isSamsung         = brand.contains("samsung"),
+        isXiaomi          = brand.contains("xiaomi") || brand.contains("redmi") || brand.contains("poco"),
+        isHighEnd         = (profile.cpuClusters.maxOfOrNull { it.maxFreqKhz } ?: 0L) > 2_500_000L
     )
 }
 
