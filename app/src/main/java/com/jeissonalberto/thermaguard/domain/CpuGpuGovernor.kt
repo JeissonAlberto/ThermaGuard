@@ -339,4 +339,64 @@ object CpuGpuGovernor {
         return results
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  applyGovernorConfig — aplica configuración del motor de física
+    // ─────────────────────────────────────────────────────────────────────────
+    fun applyGovernorConfig(config: GovernorConfig): List<String> {
+        val results = mutableListOf<String>()
+        val profile = HardwareProfiler.getProfile()
+
+        // Governor
+        val govOk = setCpuGovernorDirect(config.name)
+        results.add(if (govOk) "✅ Governor → ${config.name}" else "⚠️ Governor sin permisos")
+
+        // Frecuencia máxima CPU como porcentaje del máximo real del dispositivo
+        val peakKhz = profile.cpuClusters.maxOfOrNull { it.maxFreqKhz } ?: 1L
+        val targetKhz = (config.maxFreqGHz * 1_000_000L).toLong().coerceAtMost(peakKhz)
+        val percent = ((targetKhz.toFloat() / peakKhz) * 100).toInt().coerceIn(20, 100)
+
+        for (cluster in profile.cpuClusters) {
+            val clusterTarget = (cluster.maxFreqKhz * percent / 100L).coerceAtLeast(cluster.minFreqKhz)
+            for (core in cluster.cores) {
+                writeKernelFile(
+                    "/sys/devices/system/cpu/cpu$core/cpufreq/scaling_max_freq",
+                    clusterTarget.toString()
+                )
+            }
+        }
+        results.add("✅ CPU → ${config.maxFreqGHz}GHz (~${percent}% del máximo)")
+
+        // GPU
+        val gpuResult = setGpuMaxFreqPercent(
+            ((config.gpuMaxFreqMHz.toFloat() / 818f) * 100).toInt().coerceIn(20, 100)
+        )
+        results.add(gpuResult)
+
+        if (config.reason.isNotBlank()) results.add("💡 ${config.reason}")
+        return results
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  emergencyThrottle — throttle de emergencia cuando temp >= 52°C
+    // ─────────────────────────────────────────────────────────────────────────
+    fun emergencyThrottle(): List<String> {
+        val results = mutableListOf<String>()
+        results.add("🚨 THROTTLE DE EMERGENCIA")
+
+        // Powersave governor inmediato
+        val saveGov = HardwareProfiler.bestPowersaveGovernor()
+        if (setCpuGovernorDirect(saveGov))
+            results.add("✅ Governor → $saveGov (emergencia)")
+        else
+            results.add("⚠️ Governor: sin permisos root")
+
+        // CPU al 50%
+        results.addAll(setCpuMaxFreqPercent(50))
+
+        // GPU al 40%
+        results.add(setGpuMaxFreqPercent(40))
+
+        return results
+    }
+
 }
