@@ -83,7 +83,7 @@ class OptimizationRepository(private val context: Context) {
     fun getPerformanceModeIntent(): Intent = try {
         Intent("com.samsung.android.app.aodservice.ACTION_DEVICE_CARE").apply {
             setPackage("com.samsung.android.lool")
-        }.also {
+        } catch (_: Exception) {} }.also {
             // fallback a ajustes de bateria si no existe
         }
     } catch (e: Exception) { Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS) }
