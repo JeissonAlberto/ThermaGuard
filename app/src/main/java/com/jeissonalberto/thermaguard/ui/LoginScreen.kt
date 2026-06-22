@@ -306,7 +306,7 @@ private fun AuthScaffold(
 }
 
 @Composable
-private fun authFieldColors(): OutlinedTextFieldColors {
+private fun authFieldColors(): TextFieldColors {
     val tg = LocalTgColors.current
     return OutlinedTextFieldDefaults.colors(
         focusedBorderColor   = TG.cyan,
