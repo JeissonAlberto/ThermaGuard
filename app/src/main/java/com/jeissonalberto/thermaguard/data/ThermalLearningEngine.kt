@@ -1,6 +1,7 @@
 package com.jeissonalberto.thermaguard.data
 
 import android.content.Context
+import com.jeissonalberto.thermaguard.root.HardwareProfiler
 import android.content.SharedPreferences
 import kotlin.math.abs
 import kotlin.math.max
@@ -938,7 +939,7 @@ class ThermalLearningEngine(context: Context) {
                 icon = "🧠",
                 title = "RAM crítica — el sistema trabaja de más",
                 detail = "Con solo ${snapshot.ramUsageMb}MB libre, el sistema hace swap y " +
-                         "el Exynos 2200 genera calor extra gestionando la memoria. " +
+                         "${if (HardwareProfiler.getProfile().isExynos) "el Exynos genera calor extra gestionando la memoria. " else "el SoC genera calor extra bajo carga de memoria. "}" +
                          "Cierra apps que no uses.",
                 impactDegrees = 1.5f, effort = 1
             ))
@@ -995,7 +996,7 @@ class ThermalLearningEngine(context: Context) {
                 icon = "🔬",
                 title = "Fuga de corriente elevada — Dennard",
                 detail = "El chip genera ${silicon.dennardLeakage.toInt()}% de calor de fondo " +
-                         "aunque no esté procesando (corriente de fuga del Exynos 2200). " +
+                         "${if (HardwareProfiler.getProfile().isExynos) "aunque no esté procesando (corriente de fuga del Exynos). " else "aunque no esté procesando activamente. "}" +
                          "Reiniciar el dispositivo puede reducirla temporalmente.",
                 impactDegrees = 2f, effort = 2
             ))
