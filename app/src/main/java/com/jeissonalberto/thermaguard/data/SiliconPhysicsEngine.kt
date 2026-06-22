@@ -1,7 +1,7 @@
 package com.jeissonalberto.thermaguard.data
-import com.jeissonalberto.thermaguard.root.HardwareProfiler
 
 import kotlin.math.*
+import com.jeissonalberto.thermaguard.root.HardwareProfiler
 
 /**
  * ════════════════════════════════════════════════════════════════════════════
