@@ -306,11 +306,14 @@ private fun AuthScaffold(
 }
 
 @Composable
-private fun authFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor   = TG.cyan,
-    unfocusedBorderColor = Color(0xFF1E2D4A),
-    focusedLabelColor    = TG.cyan,
-    cursorColor          = TG.cyan,
-    focusedTextColor     = tg.textPri,
-    unfocusedTextColor   = tg.textPri,
-)
+private fun authFieldColors(): OutlinedTextFieldColors {
+    val tg = LocalTgColors.current
+    return OutlinedTextFieldDefaults.colors(
+        focusedBorderColor   = TG.cyan,
+        unfocusedBorderColor = Color(0xFF1E2D4A),
+        focusedLabelColor    = TG.cyan,
+        cursorColor          = TG.cyan,
+        focusedTextColor     = tg.textPri,
+        unfocusedTextColor   = tg.textPri,
+    )
+}
