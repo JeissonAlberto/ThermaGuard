@@ -287,7 +287,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
                 } catch (_: Exception) { }
 
-                delay(intervalMs)
+                delay(effectiveInterval)  // intervalo adaptativo según nivel térmico
             }
         }
     }
