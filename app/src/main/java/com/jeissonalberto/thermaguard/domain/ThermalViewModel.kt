@@ -416,7 +416,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     fun resetLearning()             { learningEngine.reset() }
     fun clearAutoLog()              { _uiState.update { it.copy(autoActionsLog = emptyList()) } }
     // ── Modo Juego ──────────────────────────────────────────────────────
-    private val gamingPackages = listOf("com.mobile.legends", "com.tencent.ig", "com.activision.callofduty", "com.garena.game", "com.dts.freefireth", "com.king.candycrushsaga", "com.supercell.clashofclans", "com.epicgames", "com.roblox.client", "com.mojang.minecraftpe")
+    private val gamingPackages = setOf("com.mobile.legends", "com.tencent.ig", "com.activision.callofduty", "com.garena.game", "com.dts.freefireth", "com.king.candycrushsaga", "com.supercell.clashofclans", "com.epicgames", "com.roblox.client", "com.mojang.minecraftpe")
 
     fun detectGameMode(topApp: String): GameModeState {
         val isGame = gamingPackages.any { pkg -> topApp.contains(pkg, ignoreCase = true) }
