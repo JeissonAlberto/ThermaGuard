@@ -368,9 +368,12 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private fun observeHistory() {
         viewModelScope.launch {
-            db.thermalDao().getHistory(200).distinctUntilChanged().collect { rows ->
-                _uiState.update { it.copy(history = rows) }
-            }
+            db.thermalDao().getHistory(200)
+                .distinctUntilChanged()
+                .flowOn(kotlinx.coroutines.Dispatchers.IO)  // query en IO, collect en Main
+                .collect { rows ->
+                    _uiState.update { it.copy(history = rows) }
+                }
         }
     }
 
