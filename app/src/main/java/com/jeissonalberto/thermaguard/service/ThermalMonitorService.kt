@@ -125,7 +125,11 @@ class ThermalMonitorService : Service() {
                     lastKnownTemp = mainT
                 }
                 learnCycle++
-                val profile = lastProfile ?: learningEngine.learn(snap)
+                val profile = lastProfile ?: run {
+                    val p = learningEngine.learn(snap)
+                    lastProfile = p
+                    p
+                }
 
                 // Temperatura principal: CPU si disponible, si no modem, si no batería
                 val mainTemp = snap.mainTemp()
