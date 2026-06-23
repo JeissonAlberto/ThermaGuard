@@ -658,8 +658,7 @@ class ThermalLearningEngine(context: Context) {
         prefs.edit().apply(block).apply()
     }
 
-        flush()  // persistir cambios
-        fun reset() { prefs.edit().clear().apply() }
+    fun reset() { prefs.edit().clear().apply() }
 
 
     // ════════════════════════════════════════════════════════════════════════
