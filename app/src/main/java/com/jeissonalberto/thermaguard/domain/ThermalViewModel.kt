@@ -192,7 +192,11 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     val tips       = learningEngine.generateSmartTips(profile, snapshot, prediction)
                     val gameMode   = detectGameMode(snapshot.topApp)
                     val safeCharge = evalSafeCharge(snapshot)
-                    val appRanking = computeAppRanking()
+                    // Recalcular ranking solo cada 10 ciclos (evita iterar 200 items por tick)
+                    rankingCycle++
+                    val appRanking = if (rankingCycle % 10 == 0) {
+                        computeAppRanking().also { lastAppRanking = it }
+                    } else lastAppRanking
                     val wasCooling = _uiState.value.isCoolingDown
                     val isCooling  = !snapshot.batteryTemp.toThermalLevel().let {
                         it == ThermalLevel.HOT || it == ThermalLevel.CRITICAL || it == ThermalLevel.EMERGENCY
@@ -372,6 +376,9 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     // Flag para evitar physics overlapping
     private var physicsRunning = false
+    // Throttle para computeAppRanking (costoso — iterar history 200 items)
+    private var rankingCycle   = 0
+    private var lastAppRanking = emptyList<Pair<String, Float>>()
 
     fun startMonitor() {
         _uiState.update { it.copy(isMonitoring = true) }
