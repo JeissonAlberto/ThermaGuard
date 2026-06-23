@@ -650,6 +650,7 @@ class ThermalLearningEngine(context: Context) {
 
     fun recordCooldown(minutes: Float) {
         avgCooldownMinutes = 0.3f * minutes + 0.7f * avgCooldownMinutes
+        flush()  // persistir cambios
     }
 
     /** Guarda múltiples campos en una sola transacción de SharedPreferences */
@@ -657,6 +658,7 @@ class ThermalLearningEngine(context: Context) {
         prefs.edit().apply(block).apply()
     }
 
+        flush()  // persistir cambios
         fun reset() { prefs.edit().clear().apply() }
 
 
