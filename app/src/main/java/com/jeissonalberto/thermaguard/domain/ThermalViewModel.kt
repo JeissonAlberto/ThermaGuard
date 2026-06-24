@@ -257,7 +257,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     val forceUpdate = _uiState.value.isLoading || isHotNow || wasHot
                     if (!forceUpdate && tempDelta < 0.3f && cpuDelta < 3f) {
                         // Sin cambio relevante — saltar update de UI (ahorro ~30% recomposiciones)
-                        delay(effectiveInterval)
+                        delay(intervalMs)
                         continue
                     }
                     lastUiTemp   = snapshot.batteryTemp
@@ -291,7 +291,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
                 } catch (_: Exception) { }
 
-                delay(effectiveInterval)  // intervalo adaptativo según nivel térmico
+                delay(intervalMs)  // intervalo adaptativo según nivel térmico
             }
         }
     }
