@@ -116,5 +116,6 @@ data class ThermalUiState(
     val causes: List<HeatCause> = emptyList(),
     val prediction: TempPrediction = TempPrediction(),
     val smartTips: List<SmartTip> = emptyList(),
-    val governorLog: List<String> = emptyList()
+    val governorLog: List<String> = emptyList(),
+    val isCoolingDown: Boolean = false
 )
