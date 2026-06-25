@@ -1,5 +1,7 @@
 package com.jeissonalberto.thermaguard.domain
 
+import com.jeissonalberto.thermaguard.data.SiliconPhysics
+
 import com.jeissonalberto.thermaguard.data.*
 
 import android.app.Application
