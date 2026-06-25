@@ -291,7 +291,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         )
                     }
 
-                    }
                     
                     executeAutoOptimization(snapshot, profile)
 
