@@ -27,11 +27,11 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val siliconAnalysis = _uiState.map { it.siliconAnalysis }.stateIn(viewModelScope, SharingStarted.Eagerly, SiliconAnalysis())
     val coolingRecs     = _uiState.map { it.coolingRecs }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     
-    val appTheme       = MutableStateFlow("System")
-    val pendingUpdate  = MutableStateFlow<AppUpdate?>(null)
-    val telemetryOn    = MutableStateFlow(true)
-    val userName       = MutableStateFlow("User")
-    val deviceNickname = MutableStateFlow("Device")
+    val appTheme: StateFlow<String> = MutableStateFlow("System")
+    val pendingUpdate: StateFlow<AppUpdate?> = MutableStateFlow(null)
+    val telemetryOn: StateFlow<Boolean> = MutableStateFlow(true)
+    val userName: StateFlow<String> = MutableStateFlow("User")
+    val deviceNickname: StateFlow<String> = MutableStateFlow("Device")
     val rootAvailable  = MutableStateFlow(false)
 
     init {
