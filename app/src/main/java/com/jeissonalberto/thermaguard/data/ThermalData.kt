@@ -153,7 +153,66 @@ enum class ThermalComponent {
     BATTERY, CPU, GPU, MODEM, SKIN, BOARD, DISPLAY, PROCESS;
     companion object {
         val PROCESSOR = CPU
+        val CORE = CPU
     }
 }
 
-data class HeatCause(val title: String, val description: String, val severity: Int)
+data class HeatCause(
+    val title: String = "", 
+    val description: String = "", 
+    val severity: Int = 1,
+    val label: String = ""
+)
+
+data class LearnedProfile(
+    val samplesCollected: Int = 0,
+    val baselineTemp: Float = 30f,
+    val baselineCpu: Float = 0f,
+    val averageTemp: Float = 30f,
+    val averageCpu: Float = 0f,
+    val maxRecordedTemp: Float = 30f,
+    val minRecordedTemp: Float = 30f,
+    val tempAnomaly: Float = 0f,
+    val isAnomaly: Boolean = false,
+    val trend: TempTrend = TempTrend.STABLE,
+    val likelyCause: LearnedCause = LearnedCause.UNKNOWN,
+    val personalRisk: RiskLevel = RiskLevel.NORMAL,
+    val consecutiveHotReadings: Int = 0,
+    val chargingHeatPct: Float = 0f,
+    val highCpuHeatPct: Float = 0f,
+    val dynamicThreshold: Float = 40f,
+    val topHeatApp: String = "",
+    val topHeatAppScore: Float = 0f,
+    val hourAnomaly: Float? = 0f,
+    val expectedThisHour: Float? = 0f,
+    val heatSessionsToday: Int = 0,
+    val avgCooldownMinutes: Float = 5f,
+    val riskScore: Int = 0
+)
+
+enum class TempTrend { STABLE, RISING, RISING_FAST }
+enum class LearnedCause { UNKNOWN, CHARGING_HABIT, HIGH_CPU_APPS, BACKGROUND_DRAIN }
+enum class RiskLevel { NORMAL, LOW, MEDIUM, HIGH, CRITICAL }
+
+data class TempPrediction(
+    val predictedTemp: Float = 0f,
+    val confidence: PredictionConfidence = PredictionConfidence.MEDIUM,
+    val trendText: String = "",
+    val slope: Float = 0f
+)
+enum class PredictionConfidence { LOW, MEDIUM, HIGH }
+
+data class BatteryHealthScore(
+    val score: Int = 100,
+    val level: String = "Good",
+    val factors: List<String> = emptyList()
+)
+
+data class HourlyDataPoint(val hour: Int, val avgTemp: Float)
+
+data class SmartTip(
+    val icon: String = "",
+    val title: String = "",
+    val detail: String = "",
+    val priority: Int = 1
+)
