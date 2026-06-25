@@ -287,6 +287,13 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         )
                     }
 
+                                        // Motor Predictivo v4.0: Actuar ANTES de que ocurra el calor
+                    val prediction = siliconEngine.predictFuture(snapshot, params, _uiState.value.history)
+                    if (prediction.expectedTemp2Min > 41f && prediction.trendSeverity > 0.6f) {
+                        // Pre-cooling activo: el futuro se ve caliente
+                        if (!isCooling) triggerEmergencyCooling(snapshot, "IA: Predicción de calor inminente")
+                    }
+                    
                     executeAutoOptimization(snapshot, profile)
 
                 } catch (_: Exception) { }
