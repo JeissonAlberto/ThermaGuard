@@ -34,6 +34,12 @@ data class SiliconAnalysis(
     val leakagePower_W: Float = 0f,
     val totalSocPower_W: Float = 0f,
     val joulePmicHeat_W: Float = 0f,
+    val dennardEfficiency: Float = 1.0f,
+    val pollackPerfPerWatt: Float = 1.0f,
+    val pollackWastedHeat: Float = 0f,
+    val amdahlThrottleEta: Float = 0f,
+    val amdahlParallelScore: Float = 1.0f,
+    val amdahlTimeToThrottle: Int = 999,
     val throttlePct: Int = 0,
     val performanceRatio: Float = 1f,
     val mttfHours: Double = 100000.0,
@@ -45,6 +51,8 @@ data class SiliconAnalysis(
     val recommendedMaxFreqGHz: Float = 3.0f,
     val cpuAffinityMask: Int = 0xFF,
     val summaryLines: List<String> = emptyList(),
+    val dominantLaw: String = "Moore",
+    val recommendation: String = "Optimal",
     val severity: SiliconSeverity = SiliconSeverity.OPTIMAL
 )
 
@@ -64,7 +72,15 @@ data class ComponentDiagnosis(
 
 data class GameModeState(val isActive: Boolean = false)
 data class SafeChargeState(val isCharging: Boolean = false)
-enum class OperationMode { AUTO, PERFORMANCE, POWER_SAVE, MANUAL, LEARNING }
+
+enum class OperationMode { 
+    AUTO, PERFORMANCE, POWER_SAVE, MANUAL, LEARNING;
+    companion object {
+        val EFFICIENT = POWER_SAVE
+        val ACTIVE = AUTO
+        val GAMER = PERFORMANCE
+    }
+}
 
 data class SensorLog(
     val timestamp: Long, val tag: String, val field: String, val source: String,
