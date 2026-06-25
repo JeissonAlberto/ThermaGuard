@@ -30,7 +30,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val siliconAnalysis = _uiState.map { it.siliconAnalysis }.stateIn(viewModelScope, SharingStarted.Eagerly, SiliconAnalysis())
     val coolingRecs = _uiState.map { it.coolingRecs }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     
-    // States requeridos por DashboardScreen
     val operationMode = _uiState.map { it.operationMode }.stateIn(viewModelScope, SharingStarted.Eagerly, OperationMode.AUTO)
     val gameModeState = _uiState.map { it.gameModeState }.stateIn(viewModelScope, SharingStarted.Eagerly, GameModeState())
     val safeChargeState = _uiState.map { it.safeChargeState }.stateIn(viewModelScope, SharingStarted.Eagerly, SafeChargeState())
@@ -38,6 +37,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val causes = _uiState.map { it.causes }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val prediction = _uiState.map { it.prediction }.stateIn(viewModelScope, SharingStarted.Eagerly, TempPrediction(0f, PredictionConfidence.MEDIUM, ""))
     val smartTips = _uiState.map { it.smartTips }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val governorLog = _uiState.map { it.governorLog }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     
     // States requeridos por RootControl y otros
     val cpuThrottled = MutableStateFlow(false).asStateFlow()
@@ -51,6 +51,21 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val hourlyProfile = MutableStateFlow(emptyList<HourlyDataPoint>()).asStateFlow()
     val appHeatRanking = MutableStateFlow(emptyList<Pair<String, Float>>()).asStateFlow()
     val sensorLogs = MutableStateFlow(emptyList<SensorLog>()).asStateFlow()
+    val componentDiagnoses = MutableStateFlow(emptyList<ComponentDiagnosis>()).asStateFlow()
+    
+    val superCoolActive = MutableStateFlow(false).asStateFlow()
+    val ultraCoolActive = MutableStateFlow(false).asStateFlow()
+    val superCoolResult = MutableStateFlow<String?>(null).asStateFlow()
+
+    val appTheme = MutableStateFlow("System").asStateFlow()
+    val appLanguage = MutableStateFlow("es").asStateFlow()
+    val userName = MutableStateFlow("User").asStateFlow()
+    val deviceNickname = MutableStateFlow("Android").asStateFlow()
+    val telemetryOn = MutableStateFlow(true).asStateFlow()
+    val pendingUpdate = MutableStateFlow<String?>(null).asStateFlow()
+    
+    val isMonitoring = MutableStateFlow(true).asStateFlow()
+    val isCoolingDown = MutableStateFlow(false).asStateFlow()
     
     // Alias
     val latestSnapshot = latest
@@ -102,5 +117,6 @@ data class ThermalUiState(
     val autoActionsLog: List<AutoAction> = emptyList(),
     val causes: List<String> = emptyList(),
     val prediction: TempPrediction = TempPrediction(0f, PredictionConfidence.MEDIUM, ""),
-    val smartTips: List<SmartTip> = emptyList()
+    val smartTips: List<SmartTip> = emptyList(),
+    val governorLog: List<String> = emptyList()
 )
