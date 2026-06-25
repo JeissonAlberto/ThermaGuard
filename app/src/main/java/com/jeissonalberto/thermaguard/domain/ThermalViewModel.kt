@@ -375,7 +375,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private fun observeHistory() {
         viewModelScope.launch {
-            db.thermalDao().getHistory(200)
+            // db.getHistory(200)
                 .distinctUntilChanged()
                 .flowOn(kotlinx.coroutines.Dispatchers.IO)  // query en IO, collect en Main
                 .collect { rows ->
@@ -680,7 +680,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     /** Envía telemetría manualmente (para botón en Settings) */
     fun sendTelemetryNow() = viewModelScope.launch {
         try {
-            val snaps = db.thermalDao().getHistory(200).first()
+            val snaps = // db.getHistory(200).first()
             TelemetryRepository.sendReport(getApplication(), snaps)
         } catch (e: Exception) {
             android.util.Log.w("ThermaGuard", "sendTelemetryNow: ${e.message}")
