@@ -3,6 +3,7 @@ package com.jeissonalberto.thermaguard.data
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
+import androidx.compose.ui.graphics.Color
 
 @Entity(tableName = "thermal_history")
 data class ThermalSnapshot(
@@ -56,10 +57,12 @@ data class SiliconAnalysis(
     val severity: SiliconSeverity = SiliconSeverity.OPTIMAL,
     val pollackPerf: Float = 1.0f,
     val dennardLeakage: Float = 0f,
-    val dennardThermalDensity: Float = 0f
+    val dennardThermalDensity: Float = 0f,
+    val moorePower: Float = 0f
 )
 
-enum class SiliconSeverity { OPTIMAL, NOMINAL, STRESSED, CRITICAL, DAMAGING;
+enum class SiliconSeverity { 
+    OPTIMAL, NOMINAL, STRESSED, CRITICAL, DAMAGING;
     companion object {
         val THERMAL_RUNAWAY = DAMAGING
     }
@@ -75,7 +78,8 @@ data class AutoAction(
 )
 
 data class ComponentDiagnosis(
-    val component: String, val health: Int, val status: String, val temperature: Float, val risk: String,
+    val component: String = "", val health: Int = 100, val status: String = "", 
+    val temperature: Float = 0f, val risk: String = "",
     val label: String = "", val temp: Float = 0f, val advice: String = "", val cause: String = ""
 )
 
@@ -122,9 +126,9 @@ fun Float.toThermalLevel(): ThermalLevel = when {
 }
 
 object TG {
-    val red = androidx.compose.ui.graphics.Color(0xFFE57373)
-    val amber = androidx.compose.ui.graphics.Color(0xFFFFB74D)
-    val green = androidx.compose.ui.graphics.Color(0xFF81C784)
+    val red = Color(0xFFE57373)
+    val amber = Color(0xFFFFB74D)
+    val green = Color(0xFF81C784)
     fun accentFor(level: ThermalLevel) = when(level) {
         ThermalLevel.COOL -> green
         ThermalLevel.NORMAL -> green
@@ -139,7 +143,15 @@ data class ComponentStatus(val label: String) {
         val OPTIMAL = ComponentStatus("Óptimo")
         val NOMINAL = ComponentStatus("Nominal")
         val STRESSED = ComponentStatus("Estresado")
+        val CRITICAL = ComponentStatus("Crítico")
+        val HOT = ComponentStatus("Caliente")
+        val WARM = ComponentStatus("Tibio")
     }
 }
 
-enum class ThermalComponent { BATTERY, CPU, GPU, MODEM, SKIN, BOARD, DISPLAY }
+enum class ThermalComponent { 
+    BATTERY, CPU, GPU, MODEM, SKIN, BOARD, DISPLAY, PROCESS;
+    companion object {
+        val PROCESSOR = CPU
+    }
+}
