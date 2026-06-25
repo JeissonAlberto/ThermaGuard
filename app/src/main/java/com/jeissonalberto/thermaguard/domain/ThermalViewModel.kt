@@ -193,7 +193,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     if (evolutionFuture.expectedTemp2Min > 41f) {
                         viewModelScope.launch { rootCpuThrottle() }
                     }
-                    if (future.expectedTemp2Min > 41f) viewModelScope.launch { rootCpuThrottle() }
+                    // removed duplicatef) viewModelScope.launch { rootCpuThrottle() }
                     val health     = learningEngine.computeBatteryHealthScore()
                     val hourly     = learningEngine.getHourlyProfile()
                     val tips       = learningEngine.generateSmartTips(profile, snapshot, prediction)
