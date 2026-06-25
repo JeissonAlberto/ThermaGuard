@@ -155,16 +155,6 @@ enum class ComponentStatus(val label: String, val color: Long) {
     CRITICAL("Critico", 0xFFFF1744)
 }
 
-data class ComponentDiagnosis(
-    val component: ThermalComponent,
-    val temp: Float,
-    val usagePct: Float,          // -1 si no aplica
-    val status: ComponentStatus,
-    val cause: String,
-    val advice: String,
-    val perCore: List<Float> = emptyList(),
-    val processes: List<ProcessInfo> = emptyList()
-)
 
 data class ProcessInfo(
     val pid: Int,
@@ -200,20 +190,7 @@ data class ExportRecord(
     val riskLevel: String
 )
 
-data class AutoAction(
-    val timestamp: Long,
-    val title: String,
-    val description: String,
-    val trigger: String
-)
 
-data class ComponentDiagnosis(
-    val component: String,
-    val health: Int,
-    val status: String,
-    val temperature: Float,
-    val risk: String
-)
 
 data class SmartAlert(
     val id: String,
