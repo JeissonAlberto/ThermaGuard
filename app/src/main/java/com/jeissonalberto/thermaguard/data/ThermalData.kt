@@ -106,7 +106,8 @@ enum class OperationMode {
 
 data class SensorLog(
     val timestamp: Long = 0L, val tag: String = "", val field: String = "", val source: String = "",
-    val rawValue: String = "", val parsedValue: Float = 0f, val unit: String = "", val isEstimated: Boolean = false
+    val rawValue: String = "", val parsedValue: Float = 0f, val unit: String = "", val isEstimated: Boolean = false,
+    val label: String = ""
 )
 
 enum class AppTheme { SYSTEM, LIGHT, DARK }
