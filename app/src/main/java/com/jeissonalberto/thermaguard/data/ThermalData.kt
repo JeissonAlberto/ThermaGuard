@@ -69,7 +69,7 @@ enum class SiliconSeverity {
 }
 
 data class CoolingRecommendation(
-    val icon: String, val title: String, val detail: String, val impactDegrees: Float
+    val icon: String = "❄️", val title: String = "", val detail: String = "", val impactDegrees: Float = 0f
 )
 
 data class AutoAction(
@@ -138,7 +138,7 @@ object TG {
     }
 }
 
-data class ComponentStatus(val label: String) {
+data class ComponentStatus(val label: String = "") {
     companion object {
         val OPTIMAL = ComponentStatus("Óptimo")
         val NOMINAL = ComponentStatus("Nominal")
