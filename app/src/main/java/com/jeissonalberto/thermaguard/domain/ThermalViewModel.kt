@@ -18,7 +18,7 @@ import com.jeissonalberto.thermaguard.data.TelemetryRepository
 import com.jeissonalberto.thermaguard.data.UpdateChecker
 import com.jeissonalberto.thermaguard.service.TelemetryWorker
 import com.jeissonalberto.thermaguard.service.UpdateWorker
-import com.jeissonalberto.thermaguard.data.SiliconPhysicsEngine
+//
 import com.jeissonalberto.thermaguard.data.GovernorConfig
 import com.jeissonalberto.thermaguard.domain.CpuGpuGovernor
 import com.jeissonalberto.thermaguard.data.PhysicsAnalysis
