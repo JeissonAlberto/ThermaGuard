@@ -29,6 +29,24 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val profile         = _uiState.map { it.profile }.stateIn(viewModelScope, SharingStarted.Eagerly, LearnedProfile())
     val siliconAnalysis = _uiState.map { it.siliconAnalysis }.stateIn(viewModelScope, SharingStarted.Eagerly, SiliconAnalysis())
     val coolingRecs     = _uiState.map { it.coolingRecs }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    // UI states adicionales para compatibilidad v3/v4
+    val alertThreshold  = MutableStateFlow(42f).asStateFlow()
+    val prediction      = MutableStateFlow(TempPrediction(0f, PredictionConfidence.MEDIUM, "")).asStateFlow()
+    val smartTips       = MutableStateFlow(emptyList<SmartTip>()).asStateFlow()
+    val componentDiagnoses = MutableStateFlow(emptyList<ComponentDiagnosis>()).asStateFlow()
+    val sensorLogs      = MutableStateFlow(emptyList<String>()).asStateFlow()
+    val governorLog     = MutableStateFlow(emptyList<String>()).asStateFlow()
+    val appHeatRanking  = MutableStateFlow(emptyList<Pair<String, Float>>()).asStateFlow()
+    val hourlyProfile   = MutableStateFlow(emptyList<HourlyDataPoint>()).asStateFlow()
+    val batteryHealth   = MutableStateFlow(BatteryHealthScore(100, "Good", emptyList())).asStateFlow()
+    val latestSnapshot  = latest
+    
+    val cpuThrottled    = MutableStateFlow(false).asStateFlow()
+    val gpuThrottled    = MutableStateFlow(false).asStateFlow()
+    val brightnessSet   = MutableStateFlow(false).asStateFlow()
+    val dataDisabled    = MutableStateFlow(false).asStateFlow()
+    val appsKilled      = MutableStateFlow(0).asStateFlow()
+
     
     // Config y Stubs
     val operationMode   = MutableStateFlow(OperationMode.AUTO).asStateFlow()
