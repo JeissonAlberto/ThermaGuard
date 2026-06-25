@@ -190,10 +190,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     else emptyList()
                     val prediction = learningEngine.predictNextTemp()
                     val evolutionFuture = SiliconPhysics.predictFuture(snapshot, SiliconPhysics.detectDevicePhysicsParams(), _uiState.value.history)
-                    if (evolutionFuture.expectedTemp2Min > 41f) {
-                        viewModelScope.launch { rootCpuThrottle() }
-                    }
-                    // removed duplicatef) viewModelScope.launch { rootCpuThrottle() }
+                    if (evolutionFuture.expectedTemp2Min > 41f) viewModelScope.launch { rootCpuThrottle() }
                     val health     = learningEngine.computeBatteryHealthScore()
                     val hourly     = learningEngine.getHourlyProfile()
                     val tips       = learningEngine.generateSmartTips(profile, snapshot, prediction)
@@ -294,7 +291,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         )
                     }
 
-                        // Pre-cooling activo: el futuro se ve caliente
                     }
                     
                     executeAutoOptimization(snapshot, profile)
