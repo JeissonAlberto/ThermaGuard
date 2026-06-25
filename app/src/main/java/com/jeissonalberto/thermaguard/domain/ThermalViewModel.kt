@@ -30,22 +30,22 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val siliconAnalysis = _uiState.map { it.siliconAnalysis }.stateIn(viewModelScope, SharingStarted.Eagerly, SiliconAnalysis())
     val coolingRecs     = _uiState.map { it.coolingRecs }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     
-    // Stubs para compatibilidad v3/v4
+    // Config y Stubs
     val operationMode   = MutableStateFlow(OperationMode.AUTO).asStateFlow()
     val gameModeState   = MutableStateFlow(GameModeState()).asStateFlow()
     val safeChargeState = MutableStateFlow(SafeChargeState()).asStateFlow()
     val autoActionsLog  = MutableStateFlow(emptyList<AutoAction>()).asStateFlow()
+    val alertThreshold  = MutableStateFlow(42f).asStateFlow()
     val causes          = MutableStateFlow(emptyList<String>()).asStateFlow()
     val prediction      = MutableStateFlow(TempPrediction(0f, PredictionConfidence.MEDIUM, "")).asStateFlow()
     val smartTips       = MutableStateFlow(emptyList<SmartTip>()).asStateFlow()
     val componentDiagnoses = MutableStateFlow(emptyList<ComponentDiagnosis>()).asStateFlow()
     val sensorLogs      = MutableStateFlow(emptyList<String>()).asStateFlow()
-    val physicsAnalysis = MutableStateFlow(SiliconAnalysis()).asStateFlow()
     val governorLog     = MutableStateFlow(emptyList<String>()).asStateFlow()
     val appHeatRanking  = MutableStateFlow(emptyList<Pair<String, Float>>()).asStateFlow()
     val hourlyProfile   = MutableStateFlow(emptyList<HourlyDataPoint>()).asStateFlow()
     val batteryHealth   = MutableStateFlow(BatteryHealthScore(100, "Good", emptyList())).asStateFlow()
-    val latestSnapshot  = latest // Alias
+    val latestSnapshot  = latest
     
     val superCoolActive = MutableStateFlow(false).asStateFlow()
     val ultraCoolActive = MutableStateFlow(false).asStateFlow()
@@ -57,7 +57,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val dataDisabled    = MutableStateFlow(false).asStateFlow()
     val appsKilled      = MutableStateFlow(0).asStateFlow()
 
-    // Config
     val appTheme       = MutableStateFlow(_prefs.getString("app_theme", "System") ?: "System")
     val appLanguage    = MutableStateFlow(_prefs.getString("app_lang", "es") ?: "es")
     val userName       = MutableStateFlow(_prefs.getString("user_name", "User") ?: "User")
@@ -78,11 +77,9 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private fun observeHistory() {
         viewModelScope.launch {
-            db.thermalDao().getHistory(200)
-                .distinctUntilChanged()
-                .collect { rows ->
-                    _uiState.update { it.copy(history = rows) }
-                }
+            db.thermalDao().getHistory(200).distinctUntilChanged().collect { rows ->
+                _uiState.update { it.copy(history = rows) }
+            }
         }
     }
 
@@ -95,64 +92,37 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     val silicon  = learningEngine.analyzeSilicon(snapshot)
                     val recs     = learningEngine.generateCoolingRecommendations(snapshot, silicon, OperationMode.AUTO)
                     
-                    // IA EVOLUTION - PREDICTIVE COOLING
                     val physicsParams = SiliconPhysics.detectDevicePhysicsParams()
                     val evolutionFuture = SiliconPhysics.predictFuture(snapshot, physicsParams, _uiState.value.history)
                     
                     if (evolutionFuture.expectedTemp2Min > 42f) {
-                        if (_rootAvailable.value) {
-                            RootEngine.setCpuMaxFreq(RootEngine.CpuLevel.THROTTLE)
-                        }
+                        if (_rootAvailable.value) { RootEngine.setCpuMaxFreq(RootEngine.CpuLevel.THROTTLE) }
                     }
 
                     _uiState.update { it.copy(
-                        latest = snapshot,
-                        profile = prof,
-                        siliconAnalysis = silicon,
-                        coolingRecs = recs,
+                        latest = snapshot, profile = prof,
+                        siliconAnalysis = silicon, coolingRecs = recs,
                         isLoading = false
                     )}
-                    
                     db.thermalDao().insert(snapshot)
-
-                } catch (e: Exception) {
-                    android.util.Log.e("ThermaGuard", "Read error: ${e.message}")
-                }
+                } catch (e: Exception) {}
                 delay(3000L)
             }
         }
     }
 
-    // Funciones de control UI
     fun startMonitor() {}
-    fun setUserName(name: String) { 
-        userName.value = name
-        _prefs.edit().putString("user_name", name).apply()
-    }
-    fun setDeviceNickname(name: String) { 
-        deviceNickname.value = name
-        _prefs.edit().putString("device_nickname", name).apply()
-    }
-    fun toggleTelemetry(on: Boolean) { 
-        telemetryOn.value = on 
-        _prefs.edit().putBoolean("telemetry_on", on).apply()
-    }
-    fun setTheme(theme: String) { 
-        appTheme.value = theme 
-        _prefs.edit().putString("app_theme", theme).apply()
-    }
-    fun setLanguage(lang: String) {
-        appLanguage.value = lang
-        _prefs.edit().putString("app_lang", lang).apply()
-    }
+    fun setUserName(name: String) { userName.value = name }
+    fun setDeviceNickname(name: String) { deviceNickname.value = name }
+    fun toggleTelemetry(on: Boolean) { telemetryOn.value = on }
+    fun setTheme(theme: String) { appTheme.value = theme }
+    fun setLanguage(lang: String) { appLanguage.value = lang }
     fun checkForUpdates() {}
-    
-    // Root Actions
-    fun activateSuperCool() {}
+    fun activateSuperCool(ultra: Boolean = false) {}
     fun deactivateSuperCool() {}
-    fun rootCpuThrottle() { viewModelScope.launch { if(_rootAvailable.value) RootEngine.setCpuMaxFreq(RootEngine.CpuLevel.THROTTLE) } }
+    fun rootCpuThrottle() {}
     fun rootGpuThrottle() {}
-    fun rootDisableData() { viewModelScope.launch { if(_rootAvailable.value) RootEngine.disableMobileData() } }
+    fun rootDisableData() {}
     fun rootSetBrightness(level: Int) {}
     fun rootKillBg() {}
 }
@@ -164,6 +134,6 @@ data class ThermalUiState(
     val isLoading: Boolean = true,
     val isMonitoring: Boolean = true,
     val isCoolingDown: Boolean = false,
-    val siliconAnalysis: SiliconAnalysis = SiliconAnalysis(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0, "", "", SiliconSeverity.OPTIMAL),
+    val siliconAnalysis: SiliconAnalysis = SiliconAnalysis(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0, "", "", SiliconSeverity.OPTIMAL, 0f, 0f, 0f, 0f, 0, "Moore", "Healthy", "Optimal"),
     val coolingRecs: List<CoolingRecommendation> = emptyList()
 )
