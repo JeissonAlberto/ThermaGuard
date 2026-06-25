@@ -22,22 +22,27 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _rootAvailable = MutableStateFlow(false)
     val rootAvailable: StateFlow<Boolean> = _rootAvailable.asStateFlow()
 
+    // Campos que la UI necesita
+    val latest       = _uiState.map { it.latest }.stateIn(viewModelScope, SharingStarted.Eagerly, ThermalSnapshot())
+    val isMonitoring = _uiState.map { it.isMonitoring }.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val isCoolingDown = _uiState.map { it.isCoolingDown }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val profile      = _uiState.map { it.profile }.stateIn(viewModelScope, SharingStarted.Eagerly, LearnedProfile())
+    val siliconAnalysis = _uiState.map { it.siliconAnalysis }.stateIn(viewModelScope, SharingStarted.Eagerly, SiliconAnalysis())
+    val coolingRecs  = _uiState.map { it.coolingRecs }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
     init {
         startLiveReading()
-        viewModelScope.launch { 
-            try { _rootAvailable.value = RootEngine.isRootAvailable() } catch (_:Exception) {} 
-        }
+        viewModelScope.launch { try { _rootAvailable.value = RootEngine.isRootAvailable() } catch (_:Exception) {} }
     }
 
     private fun startLiveReading() {
         viewModelScope.launch {
-            delay(1000L)
             while (true) {
                 try {
                     val snapshot = sensorRepo.readSnapshot()
                     val profile  = learningEngine.learn(snapshot)
                     
-                    // --- EVOLUTION ENGINE IA v4.0 ---
+                    // IA EVOLUTION
                     val future = SiliconPhysics.predictFuture(snapshot, SiliconPhysics.detectDevicePhysicsParams(), _uiState.value.history)
                     if (future.expectedTemp2Min > 41f) {
                         viewModelScope.launch { RootEngine.setCpuMaxFreq(RootEngine.CpuLevel.THROTTLE) }
@@ -49,7 +54,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         history = (listOf(snapshot) + it.history).take(200),
                         isLoading = false
                     )}
-
                 } catch (_: Exception) {}
                 delay(2000L)
             }
@@ -61,5 +65,9 @@ data class ThermalUiState(
     val latest: ThermalSnapshot = ThermalSnapshot(),
     val profile: LearnedProfile = LearnedProfile(),
     val history: List<ThermalSnapshot> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val isMonitoring: Boolean = true,
+    val isCoolingDown: Boolean = false,
+    val siliconAnalysis: SiliconAnalysis = SiliconAnalysis(),
+    val coolingRecs: List<CoolingRecommendation> = emptyList()
 )
