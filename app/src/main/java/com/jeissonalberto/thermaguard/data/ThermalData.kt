@@ -221,3 +221,4 @@ enum class AppLanguage(val code: String, val label: String) {
     SPANISH("es", "Español"),
     ENGLISH("en", "English")
 }
+\ndata class AutoAction(val timestamp: Long, val title: String, val description: String, val trigger: String)
