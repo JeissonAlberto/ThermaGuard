@@ -222,7 +222,7 @@ private fun HistoryRowCard(snap: ThermalSnapshot, sdf: SimpleDateFormat) {
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                "${level.emoji} ${snap.batteryTemp}°C  ·  CPU ${snap.cpuUsage.toInt()}%",
+                "${level."📊"} ${snap.batteryTemp}°C  ·  CPU ${snap.cpuUsage.toInt()}%",
                 fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = tg.textPri
             )
             Text(
