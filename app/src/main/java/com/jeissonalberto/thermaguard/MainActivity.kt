@@ -1,6 +1,7 @@
 package com.jeissonalberto.thermaguard
 
-import android.os.Bundle\nimport androidx.activity.viewModels
+import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
