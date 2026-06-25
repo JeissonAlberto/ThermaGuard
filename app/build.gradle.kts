@@ -14,8 +14,8 @@ android {
         applicationId = "com.jeissonalberto.thermaguard"
         minSdk = 26
         targetSdk = 35
-        versionCode = 150
-        versionName = "4.1.50-EVOLUTION"
+        versionCode = 160
+        versionName = "4.1.60-EVOLUTION"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
