@@ -67,6 +67,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val isMonitoring = MutableStateFlow(true).asStateFlow()
     val isCoolingDown = MutableStateFlow(false).asStateFlow()
     
+    // Alias
     val latestSnapshot = latest
     val physicsAnalysis = siliconAnalysis
 
@@ -114,7 +115,7 @@ data class ThermalUiState(
     val gameModeState: GameModeState = GameModeState(),
     val safeChargeState: SafeChargeState = SafeChargeState(),
     val autoActionsLog: List<AutoAction> = emptyList(),
-    val causes: List<String> = emptyList(),
+    val causes: List<HeatCause> = emptyList(),
     val prediction: TempPrediction = TempPrediction(0f, PredictionConfidence.MEDIUM, ""),
     val smartTips: List<SmartTip> = emptyList(),
     val governorLog: List<String> = emptyList()
