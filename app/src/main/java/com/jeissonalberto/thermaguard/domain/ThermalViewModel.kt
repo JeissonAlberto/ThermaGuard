@@ -134,6 +134,6 @@ data class ThermalUiState(
     val isLoading: Boolean = true,
     val isMonitoring: Boolean = true,
     val isCoolingDown: Boolean = false,
-    val siliconAnalysis: SiliconAnalysis = SiliconAnalysis(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0, "", "", SiliconSeverity.OPTIMAL, 0f, 0f, 0f, 0f, 0, "Moore", "Healthy", "Optimal"),
+    val siliconAnalysis: SiliconAnalysis = SiliconAnalysis(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0, "", "", SiliconSeverity.OPTIMAL),
     val coolingRecs: List<CoolingRecommendation> = emptyList()
 )
