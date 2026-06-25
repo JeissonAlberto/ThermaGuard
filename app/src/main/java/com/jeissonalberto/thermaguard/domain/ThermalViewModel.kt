@@ -189,6 +189,8 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         learningEngine.generateCoolingRecommendations(snapshot, silicon, _operationMode)
                     else emptyList()
                     val prediction = learningEngine.predictNextTemp()
+                    val future = predictFuture(snapshot, detectDevicePhysicsParams(), _uiState.value.history)
+                    if (future.expectedTemp2Min > 41f) viewModelScope.launch { rootCpuThrottle() }
                     val health     = learningEngine.computeBatteryHealthScore()
                     val hourly     = learningEngine.getHourlyProfile()
                     val tips       = learningEngine.generateSmartTips(profile, snapshot, prediction)
@@ -289,8 +291,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         )
                     }
 
-                                        // Motor Predictivo v4.0: Actuar ANTES de que ocurra el calor
-                    val futurePrediction = predictFuture(snapshot, detectDevicePhysicsParams(), _uiState.value.history)
                     if (prediction.expectedTemp2Min > 41f && prediction.trendSeverity > 0.6f) {
                         // Pre-cooling activo: el futuro se ve caliente
                         if (!isCooling) rootCpuThrottle()
