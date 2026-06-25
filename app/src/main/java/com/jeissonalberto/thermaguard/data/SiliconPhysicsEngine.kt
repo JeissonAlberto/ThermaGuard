@@ -382,4 +382,41 @@ object SiliconPhysicsEngine {
         add("🧬 MTTF estimado: ${"%.0f".format(mttf/1000)}k horas  (Arrhenius @ ${T.toInt()}°C)")
         add("🖥 Governor: ${gov.name} @ ${"%.1f".format(gov.maxFreqGHz)}GHz — ${gov.reason}")
     }
+
+    data class ThermalPrediction(
+        val expectedTemp2Min: Float,
+        val trendSeverity: Float, // 0..1 (1 = subida crítica inminente)
+        val timeToThrottle: Int    # segundos estimados hasta el throttle
+    )
+
+    /** 
+     * Motor de Predicción v4.0 (Model-Based)
+     * Usa la masa térmica (C) y resistencia térmica (R) para predecir el futuro.
+     */
+    fun predictFuture(snap: ThermalSnapshot, params: DevicePhysicsParams, history: List<ThermalSnapshot>): ThermalPrediction {
+        if (history.size < 5) return ThermalPrediction(snap.batteryTemp, 0f, 999)
+        
+        // 1. Calcular delta de potencia real (W)
+        val powerIn = (snap.cpuUsage / 100f) * params.tdpW
+        val deltaT = snap.batteryTemp - 25f // gradiente con ambiente (asumido 25C)
+        val powerOut = deltaT / 5.0f // R_theta simplificada
+        
+        val netPower = powerIn - powerOut
+        
+        # 2. Proyectar a 120 segundos (dT = (P_net / C) * dt)
+        val projectedRise = (netPower / params.thermalMassJK) * 120f
+        val predicted = snap.batteryTemp + projectedRise.toFloat()
+        
+        # 3. Calcular severidad de la tendencia
+        val recent = history.takeLast(5)
+        val slope = (recent.last().batteryTemp - recent.first().batteryTemp) / (recent.size * 5) # C/sec
+        val severity = (slope * 10).coerceIn(0f, 1f)
+        
+        return ThermalPrediction(
+            expectedTemp2Min = predicted,
+            trendSeverity    = severity,
+            timeToThrottle   = if (slope <= 0) 999 else ((42f - snap.batteryTemp) / slope).toInt().coerceAtLeast(0)
+        )
+    }
+
 }
