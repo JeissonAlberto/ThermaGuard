@@ -6,8 +6,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "thermal_history")
 data class ThermalSnapshot(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val timestamp: Long = System.currentTimeMillis(),
     val batteryTemp: Float = 0f,
     val cpuTemp: Float = 0f,
@@ -15,7 +14,15 @@ data class ThermalSnapshot(
     val cpuUsage: Float = 0f,
     val batteryLevel: Int = 0,
     val isCharging: Boolean = false,
-    val topApp: String = ""
+    val topApp: String = "",
+    val modemTemp: Float = 0f,
+    val skinTemp: Float = 0f,
+    val boardTemp: Float = 0f,
+    val displayTemp: Float = 0f,
+    val wifiActive: Boolean = false,
+    val bluetoothActive: Boolean = false,
+    val brightnessLevel: Int = 0,
+    val ramUsageMb: Int = 0
 )
 
 data class SiliconAnalysis(
@@ -44,27 +51,51 @@ data class SiliconAnalysis(
 enum class SiliconSeverity { OPTIMAL, NOMINAL, STRESSED, CRITICAL, DAMAGING }
 
 data class CoolingRecommendation(
-    val icon: String,
-    val title: String,
-    val detail: String,
-    val impactDegrees: Float
+    val icon: String, val title: String, val detail: String, val impactDegrees: Float
 )
 
 data class AutoAction(
-    val timestamp: Long,
-    val title: String,
-    val description: String,
-    val trigger: String
+    val timestamp: Long, val title: String, val description: String, val trigger: String
 )
 
 data class ComponentDiagnosis(
-    val component: String,
-    val health: Int,
-    val status: String,
-    val temperature: Float,
-    val risk: String
+    val component: String, val health: Int, val status: String, val temperature: Float, val risk: String
 )
 
 data class GameModeState(val isActive: Boolean = false)
 data class SafeChargeState(val isCharging: Boolean = false)
-enum class OperationMode { AUTO, PERFORMANCE, POWER_SAVE, MANUAL }
+enum class OperationMode { AUTO, PERFORMANCE, POWER_SAVE, MANUAL, LEARNING }
+
+data class SensorLog(
+    val timestamp: Long, val tag: String, val field: String, val source: String,
+    val rawValue: String, val parsedValue: Float, val unit: String, val isEstimated: Boolean
+)
+
+enum class AppTheme { SYSTEM, LIGHT, DARK }
+enum class AppLanguage(val code: String, val label: String) {
+    SPANISH("es", "Español"), ENGLISH("en", "English")
+}
+
+enum class ThermalLevel { COOL, NORMAL, WARM, HOT, CRITICAL, EMERGENCY }
+
+fun Float.toThermalLevel(): ThermalLevel = when {
+    this < 33f -> ThermalLevel.COOL
+    this < 37f -> ThermalLevel.NORMAL
+    this < 40f -> ThermalLevel.WARM
+    this < 43f -> ThermalLevel.HOT
+    this < 46f -> ThermalLevel.CRITICAL
+    else -> ThermalLevel.EMERGENCY
+}
+
+object TG {
+    val red = androidx.compose.ui.graphics.Color(0xFFE57373)
+    val amber = androidx.compose.ui.graphics.Color(0xFFFFB74D)
+    val green = androidx.compose.ui.graphics.Color(0xFF81C784)
+    fun accentFor(level: ThermalLevel) = when(level) {
+        ThermalLevel.COOL -> green
+        ThermalLevel.NORMAL -> green
+        ThermalLevel.WARM -> amber
+        ThermalLevel.HOT -> amber
+        else -> red
+    }
+}
