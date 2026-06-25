@@ -189,7 +189,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         learningEngine.generateCoolingRecommendations(snapshot, silicon, _operationMode)
                     else emptyList()
                     val prediction = learningEngine.predictNextTemp()
-                    val evolutionFuture = predictFuture(snapshot, detectDevicePhysicsParams(), _uiState.value.history)
+                    val evolutionFuture = SiliconPhysics.predictFuture(snapshot, SiliconPhysics.detectDevicePhysicsParams(), _uiState.value.history)
                     if (evolutionFuture.expectedTemp2Min > 41f) {
                         viewModelScope.launch { rootCpuThrottle() }
                     }
