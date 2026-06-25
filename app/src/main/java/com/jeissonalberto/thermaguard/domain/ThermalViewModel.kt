@@ -22,27 +22,41 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _rootAvailable = MutableStateFlow(false)
     val rootAvailable: StateFlow<Boolean> = _rootAvailable.asStateFlow()
 
-    // Campos que la UI necesita
-    val latest       = _uiState.map { it.latest }.stateIn(viewModelScope, SharingStarted.Eagerly, ThermalSnapshot())
-    val isMonitoring = _uiState.map { it.isMonitoring }.stateIn(viewModelScope, SharingStarted.Eagerly, true)
-    val isCoolingDown = _uiState.map { it.isCoolingDown }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
-    val profile      = _uiState.map { it.profile }.stateIn(viewModelScope, SharingStarted.Eagerly, LearnedProfile())
+    // ── PROPIEDADES REQUERIDAS POR MAINACTIVITY ───────────────────────────
+    val latest          = _uiState.map { it.latest }.stateIn(viewModelScope, SharingStarted.Eagerly, ThermalSnapshot())
+    val isMonitoring    = _uiState.map { it.isMonitoring }.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val isCoolingDown   = _uiState.map { it.isCoolingDown }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val profile         = _uiState.map { it.profile }.stateIn(viewModelScope, SharingStarted.Eagerly, LearnedProfile())
     val siliconAnalysis = _uiState.map { it.siliconAnalysis }.stateIn(viewModelScope, SharingStarted.Eagerly, SiliconAnalysis())
-    val coolingRecs  = _uiState.map { it.coolingRecs }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val coolingRecs     = _uiState.map { it.coolingRecs }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    
+    // Temas y Actualizaciones
+    val appTheme      = MutableStateFlow("System").asStateFlow()
+    val pendingUpdate = MutableStateFlow<AppUpdate?>(null).asStateFlow()
+    val telemetryOn   = MutableStateFlow(true).asStateFlow()
+    val userName      = MutableStateFlow("User").asStateFlow()
+    val deviceNickname = MutableStateFlow("Android").asStateFlow()
 
     init {
         startLiveReading()
-        viewModelScope.launch { try { _rootAvailable.value = RootEngine.isRootAvailable() } catch (_:Exception) {} }
+        viewModelScope.launch { 
+            try { _rootAvailable.value = RootEngine.isRootAvailable() } catch (_:Exception) {} 
+        }
+    }
+
+    fun startMonitor() {
+        _uiState.update { it.copy(isMonitoring = true) }
     }
 
     private fun startLiveReading() {
         viewModelScope.launch {
+            delay(1000L)
             while (true) {
                 try {
                     val snapshot = sensorRepo.readSnapshot()
                     val profile  = learningEngine.learn(snapshot)
                     
-                    // IA EVOLUTION
+                    // --- EVOLUTION ENGINE IA v4.0 ---
                     val future = SiliconPhysics.predictFuture(snapshot, SiliconPhysics.detectDevicePhysicsParams(), _uiState.value.history)
                     if (future.expectedTemp2Min > 41f) {
                         viewModelScope.launch { RootEngine.setCpuMaxFreq(RootEngine.CpuLevel.THROTTLE) }
@@ -54,11 +68,19 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         history = (listOf(snapshot) + it.history).take(200),
                         isLoading = false
                     )}
+
                 } catch (_: Exception) {}
                 delay(2000L)
             }
         }
     }
+    
+    // Funciones stub para evitar errores de compilación en settings
+    fun setUserName(name: String) {}
+    fun setDeviceNickname(name: String) {}
+    fun toggleTelemetry(on: Boolean) {}
+    fun setTheme(theme: String) {}
+    fun checkForUpdates() {}
 }
 
 data class ThermalUiState(
@@ -69,5 +91,6 @@ data class ThermalUiState(
     val isMonitoring: Boolean = true,
     val isCoolingDown: Boolean = false,
     val siliconAnalysis: SiliconAnalysis = SiliconAnalysis(),
-    val coolingRecs: List<CoolingRecommendation> = emptyList()
+    val coolingRecs: List<CoolingRecommendation> = emptyList(),
+    val alertThreshold: Float = 40f
 )
