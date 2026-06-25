@@ -386,7 +386,7 @@ object SiliconPhysicsEngine {
     data class ThermalPrediction(
         val expectedTemp2Min: Float,
         val trendSeverity: Float, // 0..1 (1 = subida crítica inminente)
-        val timeToThrottle: Int    # segundos estimados hasta el throttle
+        val timeToThrottle: Int    // segundos estimados hasta el throttle
     )
 
     /** 
@@ -403,13 +403,13 @@ object SiliconPhysicsEngine {
         
         val netPower = powerIn - powerOut
         
-        # 2. Proyectar a 120 segundos (dT = (P_net / C) * dt)
+        // 2. Proyectar a 120 segundos (dT = (P_net / C) * dt)
         val projectedRise = (netPower / params.thermalMassJK) * 120f
         val predicted = snap.batteryTemp + projectedRise.toFloat()
         
-        # 3. Calcular severidad de la tendencia
+        // 3. Calcular severidad de la tendencia
         val recent = history.takeLast(5)
-        val slope = (recent.last().batteryTemp - recent.first().batteryTemp) / (recent.size * 5) # C/sec
+        val slope = (recent.last().batteryTemp - recent.first().batteryTemp) / (recent.size * 5) // C/sec
         val severity = (slope * 10).coerceIn(0f, 1f)
         
         return ThermalPrediction(
