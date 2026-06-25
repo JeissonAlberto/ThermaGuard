@@ -294,9 +294,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         )
                     }
 
-                    if (prediction.expectedTemp2Min > 41f && prediction.trendSeverity > 0.6f) {
                         // Pre-cooling activo: el futuro se ve caliente
-                        if (!isCooling) rootCpuThrottle()
                     }
                     
                     executeAutoOptimization(snapshot, profile)
