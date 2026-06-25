@@ -31,11 +31,11 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val coolingRecs     = _uiState.map { it.coolingRecs }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     
     // Temas y Actualizaciones
-    val appTheme      = MutableStateFlow("System").asStateFlow()
-    val pendingUpdate = MutableStateFlow<AppUpdate?>(null).asStateFlow()
-    val telemetryOn   = MutableStateFlow(true).asStateFlow()
-    val userName      = MutableStateFlow("User").asStateFlow()
-    val deviceNickname = MutableStateFlow("Android").asStateFlow()
+    val appTheme      = MutableStateFlow("System")
+    val pendingUpdate = MutableStateFlow<AppUpdate?>(null)
+    val telemetryOn   = MutableStateFlow(true)
+    val userName      = MutableStateFlow("User")
+    val deviceNickname = MutableStateFlow("Android")
 
     init {
         startLiveReading()
