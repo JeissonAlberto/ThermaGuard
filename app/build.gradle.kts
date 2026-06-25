@@ -2,11 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    //
+    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
-
     namespace = "com.jeissonalberto.thermaguard"
     compileSdk = 35
 
@@ -15,27 +14,22 @@ android {
         applicationId = "com.jeissonalberto.thermaguard"
         minSdk = 26
         targetSdk = 35
-        versionCode = 61
-        versionName = "4.0.1-EVOLUTION"
+        versionCode = 85
+        versionName = "4.0.5-EVOLUTION"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
 
     buildTypes {
         release {
-            // Firma gestionada por Google Play App Signing
-            isMinifyEnabled   = true
-            isShrinkResources = true          // elimina resources no usados
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
-            isMinifyEnabled   = false
-            isShrinkResources = false
+            isMinifyEnabled = false
             applicationIdSuffix = ".debug"
-            versionNameSuffix   = "-debug"
+            versionNameSuffix = "-debug"
         }
     }
 
@@ -64,13 +58,6 @@ android {
             excludes += "/META-INF/INDEX.LIST"
         }
     }
-
-    bundle {
-        language { enableSplit = false }
-        density  { enableSplit = true }
-        abi      { enableSplit = true }
-    }
-
 }
 
 dependencies {
@@ -86,12 +73,15 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.coroutines.android)
-    //
-    //
-    //
+    
+    // ROOM
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
+
     implementation("com.airbnb.android:lottie-compose:6.4.0")
-    // WorkManager — telemetría y actualizaciones en background
     implementation("androidx.work:work-runtime-ktx:2.9.1")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
