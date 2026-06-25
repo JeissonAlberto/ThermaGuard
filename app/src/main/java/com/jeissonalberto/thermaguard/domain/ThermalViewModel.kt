@@ -23,7 +23,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _rootAvailable = MutableStateFlow(false)
     val rootAvailable: StateFlow<Boolean> = _rootAvailable.asStateFlow()
 
-    // ── UI ACCESSORS (Unificados y sin duplicados) ───────────────────────
+    // ── PROPIEDADES PARA UI (Dashboard, Stats, etc.) ──────────────────────
     val latest          = _uiState.map { it.latest }.stateIn(viewModelScope, SharingStarted.Eagerly, ThermalSnapshot())
     val history         = _uiState.map { it.history }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val profile         = _uiState.map { it.profile }.stateIn(viewModelScope, SharingStarted.Eagerly, LearnedProfile(0, 0f, 0f, 0f, 0f, 0f, 0f, 0f, false, TempTrend.STABLE, LearnedCause.UNKNOWN, RiskLevel.NORMAL, 0, 0f, 0f, 0f, "", 0f, 0f, 0f))
@@ -31,7 +31,12 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val coolingRecs     = _uiState.map { it.coolingRecs }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     
     // UI states adicionales para compatibilidad v3/v4
+    val operationMode   = MutableStateFlow(OperationMode.AUTO).asStateFlow()
+    val gameModeState   = MutableStateFlow(GameModeState()).asStateFlow()
+    val safeChargeState = MutableStateFlow(SafeChargeState()).asStateFlow()
+    val autoActionsLog  = MutableStateFlow(emptyList<AutoAction>()).asStateFlow()
     val alertThreshold  = MutableStateFlow(42f).asStateFlow()
+    val causes          = MutableStateFlow(emptyList<String>()).asStateFlow()
     val prediction      = MutableStateFlow(TempPrediction(0f, PredictionConfidence.MEDIUM, "")).asStateFlow()
     val smartTips       = MutableStateFlow(emptyList<SmartTip>()).asStateFlow()
     val componentDiagnoses = MutableStateFlow(emptyList<ComponentDiagnosis>()).asStateFlow()
@@ -42,20 +47,15 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val batteryHealth   = MutableStateFlow(BatteryHealthScore(100, "Good", emptyList())).asStateFlow()
     val latestSnapshot  = latest
     
-    val operationMode   = MutableStateFlow(OperationMode.AUTO).asStateFlow()
-    val gameModeState   = MutableStateFlow(GameModeState()).asStateFlow()
-    val safeChargeState = MutableStateFlow(SafeChargeState()).asStateFlow()
-    val autoActionsLog  = MutableStateFlow(emptyList<AutoAction>()).asStateFlow()
-
+    val superCoolActive = MutableStateFlow(false).asStateFlow()
+    val ultraCoolActive = MutableStateFlow(false).asStateFlow()
+    val superCoolResult = MutableStateFlow<String?>(null).asStateFlow()
+    
     val cpuThrottled    = MutableStateFlow(false).asStateFlow()
     val gpuThrottled    = MutableStateFlow(false).asStateFlow()
     val brightnessSet   = MutableStateFlow(false).asStateFlow()
     val dataDisabled    = MutableStateFlow(false).asStateFlow()
     val appsKilled      = MutableStateFlow(0).asStateFlow()
-    
-    val superCoolActive = MutableStateFlow(false).asStateFlow()
-    val ultraCoolActive = MutableStateFlow(false).asStateFlow()
-    val superCoolResult = MutableStateFlow<String?>(null).asStateFlow()
 
     // Config
     val appTheme       = MutableStateFlow(_prefs.getString("app_theme", "System") ?: "System").asStateFlow()
@@ -112,7 +112,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    // Funciones de control UI
     fun startMonitor() {}
     fun setUserName(name: String) {}
     fun setDeviceNickname(name: String) {}
