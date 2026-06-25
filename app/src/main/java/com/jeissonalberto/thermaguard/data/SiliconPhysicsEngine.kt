@@ -390,7 +390,6 @@ object SiliconPhysicsEngine {
         add("🖥 Governor: ${gov.name} @ ${"%.1f".format(gov.maxFreqGHz)}GHz — ${gov.reason}")
     }
 
-    data class ThermalPrediction(
         val expectedTemp2Min: Float,
         val trendSeverity: Float, // 0..1 (1 = subida crítica inminente)
         val timeToThrottle: Int    // segundos estimados hasta el throttle
