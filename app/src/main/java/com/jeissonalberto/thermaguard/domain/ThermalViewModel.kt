@@ -1,5 +1,7 @@
 package com.jeissonalberto.thermaguard.domain
 
+import com.jeissonalberto.thermaguard.data.*
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -288,10 +290,10 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     }
 
                                         // Motor Predictivo v4.0: Actuar ANTES de que ocurra el calor
-                    val prediction = predictFuture(snapshot, detectDevicePhysicsParams(), _uiState.value.history)
+                    val futurePrediction = predictFuture(snapshot, detectDevicePhysicsParams(), _uiState.value.history)
                     if (prediction.expectedTemp2Min > 41f && prediction.trendSeverity > 0.6f) {
                         // Pre-cooling activo: el futuro se ve caliente
-                        if (!isCooling) triggerEmergencyCooling(snapshot, "IA: Predicción de calor inminente")
+                        if (!isCooling) rootCpuThrottle()
                     }
                     
                     executeAutoOptimization(snapshot, profile)
