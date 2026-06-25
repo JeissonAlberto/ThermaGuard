@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.kapt)
+    kotlin("kapt")
 }
 
 android {
@@ -14,8 +14,8 @@ android {
         applicationId = "com.jeissonalberto.thermaguard"
         minSdk = 26
         targetSdk = 35
-        versionCode = 130
-        versionName = "4.1.30-EVOLUTION"
+        versionCode = 131
+        versionName = "4.1.31-EVOLUTION"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
