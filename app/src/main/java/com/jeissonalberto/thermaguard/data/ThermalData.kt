@@ -53,25 +53,43 @@ data class SiliconAnalysis(
     val summaryLines: List<String> = emptyList(),
     val dominantLaw: String = "Moore",
     val recommendation: String = "Optimal",
-    val severity: SiliconSeverity = SiliconSeverity.OPTIMAL
+    val severity: SiliconSeverity = SiliconSeverity.OPTIMAL,
+    val pollackPerf: Float = 1.0f,
+    val dennardLeakage: Float = 0f,
+    val dennardThermalDensity: Float = 0f
 )
 
-enum class SiliconSeverity { OPTIMAL, NOMINAL, STRESSED, CRITICAL, DAMAGING }
+enum class SiliconSeverity { OPTIMAL, NOMINAL, STRESSED, CRITICAL, DAMAGING;
+    companion object {
+        val THERMAL_RUNAWAY = DAMAGING
+    }
+}
 
 data class CoolingRecommendation(
     val icon: String, val title: String, val detail: String, val impactDegrees: Float
 )
 
 data class AutoAction(
-    val timestamp: Long, val title: String, val description: String, val trigger: String
+    val timestamp: Long, val title: String, val description: String, val trigger: String,
+    val effort: Int = 1
 )
 
 data class ComponentDiagnosis(
-    val component: String, val health: Int, val status: String, val temperature: Float, val risk: String
+    val component: String, val health: Int, val status: String, val temperature: Float, val risk: String,
+    val label: String = "", val temp: Float = 0f, val advice: String = "", val cause: String = ""
 )
 
-data class GameModeState(val isActive: Boolean = false)
-data class SafeChargeState(val isCharging: Boolean = false)
+data class GameModeState(
+    val isActive: Boolean = false, 
+    val detectedGame: String = "None"
+)
+
+data class SafeChargeState(
+    val isCharging: Boolean = false,
+    val isOverheating: Boolean = false,
+    val recommendation: String = "Normal",
+    val chargingTemp: Float = 0f
+)
 
 enum class OperationMode { 
     AUTO, PERFORMANCE, POWER_SAVE, MANUAL, LEARNING;
@@ -115,3 +133,13 @@ object TG {
         else -> red
     }
 }
+
+data class ComponentStatus(val label: String) {
+    companion object {
+        val OPTIMAL = ComponentStatus("Óptimo")
+        val NOMINAL = ComponentStatus("Nominal")
+        val STRESSED = ComponentStatus("Estresado")
+    }
+}
+
+enum class ThermalComponent { BATTERY, CPU, GPU, MODEM, SKIN, BOARD, DISPLAY }
