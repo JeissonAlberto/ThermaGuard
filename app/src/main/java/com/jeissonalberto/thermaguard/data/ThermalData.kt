@@ -200,39 +200,32 @@ data class ExportRecord(
     val riskLevel: String
 )
 
-// ---- Alerta inteligente ----
-data class SmartAlert(
-    val id: String,
-    val title: String,
-    val body: String,
-    val priority: Int,  // 1=info, 2=warning, 3=critical
-    val suppressUntil: Long = 0L  // no molestar hasta este timestamp
-)
-
-// ── TEMA DE LA APP ───────────────────────────────────────────────────────────
-enum class AppTheme {
-    SYSTEM,   // Sigue el sistema
-    LIGHT,    // Siempre claro
-    DARK      // Siempre oscuro
-}
-
-// ── IDIOMA DE LA APP ─────────────────────────────────────────────────────────
-enum class AppLanguage(val code: String, val label: String) {
-    SPANISH("es", "Español"),
-    ENGLISH("en", "English")
-}
-
 data class AutoAction(
-    val timestamp: Long, 
-    val title: String, 
-    val description: String, 
+    val timestamp: Long,
+    val title: String,
+    val description: String,
     val trigger: String
 )
 
 data class ComponentDiagnosis(
-    val component: String, 
-    val health: Int, 
-    val status: String, 
-    val temperature: Float, 
+    val component: String,
+    val health: Int,
+    val status: String,
+    val temperature: Float,
     val risk: String
 )
+
+data class SmartAlert(
+    val id: String,
+    val title: String,
+    val body: String,
+    val priority: Int,
+    val suppressUntil: Long = 0L
+)
+
+enum class AppTheme { SYSTEM, LIGHT, DARK }
+
+enum class AppLanguage(val code: String, val label: String) {
+    SPANISH("es", "Español"),
+    ENGLISH("en", "English")
+}
