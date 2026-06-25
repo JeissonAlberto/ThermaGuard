@@ -73,7 +73,7 @@ data class CoolingRecommendation(
 )
 
 data class AutoAction(
-    val timestamp: Long, val title: String, val description: String, val trigger: String,
+    val timestamp: Long = 0L, val title: String = "", val description: String = "", val trigger: String = "",
     val effort: Int = 1
 )
 
@@ -105,8 +105,8 @@ enum class OperationMode {
 }
 
 data class SensorLog(
-    val timestamp: Long, val tag: String, val field: String, val source: String,
-    val rawValue: String, val parsedValue: Float, val unit: String, val isEstimated: Boolean
+    val timestamp: Long = 0L, val tag: String = "", val field: String = "", val source: String = "",
+    val rawValue: String = "", val parsedValue: Float = 0f, val unit: String = "", val isEstimated: Boolean = false
 )
 
 enum class AppTheme { SYSTEM, LIGHT, DARK }
@@ -155,3 +155,5 @@ enum class ThermalComponent {
         val PROCESSOR = CPU
     }
 }
+
+data class HeatCause(val title: String, val description: String, val severity: Int)
