@@ -3,6 +3,13 @@ package com.jeissonalberto.thermaguard.data
 import kotlin.math.*
 import com.jeissonalberto.thermaguard.root.HardwareProfiler
 
+data class ThermalPrediction(
+    val expectedTemp2Min: Float,
+    val trendSeverity: Float,
+    val timeToThrottle: Int
+)
+
+object SiliconPhysics {
 /**
  * ════════════════════════════════════════════════════════════════════════════
  *  SiliconPhysicsEngine — Motor de Física del Silicio v2.0
@@ -419,4 +426,5 @@ object SiliconPhysicsEngine {
         )
     }
 
+}
 }
