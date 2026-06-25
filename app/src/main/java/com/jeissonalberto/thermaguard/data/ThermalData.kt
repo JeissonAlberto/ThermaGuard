@@ -221,4 +221,18 @@ enum class AppLanguage(val code: String, val label: String) {
     SPANISH("es", "Español"),
     ENGLISH("en", "English")
 }
-\ndata class AutoAction(val timestamp: Long, val title: String, val description: String, val trigger: String)
+
+data class AutoAction(
+    val timestamp: Long, 
+    val title: String, 
+    val description: String, 
+    val trigger: String
+)
+
+data class ComponentDiagnosis(
+    val component: String, 
+    val health: Int, 
+    val status: String, 
+    val temperature: Float, 
+    val risk: String
+)
