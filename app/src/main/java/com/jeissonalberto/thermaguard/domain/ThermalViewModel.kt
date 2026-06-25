@@ -57,8 +57,8 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val ultraCoolActive = MutableStateFlow(false).asStateFlow()
     val superCoolResult = MutableStateFlow<String?>(null).asStateFlow()
 
-    val appTheme = MutableStateFlow("System").asStateFlow()
-    val appLanguage = MutableStateFlow("es").asStateFlow()
+    val appTheme = MutableStateFlow(AppTheme.SYSTEM).asStateFlow()
+    val appLanguage = MutableStateFlow(AppLanguage.SPANISH).asStateFlow()
     val userName = MutableStateFlow("User").asStateFlow()
     val deviceNickname = MutableStateFlow("Android").asStateFlow()
     val telemetryOn = MutableStateFlow(true).asStateFlow()
@@ -67,7 +67,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val isMonitoring = MutableStateFlow(true).asStateFlow()
     val isCoolingDown = MutableStateFlow(false).asStateFlow()
     
-    // Alias
     val latestSnapshot = latest
     val physicsAnalysis = siliconAnalysis
 
