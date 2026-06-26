@@ -1,7 +1,6 @@
 package com.jeissonalberto.thermaguard.data
 
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.compose.ui.graphics.Color
 
@@ -61,12 +60,7 @@ data class SiliconAnalysis(
     val moorePower: Float = 0f
 )
 
-enum class SiliconSeverity { 
-    OPTIMAL, NOMINAL, STRESSED, CRITICAL, DAMAGING;
-    companion object {
-        val THERMAL_RUNAWAY = DAMAGING
-    }
-}
+enum class SiliconSeverity { OPTIMAL, NOMINAL, STRESSED, CRITICAL, DAMAGING }
 
 data class CoolingRecommendation(
     val icon: String = "❄️", val title: String = "", val detail: String = "", val impactDegrees: Float = 0f
@@ -74,7 +68,7 @@ data class CoolingRecommendation(
 
 data class AutoAction(
     val timestamp: Long = 0L, val title: String = "", val description: String = "", val trigger: String = "",
-    val effort: Int = 1
+    val effort: Int = 1, val emoji: String = "⚡"
 )
 
 data class ComponentDiagnosis(
@@ -83,25 +77,12 @@ data class ComponentDiagnosis(
     val label: String = "", val temp: Float = 0f, val advice: String = "", val cause: String = ""
 )
 
-data class GameModeState(
-    val isActive: Boolean = false, 
-    val detectedGame: String = "None"
-)
-
-data class SafeChargeState(
-    val isCharging: Boolean = false,
-    val isOverheating: Boolean = false,
-    val recommendation: String = "Normal",
-    val chargingTemp: Float = 0f
-)
+data class GameModeState(val isActive: Boolean = false, val detectedGame: String = "None")
+data class SafeChargeState(val isCharging: Boolean = false, val isOverheating: Boolean = false, val recommendation: String = "Normal", val chargingTemp: Float = 0f)
 
 enum class OperationMode { 
     AUTO, PERFORMANCE, POWER_SAVE, MANUAL, LEARNING;
-    companion object {
-        val EFFICIENT = POWER_SAVE
-        val ACTIVE = AUTO
-        val GAMER = PERFORMANCE
-    }
+    companion object { val EFFICIENT = POWER_SAVE }
 }
 
 data class SensorLog(
@@ -111,9 +92,7 @@ data class SensorLog(
 )
 
 enum class AppTheme { SYSTEM, LIGHT, DARK }
-enum class AppLanguage(val code: String, val label: String) {
-    SPANISH("es", "Español"), ENGLISH("en", "English")
-}
+enum class AppLanguage(val code: String, val label: String) { SPANISH("es", "Español"), ENGLISH("en", "English") }
 
 enum class ThermalLevel { COOL, NORMAL, WARM, HOT, CRITICAL, EMERGENCY }
 
@@ -131,10 +110,8 @@ object TG {
     val amber = Color(0xFFFFB74D)
     val green = Color(0xFF81C784)
     fun accentFor(level: ThermalLevel) = when(level) {
-        ThermalLevel.COOL -> green
-        ThermalLevel.NORMAL -> green
-        ThermalLevel.WARM -> amber
-        ThermalLevel.HOT -> amber
+        ThermalLevel.COOL, ThermalLevel.NORMAL -> green
+        ThermalLevel.WARM, ThermalLevel.HOT -> amber
         else -> red
     }
 }
@@ -152,42 +129,20 @@ data class ComponentStatus(val label: String = "") {
 
 enum class ThermalComponent { 
     BATTERY, CPU, GPU, MODEM, SKIN, BOARD, DISPLAY, PROCESS;
-    companion object {
-        val PROCESSOR = CPU
-        val CORE = CPU
-    }
+    companion object { val PROCESSOR = CPU; val CORE = CPU }
 }
 
-data class HeatCause(
-    val title: String = "", 
-    val description: String = "", 
-    val severity: Int = 1,
-    val label: String = ""
-)
+data class HeatCause(val title: String = "", val description: String = "", val severity: Int = 1, val label: String = "")
 
 data class LearnedProfile(
-    val samplesCollected: Int = 0,
-    val baselineTemp: Float = 30f,
-    val baselineCpu: Float = 0f,
-    val averageTemp: Float = 30f,
-    val averageCpu: Float = 0f,
-    val maxRecordedTemp: Float = 30f,
-    val minRecordedTemp: Float = 30f,
-    val tempAnomaly: Float = 0f,
-    val isAnomaly: Boolean = false,
-    val trend: TempTrend = TempTrend.STABLE,
-    val likelyCause: LearnedCause = LearnedCause.UNKNOWN,
-    val personalRisk: RiskLevel = RiskLevel.NORMAL,
-    val consecutiveHotReadings: Int = 0,
-    val chargingHeatPct: Float = 0f,
-    val highCpuHeatPct: Float = 0f,
-    val dynamicThreshold: Float = 40f,
-    val topHeatApp: String = "",
-    val topHeatAppScore: Float = 0f,
-    val hourAnomaly: Float? = 0f,
-    val expectedThisHour: Float? = 0f,
-    val heatSessionsToday: Int = 0,
-    val avgCooldownMinutes: Float = 5f,
+    val samplesCollected: Int = 0, val baselineTemp: Float = 30f, val baselineCpu: Float = 0f,
+    val averageTemp: Float = 30f, val averageCpu: Float = 0f, val maxRecordedTemp: Float = 30f,
+    val minRecordedTemp: Float = 30f, val tempAnomaly: Float = 0f, val isAnomaly: Boolean = false,
+    val trend: TempTrend = TempTrend.STABLE, val likelyCause: LearnedCause = LearnedCause.UNKNOWN,
+    val personalRisk: RiskLevel = RiskLevel.NORMAL, val consecutiveHotReadings: Int = 0,
+    val chargingHeatPct: Float = 0f, val highCpuHeatPct: Float = 0f, val dynamicThreshold: Float = 40f,
+    val topHeatApp: String = "", val topHeatAppScore: Float = 0f, val hourAnomaly: Float? = 0f,
+    val expectedThisHour: Float? = 0f, val heatSessionsToday: Int = 0, val avgCooldownMinutes: Float = 5f,
     val riskScore: Int = 0
 )
 
@@ -195,25 +150,9 @@ enum class TempTrend { STABLE, RISING, RISING_FAST }
 enum class LearnedCause { UNKNOWN, CHARGING_HABIT, HIGH_CPU_APPS, BACKGROUND_DRAIN }
 enum class RiskLevel { NORMAL, LOW, MEDIUM, HIGH, CRITICAL }
 
-data class TempPrediction(
-    val predictedTemp: Float = 0f,
-    val confidence: PredictionConfidence = PredictionConfidence.MEDIUM,
-    val trendText: String = "",
-    val slope: Float = 0f
-)
+data class TempPrediction(val predictedTemp: Float = 0f, val confidence: PredictionConfidence = PredictionConfidence.MEDIUM, val trendText: String = "", val slope: Float = 0f)
 enum class PredictionConfidence { LOW, MEDIUM, HIGH }
 
-data class BatteryHealthScore(
-    val score: Int = 100,
-    val level: String = "Good",
-    val factors: List<String> = emptyList()
-)
-
+data class BatteryHealthScore(val score: Int = 100, val level: String = "Good", val factors: List<String> = emptyList())
 data class HourlyDataPoint(val hour: Int, val avgTemp: Float)
-
-data class SmartTip(
-    val icon: String = "",
-    val title: String = "",
-    val detail: String = "",
-    val priority: Int = 1
-)
+data class SmartTip(val icon: String = "", val title: String = "", val detail: String = "", val priority: Int = 1)
