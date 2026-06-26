@@ -39,7 +39,7 @@ object BeastCoolingEngine {
     // Umbrales dinámicos según TDP del chip detectado
     // Chip potente (TDP>10W) throttlea antes → umbrales más bajos
     private val thermalThresholds: ThermalThresholds by lazy {
-        val tdp = try { com.jeissonalberto.thermaguard.data.detectDevicePhysicsParams().tdpW } catch (_: Exception) { 9.0 }
+        val tdp = try { com.jeissonalberto.thermaguard.data.emptyMap<String, Any>().tdpW } catch (_: Exception) { 9.0 }
         val offset = when {
             tdp >= 12.0 -> -2f  // flagship potente: empieza a proteger antes
             tdp >= 10.0 -> -1f  // high-end
