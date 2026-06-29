@@ -1,34 +1,19 @@
 package com.jeissonalberto.thermaguard.data
-
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
 
-@Database(
-    entities = [ThermalSnapshot::class],
-    version = 1,
-    exportSchema = false
-)
+@Dao
+interface ThermalDao {
+    @Insert
+    suspend fun insert(snapshot: ThermalSnapshot)
+    @Query("SELECT * FROM thermal_history ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLast(): ThermalSnapshot?
+}
+
+@Database(entities = [ThermalSnapshot::class], version = 1, exportSchema = false)
 abstract class ThermalDatabase : RoomDatabase() {
-
     abstract fun thermalDao(): ThermalDao
-
-    companion object {
-        @Volatile
-        private var INSTANCE: ThermalDatabase? = null
-
-        fun getInstance(context: Context): ThermalDatabase {
-            return INSTANCE ?: synchronized(this) {
-                Room.databaseBuilder(
-                    context.applicationContext,
-                    ThermalDatabase::class.java,
-                    "thermaguard.db"
-                )
-                    .fallbackToDestructiveMigration()
-                    .build()
-                    .also { INSTANCE = it }
-            }
-        }
-    }
 }
