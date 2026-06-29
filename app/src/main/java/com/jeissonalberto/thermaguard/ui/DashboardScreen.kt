@@ -1,114 +1,77 @@
 package com.jeissonalberto.thermaguard.ui
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
-import com.jeissonalberto.thermaguard.data.TG
+import com.jeissonalberto.thermaguard.data.SiliconPhysicsEngine
 
 @Composable
 fun DashboardScreen(viewModel: ThermalViewModel) {
-    val temp by viewModel.batteryTemp.collectAsState()
+    val temp by viewModel.temperature.collectAsState(initial = 32.0f)
+    val usage by viewModel.cpuUsage.collectAsState(initial = 15.0f)
     
-    val backgroundColor = Color(0xFF0F172A) // Dark Navy (Pro Style)
-    val glassColor = Color(0xFF1E293B).copy(alpha = 0.8f)
-    val accentColor = if (temp < 40f) Color(0xFF10B981) else Color(0xFFEF4444)
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
-            .padding(16.dp)
+            .background(Color(0xFF0A0E14)) // Deep Navy
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.padding(24.dp).fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "THERMAGUARD EVOLUTION",
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp
+                "THERMAGUARD v4.3",
+                color = Color(0xFF00F2FF), // Cyber Blue
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 4.sp
             )
             
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Glassmorphism Card para el Motor de Física
-            Surface(
-                color = glassColor,
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth()
+            Spacer(modifier = Modifier.height(40.dp))
+            
+            // Glassmorphic Card
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color.White.copy(alpha = 0.05f))
+                    .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp)),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "${temp}°C",
-                        color = accentColor,
-                        fontSize = 64.sp,
-                        fontWeight = FontWeight.Light
-                    )
-                    Text(
-                        text = "CORE TEMPERATURE",
-                        color = Color.White.copy(alpha = 0.8f),
-                        fontSize = 14.sp
-                    )
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    // Barra de Flujo Termodinámico (Visual)
-                    LinearProgressIndicator(
-                        progress = (temp / 60f).coerceIn(0f, 1f),
-                        color = accentColor,
-                        trackColor = Color.White.copy(alpha = 0.1f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    Text(
-                        text = "SILICON PHYSICS ENGINE ACTIVE",
-                        color = Color(0xFF38BDF8), // Cyber Blue
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("${temp}°C", fontSize = 64.sp, color = Color.White, fontWeight = FontWeight.Thin)
+                    Text("SILICON TEMP", color = Color(0xFF00F2FF).copy(alpha = 0.6f))
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
-            // Status Card
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                StatusMiniCard("STATUS", "NOMINAL", Modifier.weight(1f))
-                StatusMiniCard("RISK", "LOW", Modifier.weight(1f))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                StatusBadge("CPU: ${usage.toInt()}%", Color(0xFF00F2FF))
+                val throttle = SiliconPhysicsEngine.predictThrottling(temp)
+                StatusBadge(if (throttle) "THROTTLING" else "STABLE", if (throttle) Color.Red else Color.Green)
             }
         }
     }
 }
 
 @Composable
-fun StatusMiniCard(label: String, value: String, modifier: Modifier) {
+fun StatusBadge(text: String, color: Color) {
     Surface(
-        color = Color(0xFF1E293B).copy(alpha = 0.6f),
-        shape = RoundedCornerShape(16.dp),
-        modifier = modifier
+        color = color.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.5f))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(label, color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp)
-            Text(value, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
+        Text(text, color = color, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), fontSize = 12.sp)
     }
 }
