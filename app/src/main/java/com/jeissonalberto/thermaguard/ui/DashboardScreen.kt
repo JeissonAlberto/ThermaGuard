@@ -15,59 +15,45 @@ import com.jeissonalberto.thermaguard.domain.ThermalViewModel
 
 @Composable
 fun DashboardScreen(viewModel: ThermalViewModel) {
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF020408))) {
-        Column(modifier = Modifier.padding(20.dp).fillMaxSize()) {
-            // Header con versión explícita
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(6.dp)).background(Color(0xFF00F2FF)))
-                Spacer(modifier = Modifier.width(10.dp))
-                Text("THERMAGUARD v4.3.25", color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp)
-            }
+    // UI ULTRA-CYBER NEGRA/NEÓN (Inconfundible)
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF000000))) {
+        Column(modifier = Modifier.padding(24.dp).fillMaxSize()) {
+            // Versión Gigante para que no haya duda
+            Text("THERMAGUARD v4.3.30", color = Color(0xFF00F2FF), fontWeight = FontWeight.Black, fontSize = 12.sp)
+            Text("ULTIMATE EVOLUTION", color = Color.White, fontWeight = FontWeight.Thin, fontSize = 24.sp)
             
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(40.dp))
             
-            // Thermal Core Monitor (Glassmorphism)
+            // Monitor Principal estilo Reactor
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White.copy(alpha = 0.03f))
-                    .border(1.dp, Color(0xFF00F2FF).copy(alpha = 0.3f), RoundedCornerShape(24.dp)),
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(200.dp))
+                    .border(2.dp, Color(0xFF00F2FF), RoundedCornerShape(200.dp))
+                    .background(Brush.radialGradient(listOf(Color(0xFF00F2FF).copy(alpha = 0.1f), Color.Transparent))),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("36.8°C", fontSize = 52.sp, color = Color.White, fontWeight = FontWeight.Thin)
-                    Text("SILICON PHYSICS ENGINE: ON", color = Color(0xFF00F2FF), fontSize = 10.sp, letterSpacing = 2.sp)
+                    Text("36.5°C", fontSize = 64.sp, color = Color.White, fontWeight = FontWeight.ExtraLight)
+                    Text("SILICON ENGINE: ACTIVE", color = Color(0xFF00F2FF), fontSize = 10.sp)
                 }
             }
             
-            Spacer(modifier = Modifier.height(25.dp))
+            Spacer(modifier = Modifier.weight(1f))
             
-            Text("ECOSYSTEM TOOLS", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(15.dp))
-            
-            ToolRow("FLEETBASE LOGISTICS", "ACTIVE / CONNECTED", Color(0xFF00FFCC))
+            // Indicadores de Módulos
+            ModuleStatus("FLEETBASE LOGISTICS", "ONLINE", Color(0xFF00FFCC))
             Spacer(modifier = Modifier.height(10.dp))
-            ToolRow("PROJECT ARCHITECT", "V4.3 STRUCTURE", Color(0xFFBB86FC))
-            Spacer(modifier = Modifier.height(10.dp))
-            ToolRow("EVOLUTION ENGINE", "STABLE", Color(0xFF00F2FF))
+            ModuleStatus("PROJECT ARCHITECT", "V4.3.30 READY", Color(0xFFBB86FC))
         }
     }
 }
 
 @Composable
-fun ToolRow(name: String, status: String, color: Color) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(color.copy(alpha = 0.05f))
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+fun ModuleStatus(name: String, status: String, color: Color) {
+    Row(modifier = Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(name, color = Color.Gray, fontSize = 11.sp)
         Text(status, color = color, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
