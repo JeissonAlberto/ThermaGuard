@@ -3,18 +3,18 @@ package com.jeissonalberto.thermaguard
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.jeissonalberto.thermaguard.ui.DashboardScreen
-import com.jeissonalberto.thermaguard.domain.ThermalViewModel
-import com.jeissonalberto.thermaguard.ui.theme.ThermaGuardTheme
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ThermaGuardTheme {
-                val viewModel: ThermalViewModel = viewModel()
-                DashboardScreen(viewModel)
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("THERMAGUARD v4.4.8 - REPARANDO...")
             }
         }
     }
