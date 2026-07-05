@@ -2,7 +2,6 @@ package com.jeissonalberto.thermaguard.domain
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jeissonalberto.thermaguard.data.LearningEngine
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,27 +15,17 @@ class ThermalViewModel : ViewModel() {
     private val _optimizationLevel = MutableStateFlow(0f)
     val optimizationLevel: StateFlow<Float> = _optimizationLevel
 
-    private val _engineStatus = MutableStateFlow("LEARNING")
+    private val _engineStatus = MutableStateFlow("ACTIVE")
     val engineStatus: StateFlow<String> = _engineStatus
 
     init {
-        runAutoLearningCycle()
-    }
-
-    private fun runAutoLearningCycle() {
         viewModelScope.launch {
             while (true) {
-                delay(1500)
-                val currentTemp = 36.0f + Random.nextFloat() * 2.0f
-                _batteryTemp.value = currentTemp
-                
-                // Inyectar datos al motor de aprendizaje
-                LearningEngine.learnFromPattern(currentTemp, 0.5f)
-                
-                val threshold = LearningEngine.getOptimizedThreshold(40f)
-                _optimizationLevel.value = (1.0f - (threshold / 45f)).coerceIn(0f, 1f)
-                
-                _engineStatus.value = if (currentTemp > threshold) "SELF-OPTIMIZING" else "STABLE"
+                delay(2000)
+                val temp = 36.0f + Random.nextFloat() * 2.5f
+                _batteryTemp.value = temp
+                _optimizationLevel.value = (temp - 35f) / 10f
+                _engineStatus.value = if (temp > 37.5f) "LEARNING & OPTIMIZING" else "STABLE"
             }
         }
     }
