@@ -6,9 +6,14 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.jeissonalberto.thermaguard.data.ThermalDatabase
+import com.jeissonalberto.thermaguard.data.ThermalSnapshot
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
@@ -21,10 +26,17 @@ import kotlinx.coroutines.launch
 class ThermalViewModel(application: Application) : AndroidViewModel(application) {
     private companion object {
         const val POLL_INTERVAL_MS = 5_000L
+        const val HISTORY_SAMPLE_INTERVAL_MS = 60_000L
+        const val HISTORY_RETENTION_MS = 24 * 60 * 60 * 1_000L
+        const val HISTORY_LIMIT = 24
         const val UNAVAILABLE = Int.MIN_VALUE
         const val ALERT_THRESHOLD_C = 40f
         const val CRITICAL_THRESHOLD_C = 45f
     }
+
+    private val thermalDao = runCatching {
+        ThermalDatabase.getInstance(application).thermalDao()
+    }.getOrNull()
 
     private val _batteryTemp = MutableStateFlow<Float?>(null)
     val batteryTemp: StateFlow<Float?> = _batteryTemp
@@ -42,9 +54,25 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _alertThreshold = MutableStateFlow(ALERT_THRESHOLD_C)
     val alertThreshold: StateFlow<Float> = _alertThreshold
 
+    private val _history = MutableStateFlow<List<ThermalSnapshot>>(emptyList())
+    val history: StateFlow<List<ThermalSnapshot>> = _history
+
+    private val _historyStorageError = MutableStateFlow(thermalDao == null)
+    val historyStorageError: StateFlow<Boolean> = _historyStorageError
+
+    private var lastPersistedAt = 0L
+
     init {
+        thermalDao?.let { dao ->
+            viewModelScope.launch(Dispatchers.IO) {
+                dao.observeRecent(HISTORY_LIMIT)
+                    .catch { _historyStorageError.value = true }
+                    .collect { snapshots -> _history.value = snapshots }
+            }
+        }
+
         viewModelScope.launch {
-            while (true) {
+            while (isActive) {
                 refreshReading()
                 delay(POLL_INTERVAL_MS)
             }
@@ -64,15 +92,28 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         val temperature = rawTemperature
             .takeUnless { it == UNAVAILABLE || it <= 0 }
             ?.div(10f)
+        val now = System.currentTimeMillis()
 
         _batteryTemp.value = temperature
         _sensorAvailable.value = temperature != null
-        _lastUpdated.value = System.currentTimeMillis()
+        _lastUpdated.value = now
         _engineStatus.value = when {
             temperature == null -> "SENSOR UNAVAILABLE"
             temperature >= CRITICAL_THRESHOLD_C -> "CRITICAL"
             temperature >= ALERT_THRESHOLD_C -> "ALERT"
             else -> "NOMINAL"
+        }
+
+        if (temperature != null && now - lastPersistedAt >= HISTORY_SAMPLE_INTERVAL_MS) {
+            lastPersistedAt = now
+            thermalDao?.let { dao ->
+                viewModelScope.launch(Dispatchers.IO) {
+                    runCatching {
+                        dao.insert(ThermalSnapshot(timestamp = now, batteryTemp = temperature))
+                        dao.deleteOlderThan(now - HISTORY_RETENTION_MS)
+                    }.onFailure { _historyStorageError.value = true }
+                }
+            }
         }
     }
 }

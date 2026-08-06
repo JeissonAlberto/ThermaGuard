@@ -35,6 +35,8 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
     val status by viewModel.engineStatus.collectAsState()
     val threshold by viewModel.alertThreshold.collectAsState()
     val lastUpdated by viewModel.lastUpdated.collectAsState()
+    val history by viewModel.history.collectAsState()
+    val historyStorageError by viewModel.historyStorageError.collectAsState()
 
     val temperatureLabel = temp?.let {
         String.format(Locale.getDefault(), "%.1f°C", it)
@@ -122,6 +124,34 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                             fontWeight = FontWeight.Bold
                         )
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White.copy(alpha = 0.05f)
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text("HISTORIAL LOCAL", color = Color.Gray, fontSize = 12.sp)
+                    Text(
+                        when {
+                            historyStorageError -> "No disponible en este dispositivo"
+                            history.isEmpty() -> "Sin lecturas persistidas"
+                            else -> "${history.size} lecturas recientes • retención de 24 h"
+                        },
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        "Se guarda una lectura real por minuto; los datos no se inventan.",
+                        color = Color.White.copy(alpha = 0.55f),
+                        fontSize = 11.sp
+                    )
                 }
             }
         }
