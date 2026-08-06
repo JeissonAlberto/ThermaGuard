@@ -1,12 +1,32 @@
-# 🛡️ ThermaGuard v4.3.32 - ULTIMATE
-## 🛠️ Estado: REPARADO & SINCRONIZADO
+# ThermaGuard
 
-He corregido los errores de las versiones anteriores. Esta versión ya no es estática; el motor térmico y la interfaz de usuario ahora son completamente dinámicos.
+Monitor térmico para Android, con una interfaz Compose orientada a mostrar lecturas reales del dispositivo.
 
-### ✅ Correcciones v4.3.32:
-*   **UI Dinámica:** Los valores de temperatura y el estado del motor cambian en tiempo real.
-*   **Animaciones de Reactor:** Implementación de ciclos de pulso para el monitoreo del Silicon Engine.
-*   **Sincronización Total:** Fleetbase y Project Architect están integrados y operativos.
+## Estado actual
 
-### 📥 Descarga:
-Busca el APK en la sección de **Releases** bajo el tag `v4.3.32-stable`.
+- La pantalla principal consulta la temperatura de batería publicada por Android mediante `BatteryManager`.
+- La lectura se actualiza cada 5 segundos mientras la pantalla está activa.
+- Si el dispositivo no expone la temperatura, la app muestra `—` y el estado `SENSOR UNAVAILABLE`; no genera valores simulados.
+- Se muestran la fuente de la lectura, la hora de actualización y un umbral de alerta de 40 °C.
+
+La disponibilidad y precisión dependen del fabricante y del modelo del dispositivo. La temperatura de batería no equivale necesariamente a la temperatura de CPU o GPU.
+
+## Construir localmente
+
+Requisitos: JDK 17, Android SDK con API 35 y acceso a las dependencias de Gradle.
+
+```bash
+./gradlew assembleDebug
+```
+
+El APK de depuración se genera en `app/build/outputs/apk/debug/app-debug.apk` cuando el build termina correctamente. Este repositorio no incluye un APK precompilado.
+
+## Validación continua
+
+El workflow de GitHub Actions ejecuta `assembleDebug` y `bundleRelease` en cada push a `main`. Los artefactos solo deben considerarse disponibles después de que una ejecución exitosa los publique.
+
+## Limitaciones conocidas
+
+- La lectura implementada es la temperatura de batería proporcionada por el sistema; no se asume acceso root ni se inventan sensores CPU/GPU.
+- El historial persistente, las alertas del sistema y el diagnóstico avanzado aún requieren integración adicional.
+- No se deben interpretar las lecturas como consejo médico ni como garantía de protección térmica.
