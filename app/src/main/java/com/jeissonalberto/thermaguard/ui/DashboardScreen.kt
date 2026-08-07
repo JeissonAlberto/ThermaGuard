@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -91,6 +92,12 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                     color = Color.White.copy(alpha = 0.55f),
                     fontSize = 11.sp
                 )
+                Button(
+                    onClick = viewModel::refreshReading,
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("ACTUALIZAR LECTURA")
+                }
             }
 
             if (status == "ALERT" || status == "CRITICAL") {
