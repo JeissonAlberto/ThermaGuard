@@ -152,6 +152,34 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                         color = Color.White.copy(alpha = 0.55f),
                         fontSize = 11.sp
                     )
+                    history.firstOrNull()?.let { latest ->
+                        val timeLabel = SimpleDateFormat("HH:mm", Locale.getDefault())
+                            .format(Date(latest.timestamp))
+                        Text(
+                            String.format(
+                                Locale.getDefault(),
+                                "Última lectura: %.1f°C • %s",
+                                latest.batteryTemp,
+                                timeLabel
+                            ),
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 12.sp
+                        )
+                    }
+                    history.drop(1).lastOrNull()?.let { oldest ->
+                        val timeLabel = SimpleDateFormat("HH:mm", Locale.getDefault())
+                            .format(Date(oldest.timestamp))
+                        Text(
+                            String.format(
+                                Locale.getDefault(),
+                                "Más antigua disponible: %.1f°C • %s",
+                                oldest.batteryTemp,
+                                timeLabel
+                            ),
+                            color = Color.White.copy(alpha = 0.55f),
+                            fontSize = 11.sp
+                        )
+                    }
                 }
             }
         }
