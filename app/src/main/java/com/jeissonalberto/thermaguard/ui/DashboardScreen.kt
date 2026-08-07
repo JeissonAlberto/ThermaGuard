@@ -93,6 +93,53 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                 )
             }
 
+            if (status == "ALERT" || status == "CRITICAL") {
+                val isCritical = status == "CRITICAL"
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = (if (isCritical) Color(0xFF5D1717) else Color(0xFF5A3A12))
+                            .copy(alpha = 0.9f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            if (isCritical) "ALERTA CRÍTICA" else "ALERTA TÉRMICA",
+                            color = if (isCritical) Color(0xFFFF8A80) else Color(0xFFFFCC80),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            temp?.let {
+                                if (isCritical) {
+                                    String.format(
+                                        Locale.getDefault(),
+                                        "Batería a %.1f°C • nivel crítico",
+                                        it
+                                    )
+                                } else {
+                                    String.format(
+                                        Locale.getDefault(),
+                                        "Batería a %.1f°C (umbral %.0f°C)",
+                                        it,
+                                        threshold
+                                    )
+                                }
+                            } ?: "Lectura no disponible",
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            "Reduce la carga del dispositivo y comprueba su ventilación.",
+                            color = Color.White.copy(alpha = 0.75f),
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             Card(
