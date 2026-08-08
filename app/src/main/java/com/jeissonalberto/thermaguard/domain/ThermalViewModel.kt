@@ -44,6 +44,12 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _sensorAvailable = MutableStateFlow(false)
     val sensorAvailable: StateFlow<Boolean> = _sensorAvailable
 
+    private val _batteryLevel = MutableStateFlow<Int?>(null)
+    val batteryLevel: StateFlow<Int?> = _batteryLevel
+
+    private val _isCharging = MutableStateFlow<Boolean?>(null)
+    val isCharging: StateFlow<Boolean?> = _isCharging
+
     private val _lastUpdated = MutableStateFlow<Long?>(null)
     val lastUpdated: StateFlow<Long?> = _lastUpdated
 
@@ -89,6 +95,9 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             BatteryManager.EXTRA_TEMPERATURE,
             UNAVAILABLE
         ) ?: UNAVAILABLE
+        val batteryLevel = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, UNAVAILABLE)
+        val batteryScale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, UNAVAILABLE)
+        val chargingStatus = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, UNAVAILABLE)
         val temperature = rawTemperature
             .takeUnless { it == UNAVAILABLE || it <= 0 }
             ?.div(10f)
@@ -96,6 +105,16 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
         _batteryTemp.value = temperature
         _sensorAvailable.value = temperature != null
+        _batteryLevel.value = if (batteryLevel != null && batteryScale != null && batteryLevel >= 0 && batteryScale > 0) {
+            (batteryLevel * 100f / batteryScale).toInt().coerceIn(0, 100)
+        } else {
+            null
+        }
+        _isCharging.value = when (chargingStatus) {
+            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> true
+            BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> false
+            else -> null
+        }
         _lastUpdated.value = now
         _engineStatus.value = when {
             temperature == null -> "SENSOR UNAVAILABLE"

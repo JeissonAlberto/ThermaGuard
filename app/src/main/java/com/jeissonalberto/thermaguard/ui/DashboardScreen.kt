@@ -33,6 +33,8 @@ import java.util.Locale
 fun DashboardScreen(viewModel: ThermalViewModel) {
     val temp by viewModel.batteryTemp.collectAsState()
     val available by viewModel.sensorAvailable.collectAsState()
+    val batteryLevel by viewModel.batteryLevel.collectAsState()
+    val isCharging by viewModel.isCharging.collectAsState()
     val status by viewModel.engineStatus.collectAsState()
     val threshold by viewModel.alertThreshold.collectAsState()
     val lastUpdated by viewModel.lastUpdated.collectAsState()
@@ -168,6 +170,18 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                             if (available) "Android BatteryManager" else "No disponible",
                             color = Color.White,
                             fontSize = 14.sp
+                        )
+                        Text(
+                            batteryLevel?.let { level ->
+                                val chargingLabel = when (isCharging) {
+                                    true -> "cargando"
+                                    false -> "sin carga"
+                                    null -> "estado de carga no disponible"
+                                }
+                                "Batería: $level% • $chargingLabel"
+                            } ?: "Nivel de batería no disponible",
+                            color = Color.White.copy(alpha = 0.55f),
+                            fontSize = 11.sp
                         )
                     }
                     Column(horizontalAlignment = Alignment.End) {
