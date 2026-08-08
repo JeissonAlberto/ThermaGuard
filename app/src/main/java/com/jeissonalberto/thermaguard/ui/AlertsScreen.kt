@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -133,7 +135,19 @@ private fun ThermalHistoryChart(
     val thresholdColor = Color(0xFFFFB74D)
 
     Column(modifier = modifier) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .semantics {
+                    contentDescription = String.format(
+                        Locale.getDefault(),
+                        "Gráfico de temperatura de batería. Mínima %.1f grados Celsius, máxima %.1f grados Celsius, umbral %.0f grados Celsius.",
+                        minTemperature,
+                        maxTemperature,
+                        threshold
+                    )
+                }
+        ) {
             val left = 8f
             val right = size.width - 8f
             val top = 8f
