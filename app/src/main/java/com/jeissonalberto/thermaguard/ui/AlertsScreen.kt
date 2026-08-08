@@ -1,5 +1,6 @@
 package com.jeissonalberto.thermaguard.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,6 +88,25 @@ fun AlertsScreen(viewModel: ThermalViewModel) {
         )
 
         Spacer(modifier = Modifier.height(20.dp))
+        Text("TENDENCIA DE LAS LECTURAS", color = Color.Gray, fontSize = 12.sp)
+        if (history.size >= 2) {
+            ThermalHistoryChart(
+                temperatures = history.asReversed().map { it.batteryTemp },
+                threshold = threshold,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .padding(top = 8.dp)
+            )
+        } else {
+            Text(
+                "Se necesitan al menos 2 lecturas persistidas para mostrar una tendencia.",
+                color = Color.White.copy(alpha = 0.65f),
+                fontSize = 13.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
         Text("EVIDENCIA LOCAL", color = Color.Gray, fontSize = 12.sp)
         Text(
             when {
@@ -94,6 +116,63 @@ fun AlertsScreen(viewModel: ThermalViewModel) {
             },
             color = Color.White.copy(alpha = 0.75f),
             fontSize = 13.sp
+        )
+    }
+}
+
+@Composable
+private fun ThermalHistoryChart(
+    temperatures: List<Float>,
+    threshold: Float,
+    modifier: Modifier = Modifier
+) {
+    val minTemperature = temperatures.minOrNull() ?: return
+    val maxTemperature = temperatures.maxOrNull() ?: return
+    val range = (maxTemperature - minTemperature).coerceAtLeast(1f)
+    val lineColor = Color(0xFF00F2FF)
+    val thresholdColor = Color(0xFFFFB74D)
+
+    Column(modifier = modifier) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val left = 8f
+            val right = size.width - 8f
+            val top = 8f
+            val bottom = size.height - 8f
+            val xStep = (right - left) / (temperatures.size - 1).coerceAtLeast(1)
+            val points = temperatures.mapIndexed { index, value ->
+                val x = left + index * xStep
+                val y = bottom - ((value - minTemperature) / range) * (bottom - top)
+                Offset(x, y)
+            }
+
+            val thresholdY = bottom - ((threshold - minTemperature) / range) * (bottom - top)
+            drawLine(
+                color = thresholdColor.copy(alpha = 0.65f),
+                start = Offset(left, thresholdY.coerceIn(top, bottom)),
+                end = Offset(right, thresholdY.coerceIn(top, bottom)),
+                strokeWidth = 2f,
+                cap = StrokeCap.Round
+            )
+            points.zipWithNext().forEach { (start, end) ->
+                drawLine(
+                    color = lineColor,
+                    start = start,
+                    end = end,
+                    strokeWidth = 4f,
+                    cap = StrokeCap.Round
+                )
+            }
+        }
+        Text(
+            String.format(
+                Locale.getDefault(),
+                "Mín. %.1f°C • Máx. %.1f°C • línea ámbar: umbral %.0f°C",
+                minTemperature,
+                maxTemperature,
+                threshold
+            ),
+            color = Color.White.copy(alpha = 0.65f),
+            fontSize = 11.sp
         )
     }
 }
