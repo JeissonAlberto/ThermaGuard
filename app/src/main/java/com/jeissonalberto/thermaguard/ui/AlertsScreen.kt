@@ -1,10 +1,99 @@
 package com.jeissonalberto.thermaguard.ui
-import androidx.compose.runtime.*
-import com.jeissonalberto.thermaguard.domain.ThermalViewModel
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.jeissonalberto.thermaguard.domain.ThermalViewModel
+import java.util.Locale
 
 @Composable
 fun AlertsScreen(viewModel: ThermalViewModel) {
     val threshold by viewModel.alertThreshold.collectAsState()
-    Text(text = "Alert Threshold: ${threshold}C")
+    val temperature by viewModel.batteryTemp.collectAsState()
+    val status by viewModel.engineStatus.collectAsState()
+    val sensorAvailable by viewModel.sensorAvailable.collectAsState()
+    val history by viewModel.history.collectAsState()
+    val historyStorageError by viewModel.historyStorageError.collectAsState()
+
+    val statusColor = when (status) {
+        "CRITICAL" -> Color(0xFFFF8A80)
+        "ALERT" -> Color(0xFFFFCC80)
+        "NOMINAL" -> Color(0xFF80CBC4)
+        else -> Color(0xFFFFB74D)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Top
+    ) {
+        Text("ALERTAS TÉRMICAS", color = Color(0xFF00F2FF), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(
+            "Basadas únicamente en la temperatura real de batería expuesta por Android.",
+            color = Color.White.copy(alpha = 0.65f),
+            fontSize = 12.sp
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.07f))
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text("ESTADO ACTUAL", color = Color.Gray, fontSize = 12.sp)
+                Text(status, color = statusColor, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                Text(
+                    temperature?.let {
+                        String.format(Locale.getDefault(), "Temperatura: %.1f°C", it)
+                    } ?: "Temperatura no disponible",
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
+                Text("Umbral de alerta: ≥ ${threshold.toInt()}°C", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            when {
+                !sensorAvailable -> "No se puede activar una alerta térmica: este dispositivo no expone la temperatura de batería."
+                status == "CRITICAL" -> "Temperatura crítica detectada. Reduce la carga y comprueba la ventilación del dispositivo."
+                status == "ALERT" -> "Temperatura por encima del umbral configurado. Vigila la lectura y reduce la carga si continúa subiendo."
+                else -> "No hay una alerta térmica activa según la última lectura disponible."
+            },
+            color = Color.White.copy(alpha = 0.85f),
+            fontSize = 14.sp
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+        Text("EVIDENCIA LOCAL", color = Color.Gray, fontSize = 12.sp)
+        Text(
+            when {
+                historyStorageError -> "El almacenamiento local del historial no está disponible."
+                history.isEmpty() -> "Todavía no hay lecturas persistidas."
+                else -> "${history.size} lecturas reales recientes disponibles para contextualizar la alerta."
+            },
+            color = Color.White.copy(alpha = 0.75f),
+            fontSize = 13.sp
+        )
+    }
 }
