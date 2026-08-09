@@ -28,7 +28,8 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         const val POLL_INTERVAL_MS = 5_000L
         const val HISTORY_SAMPLE_INTERVAL_MS = 60_000L
         const val HISTORY_RETENTION_MS = 24 * 60 * 60 * 1_000L
-        const val HISTORY_LIMIT = 24
+        // One sample per minute, matching the 24-hour retention window.
+        const val HISTORY_LIMIT = 24 * 60
         const val UNAVAILABLE = Int.MIN_VALUE
         const val ALERT_THRESHOLD_C = 40f
         const val CRITICAL_THRESHOLD_C = 45f
