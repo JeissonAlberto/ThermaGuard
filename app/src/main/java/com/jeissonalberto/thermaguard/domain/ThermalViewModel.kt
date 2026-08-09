@@ -117,7 +117,9 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> false
             else -> null
         }
-        _lastUpdated.value = now
+        if (intent != null) {
+            _lastUpdated.value = now
+        }
         _engineStatus.value = when {
             temperature == null -> "SENSOR UNAVAILABLE"
             temperature >= CRITICAL_THRESHOLD_C -> "CRITICAL"
