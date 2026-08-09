@@ -87,10 +87,12 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     /** Refreshes the sticky battery broadcast without requiring a permission. */
     fun refreshReading() {
-        val intent = getApplication<Application>().registerReceiver(
-            null,
-            IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        )
+        val intent = runCatching {
+            getApplication<Application>().registerReceiver(
+                null,
+                IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            )
+        }.getOrNull()
         val rawTemperature = intent?.getIntExtra(
             BatteryManager.EXTRA_TEMPERATURE,
             UNAVAILABLE
