@@ -128,8 +128,11 @@ private fun ThermalHistoryChart(
     threshold: Float,
     modifier: Modifier = Modifier
 ) {
-    val minTemperature = temperatures.minOrNull() ?: return
-    val maxTemperature = temperatures.maxOrNull() ?: return
+    // Keep the full history in Room/UI, but cap drawing work while preserving
+    // each bucket's first, last, minimum and maximum thermal readings.
+    val chartTemperatures = temperatures.downsampleForChart()
+    val minTemperature = chartTemperatures.minOrNull() ?: return
+    val maxTemperature = chartTemperatures.maxOrNull() ?: return
     val range = (maxTemperature - minTemperature).coerceAtLeast(1f)
     val lineColor = Color(0xFF00F2FF)
     val thresholdColor = Color(0xFFFFB74D)
@@ -152,8 +155,8 @@ private fun ThermalHistoryChart(
             val right = size.width - 8f
             val top = 8f
             val bottom = size.height - 8f
-            val xStep = (right - left) / (temperatures.size - 1).coerceAtLeast(1)
-            val points = temperatures.mapIndexed { index, value ->
+            val xStep = (right - left) / (chartTemperatures.size - 1).coerceAtLeast(1)
+            val points = chartTemperatures.mapIndexed { index, value ->
                 val x = left + index * xStep
                 val y = bottom - ((value - minTemperature) / range) * (bottom - top)
                 Offset(x, y)
@@ -188,5 +191,20 @@ private fun ThermalHistoryChart(
             color = Color.White.copy(alpha = 0.65f),
             fontSize = 11.sp
         )
+    }
+}
+
+private fun List<Float>.downsampleForChart(maxPoints: Int = 180): List<Float> {
+    if (size <= maxPoints) return this
+
+    val bucketCount = (maxPoints / 4).coerceAtLeast(1)
+    val bucketSize = (size + bucketCount - 1) / bucketCount
+    return chunked(bucketSize).flatMap { bucket ->
+        val minIndex = bucket.indices.minByOrNull { bucket[it] } ?: 0
+        val maxIndex = bucket.indices.maxByOrNull { bucket[it] } ?: 0
+        listOf(0, minIndex, maxIndex, bucket.lastIndex)
+            .distinct()
+            .sorted()
+            .map(bucket::get)
     }
 }
