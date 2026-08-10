@@ -27,13 +27,16 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
     val temperature by viewModel.batteryTemp.collectAsState()
     val sensorAvailable by viewModel.sensorAvailable.collectAsState()
     val status by viewModel.engineStatus.collectAsState()
+    val systemThermalStatus by viewModel.systemThermalStatus.collectAsState()
     val batteryLevel by viewModel.batteryLevel.collectAsState()
     val isCharging by viewModel.isCharging.collectAsState()
     val lastUpdated by viewModel.lastUpdated.collectAsState()
     val history by viewModel.history.collectAsState()
     val historyStorageError by viewModel.historyStorageError.collectAsState()
 
+    val systemThermalRisk = systemThermalStatus in setOf("SEVERE", "CRITICAL", "EMERGENCY", "SHUTDOWN")
     val diagnosis = when {
+        systemThermalRisk -> "Android reporta un estado térmico del sistema que requiere reducir la carga."
         !sensorAvailable -> "Sin diagnóstico térmico: Android no entregó una temperatura de batería válida."
         status == "CRITICAL" -> "Riesgo térmico alto según la lectura de batería actual."
         status == "ALERT" -> "Se requiere vigilancia: la lectura supera el umbral de alerta."
@@ -69,6 +72,7 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
         Spacer(modifier = Modifier.height(18.dp))
         Text("SEÑALES COMPROBADAS", color = Color.Gray, fontSize = 12.sp)
         DiagnosticRow("Sensor de temperatura", if (sensorAvailable) "Disponible" else "No disponible")
+        DiagnosticRow("Estado térmico del sistema", systemThermalStatus ?: "No disponible (Android < 10)")
         DiagnosticRow("Temperatura actual", temperature?.let { "%.1f°C".format(it) } ?: "Sin lectura")
         DiagnosticRow("Nivel de batería", batteryLevel?.let { "$it%" } ?: "No disponible")
         DiagnosticRow(
@@ -90,7 +94,7 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
 
         Spacer(modifier = Modifier.height(18.dp))
         Text(
-            "Este diagnóstico no mide CPU/GPU ni sustituye las protecciones del sistema; solo interpreta datos entregados por Android y el historial local.",
+            "El estado térmico del sistema es una señal agregada de Android; no identifica un componente concreto ni sustituye sus protecciones.",
             color = Color.White.copy(alpha = 0.55f),
             fontSize = 11.sp
         )

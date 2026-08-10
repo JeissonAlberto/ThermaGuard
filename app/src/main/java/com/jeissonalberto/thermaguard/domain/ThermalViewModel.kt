@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.os.Build
+import android.os.PowerManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jeissonalberto.thermaguard.data.ThermalDatabase
@@ -35,6 +37,8 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         const val CRITICAL_THRESHOLD_C = 45f
     }
 
+    private val powerManager = application.getSystemService(PowerManager::class.java)
+
     private val thermalDao = runCatching {
         ThermalDatabase.getInstance(application).thermalDao()
     }.getOrNull()
@@ -56,6 +60,10 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private val _engineStatus = MutableStateFlow("WAITING")
     val engineStatus: StateFlow<String> = _engineStatus
+
+    /** Aggregated thermal status reported by Android 10+ (not a CPU/GPU reading). */
+    private val _systemThermalStatus = MutableStateFlow<String?>(null)
+    val systemThermalStatus: StateFlow<String?> = _systemThermalStatus
 
     /** Kept public for the alerts screen and shared threshold presentation. */
     private val _alertThreshold = MutableStateFlow(ALERT_THRESHOLD_C)
@@ -86,8 +94,26 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private fun updateSystemThermalStatus() {
+        _systemThermalStatus.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            when (powerManager?.currentThermalStatus) {
+                PowerManager.THERMAL_STATUS_NONE -> "NORMAL"
+                PowerManager.THERMAL_STATUS_LIGHT -> "LIGHT"
+                PowerManager.THERMAL_STATUS_MODERATE -> "MODERATE"
+                PowerManager.THERMAL_STATUS_SEVERE -> "SEVERE"
+                PowerManager.THERMAL_STATUS_CRITICAL -> "CRITICAL"
+                PowerManager.THERMAL_STATUS_EMERGENCY -> "EMERGENCY"
+                PowerManager.THERMAL_STATUS_SHUTDOWN -> "SHUTDOWN"
+                else -> "UNKNOWN"
+            }
+        } else {
+            null
+        }
+    }
+
     /** Refreshes the sticky battery broadcast without requiring a permission. */
     fun refreshReading() {
+        updateSystemThermalStatus()
         val intent = runCatching {
             getApplication<Application>().registerReceiver(
                 null,
