@@ -18,6 +18,18 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+/** Converts Android's public thermal status constants to stable UI labels. */
+internal fun systemThermalStatusLabel(status: Int): String = when (status) {
+    PowerManager.THERMAL_STATUS_NONE -> "NORMAL"
+    PowerManager.THERMAL_STATUS_LIGHT -> "LIGHT"
+    PowerManager.THERMAL_STATUS_MODERATE -> "MODERATE"
+    PowerManager.THERMAL_STATUS_SEVERE -> "SEVERE"
+    PowerManager.THERMAL_STATUS_CRITICAL -> "CRITICAL"
+    PowerManager.THERMAL_STATUS_EMERGENCY -> "EMERGENCY"
+    PowerManager.THERMAL_STATUS_SHUTDOWN -> "SHUTDOWN"
+    else -> "UNKNOWN"
+}
+
 /**
  * Exposes readings from the Android battery service.
  *
@@ -96,16 +108,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private fun updateSystemThermalStatus() {
         _systemThermalStatus.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            when (powerManager?.currentThermalStatus) {
-                PowerManager.THERMAL_STATUS_NONE -> "NORMAL"
-                PowerManager.THERMAL_STATUS_LIGHT -> "LIGHT"
-                PowerManager.THERMAL_STATUS_MODERATE -> "MODERATE"
-                PowerManager.THERMAL_STATUS_SEVERE -> "SEVERE"
-                PowerManager.THERMAL_STATUS_CRITICAL -> "CRITICAL"
-                PowerManager.THERMAL_STATUS_EMERGENCY -> "EMERGENCY"
-                PowerManager.THERMAL_STATUS_SHUTDOWN -> "SHUTDOWN"
-                else -> "UNKNOWN"
-            }
+            powerManager?.currentThermalStatus?.let(::systemThermalStatusLabel) ?: "UNKNOWN"
         } else {
             null
         }
