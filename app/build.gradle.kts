@@ -72,6 +72,8 @@ dependencies {
 }
 
 // Keep the APK validation path from silently skipping the unit test suite.
-tasks.named("assembleDebug") {
-    dependsOn("test")
+tasks.configureEach {
+    if (name == "assembleDebug") {
+        dependsOn("test")
+    }
 }
