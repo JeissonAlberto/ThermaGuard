@@ -34,6 +34,7 @@ fun AlertsScreen(viewModel: ThermalViewModel) {
     val temperature by viewModel.batteryTemp.collectAsState()
     val status by viewModel.engineStatus.collectAsState()
     val sensorAvailable by viewModel.sensorAvailable.collectAsState()
+    val systemThermalStatus by viewModel.systemThermalStatus.collectAsState()
     val history by viewModel.history.collectAsState()
     val historyStorageError by viewModel.historyStorageError.collectAsState()
 
@@ -72,6 +73,16 @@ fun AlertsScreen(viewModel: ThermalViewModel) {
                     } ?: "Temperatura no disponible",
                     color = Color.White,
                     fontSize = 14.sp
+                )
+                Text(
+                    "Estado térmico de Android: ${systemThermalStatus ?: "NO DISPONIBLE"}",
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontSize = 13.sp
+                )
+                Text(
+                    "El estado del sistema complementa la temperatura de batería; no es una lectura de CPU/GPU.",
+                    color = Color.White.copy(alpha = 0.55f),
+                    fontSize = 11.sp
                 )
                 Text("Umbral de alerta: ≥ ${threshold.toInt()}°C", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
             }
