@@ -70,3 +70,8 @@ dependencies {
     implementation("com.airbnb.android:lottie-compose:6.4.0")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 }
+
+// Keep the APK validation path from silently skipping the unit test suite.
+tasks.named("assembleDebug") {
+    dependsOn("test")
+}
