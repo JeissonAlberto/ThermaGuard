@@ -247,12 +247,16 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             lastNotifiedEngineStatus = null
         }
 
-        if (temperature != null && now - lastPersistedAt >= HISTORY_SAMPLE_INTERVAL_MS) {
+        // Keep retention maintenance independent from sensor availability. A device
+        // that stops exposing temperature must not keep stale history indefinitely.
+        if (now - lastPersistedAt >= HISTORY_SAMPLE_INTERVAL_MS) {
             lastPersistedAt = now
             thermalDao?.let { dao ->
                 viewModelScope.launch(Dispatchers.IO) {
                     runCatching {
-                        dao.insert(ThermalSnapshot(timestamp = now, batteryTemp = temperature))
+                        temperature?.let {
+                            dao.insert(ThermalSnapshot(timestamp = now, batteryTemp = it))
+                        }
                         dao.deleteOlderThan(now - HISTORY_RETENTION_MS)
                     }.onFailure { _historyStorageError.value = true }
                 }
