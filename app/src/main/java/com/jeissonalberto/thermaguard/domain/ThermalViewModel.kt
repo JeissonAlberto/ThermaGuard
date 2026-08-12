@@ -129,15 +129,15 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun notifyThermalAlert(status: String, temperature: Float) {
+    private fun notifyThermalAlert(status: String, temperature: Float): Boolean {
         val application = getApplication<Application>()
-        if (!NotificationManagerCompat.from(application).areNotificationsEnabled()) return
+        if (!NotificationManagerCompat.from(application).areNotificationsEnabled()) return false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(application, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
-        ) return
+        ) return false
 
-        runCatching {
+        return runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val manager = application.getSystemService(NotificationManager::class.java)
                 manager?.createNotificationChannel(
@@ -174,7 +174,8 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build()
             NotificationManagerCompat.from(application).notify(THERMAL_ALERT_NOTIFICATION_ID, notification)
-        }
+            true
+        }.getOrDefault(false)
     }
 
     /** Refreshes the sticky battery broadcast without requiring a permission. */
@@ -221,9 +222,12 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
         _engineStatus.value = currentStatus
         if (temperature != null && shouldNotifyThermalStatus(lastNotifiedEngineStatus, currentStatus)) {
-            notifyThermalAlert(currentStatus, temperature)
+            if (notifyThermalAlert(currentStatus, temperature)) {
+                lastNotifiedEngineStatus = currentStatus
+            }
+        } else if (currentStatus != "ALERT" && currentStatus != "CRITICAL") {
+            lastNotifiedEngineStatus = null
         }
-        lastNotifiedEngineStatus = currentStatus.takeIf { it == "ALERT" || it == "CRITICAL" }
 
         if (temperature != null && now - lastPersistedAt >= HISTORY_SAMPLE_INTERVAL_MS) {
             lastPersistedAt = now
