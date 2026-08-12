@@ -26,4 +26,12 @@ class SystemThermalStatusTest {
     fun unknownAndroidStatusDoesNotLookLikeNormal() {
         assertEquals("UNKNOWN", systemThermalStatusLabel(Int.MAX_VALUE))
     }
+
+    @Test
+    fun thermalNotificationOnlyFiresWhenEnteringAnAlertState() {
+        assertEquals(true, shouldNotifyThermalStatus(null, "ALERT"))
+        assertEquals(true, shouldNotifyThermalStatus("ALERT", "CRITICAL"))
+        assertEquals(false, shouldNotifyThermalStatus("ALERT", "ALERT"))
+        assertEquals(false, shouldNotifyThermalStatus("CRITICAL", "NOMINAL"))
+    }
 }

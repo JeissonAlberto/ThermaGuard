@@ -1,13 +1,21 @@
 package com.jeissonalberto.thermaguard.domain
 
+import android.Manifest
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.jeissonalberto.thermaguard.MainActivity
 import com.jeissonalberto.thermaguard.data.ThermalDatabase
 import com.jeissonalberto.thermaguard.data.ThermalSnapshot
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +38,10 @@ internal fun systemThermalStatusLabel(status: Int): String = when (status) {
     else -> "UNKNOWN"
 }
 
+/** A notification is emitted only when the app enters a new alert state. */
+internal fun shouldNotifyThermalStatus(previous: String?, current: String): Boolean =
+    current in setOf("ALERT", "CRITICAL") && previous != current
+
 /**
  * Exposes readings from the Android battery service.
  *
@@ -47,9 +59,12 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         const val UNAVAILABLE = Int.MIN_VALUE
         const val ALERT_THRESHOLD_C = 40f
         const val CRITICAL_THRESHOLD_C = 45f
+        const val THERMAL_ALERT_CHANNEL_ID = "therma_alerts"
+        const val THERMAL_ALERT_NOTIFICATION_ID = 9902
     }
 
     private val powerManager = application.getSystemService(PowerManager::class.java)
+    private var lastNotifiedEngineStatus: String? = null
 
     private val thermalDao = runCatching {
         ThermalDatabase.getInstance(application).thermalDao()
@@ -114,6 +129,54 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private fun notifyThermalAlert(status: String, temperature: Float) {
+        val application = getApplication<Application>()
+        if (!NotificationManagerCompat.from(application).areNotificationsEnabled()) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(application, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) return
+
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val manager = application.getSystemService(NotificationManager::class.java)
+                manager?.createNotificationChannel(
+                    NotificationChannel(
+                        THERMAL_ALERT_CHANNEL_ID,
+                        "Alertas térmicas",
+                        NotificationManager.IMPORTANCE_HIGH
+                    ).apply {
+                        description = "Avisos cuando la temperatura real de batería supera el umbral."
+                    }
+                )
+            }
+            val notification = NotificationCompat.Builder(application, THERMAL_ALERT_CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setContentTitle(if (status == "CRITICAL") "Alerta térmica crítica" else "Alerta térmica")
+                .setContentText("Temperatura real de batería: %.1f°C".format(temperature))
+                .setStyle(
+                    NotificationCompat.BigTextStyle().bigText(
+                        ("Android reportó una temperatura real de batería de %.1f°C. " +
+                            "Reduce la carga y comprueba la ventilación del dispositivo.").format(temperature)
+                    )
+                )
+                .setContentIntent(
+                    android.app.PendingIntent.getActivity(
+                        application,
+                        0,
+                        Intent(application, MainActivity::class.java),
+                        android.app.PendingIntent.FLAG_UPDATE_CURRENT or
+                            android.app.PendingIntent.FLAG_IMMUTABLE
+                    )
+                )
+                .setAutoCancel(true)
+                .setOnlyAlertOnce(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .build()
+            NotificationManagerCompat.from(application).notify(THERMAL_ALERT_NOTIFICATION_ID, notification)
+        }
+    }
+
     /** Refreshes the sticky battery broadcast without requiring a permission. */
     fun refreshReading() {
         updateSystemThermalStatus()
@@ -150,12 +213,17 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         if (intent != null) {
             _lastUpdated.value = now
         }
-        _engineStatus.value = when {
+        val currentStatus = when {
             temperature == null -> "SENSOR UNAVAILABLE"
             temperature >= CRITICAL_THRESHOLD_C -> "CRITICAL"
             temperature >= ALERT_THRESHOLD_C -> "ALERT"
             else -> "NOMINAL"
         }
+        _engineStatus.value = currentStatus
+        if (temperature != null && shouldNotifyThermalStatus(lastNotifiedEngineStatus, currentStatus)) {
+            notifyThermalAlert(currentStatus, temperature)
+        }
+        lastNotifiedEngineStatus = currentStatus.takeIf { it == "ALERT" || it == "CRITICAL" }
 
         if (temperature != null && now - lastPersistedAt >= HISTORY_SAMPLE_INTERVAL_MS) {
             lastPersistedAt = now
