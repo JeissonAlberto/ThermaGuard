@@ -18,6 +18,7 @@ import androidx.lifecycle.viewModelScope
 import com.jeissonalberto.thermaguard.MainActivity
 import com.jeissonalberto.thermaguard.data.ThermalDatabase
 import com.jeissonalberto.thermaguard.data.ThermalSnapshot
+import com.jeissonalberto.thermaguard.root.HardwareProfiler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +55,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         const val POLL_INTERVAL_MS = 5_000L
         const val HISTORY_SAMPLE_INTERVAL_MS = 60_000L
         const val HISTORY_RETENTION_MS = 24 * 60 * 60 * 1_000L
+        const val HARDWARE_ZONE_REFRESH_INTERVAL_MS = 15_000L
         // One sample per minute, matching the 24-hour retention window.
         const val HISTORY_LIMIT = 24 * 60
         const val UNAVAILABLE = Int.MIN_VALUE
@@ -92,6 +94,10 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _systemThermalStatus = MutableStateFlow<String?>(null)
     val systemThermalStatus: StateFlow<String?> = _systemThermalStatus
 
+    /** Raw thermal zones exposed by the kernel, when the device permits reading them. */
+    private val _hardwareThermalZones = MutableStateFlow<List<HardwareProfiler.ThermalZoneInfo>>(emptyList())
+    val hardwareThermalZones: StateFlow<List<HardwareProfiler.ThermalZoneInfo>> = _hardwareThermalZones
+
     /** Kept public for the alerts screen and shared threshold presentation. */
     private val _alertThreshold = MutableStateFlow(ALERT_THRESHOLD_C)
     val alertThreshold: StateFlow<Float> = _alertThreshold
@@ -103,6 +109,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val historyStorageError: StateFlow<Boolean> = _historyStorageError
 
     private var lastPersistedAt = 0L
+    private var lastHardwareZoneReadAt = 0L
 
     init {
         thermalDao?.let { dao ->
@@ -178,6 +185,16 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }.getOrDefault(false)
     }
 
+    private fun refreshHardwareThermalZones(now: Long) {
+        if (now - lastHardwareZoneReadAt < HARDWARE_ZONE_REFRESH_INTERVAL_MS) return
+        lastHardwareZoneReadAt = now
+        viewModelScope.launch(Dispatchers.IO) {
+            _hardwareThermalZones.value = runCatching {
+                HardwareProfiler.readCurrentThermalZones()
+            }.getOrDefault(emptyList())
+        }
+    }
+
     /** Refreshes the sticky battery broadcast without requiring a permission. */
     fun refreshReading() {
         updateSystemThermalStatus()
@@ -198,6 +215,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             .takeUnless { it == UNAVAILABLE || it <= 0 }
             ?.div(10f)
         val now = System.currentTimeMillis()
+        refreshHardwareThermalZones(now)
 
         _batteryTemp.value = temperature
         _sensorAvailable.value = temperature != null

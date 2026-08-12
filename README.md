@@ -11,7 +11,7 @@ Monitor térmico para Android, con una interfaz Compose orientada a mostrar lect
 - Las lecturas disponibles se guardan en una base de datos Room local, aproximadamente una vez por minuto.
 - La pantalla muestra las lecturas recientes persistidas; se conservan como máximo 24 horas y no se envían a ningún servicio externo.
 - La sección de alertas muestra el estado actual, la tendencia local y un gráfico accesible con mínimo, máximo y umbral.
-- La sección de diagnóstico resume las señales comprobables: sensor, temperatura, batería, carga, actualización e historial.
+- La sección de diagnóstico resume las señales comprobables: sensor, temperatura, batería, carga, actualización e historial; también lista las zonas térmicas crudas del kernel cuando Android permite leerlas.
 
 La disponibilidad y precisión dependen del fabricante y del modelo del dispositivo. La temperatura de batería no equivale necesariamente a la temperatura de CPU o GPU.
 

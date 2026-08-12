@@ -28,6 +28,7 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
     val sensorAvailable by viewModel.sensorAvailable.collectAsState()
     val status by viewModel.engineStatus.collectAsState()
     val systemThermalStatus by viewModel.systemThermalStatus.collectAsState()
+    val hardwareThermalZones by viewModel.hardwareThermalZones.collectAsState()
     val batteryLevel by viewModel.batteryLevel.collectAsState()
     val isCharging by viewModel.isCharging.collectAsState()
     val lastUpdated by viewModel.lastUpdated.collectAsState()
@@ -74,6 +75,14 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
         DiagnosticRow("Sensor de temperatura", if (sensorAvailable) "Disponible" else "No disponible")
         DiagnosticRow("Estado térmico del sistema", systemThermalStatus ?: "No disponible (Android < 10)")
         DiagnosticRow("Temperatura actual", temperature?.let { "%.1f°C".format(it) } ?: "Sin lectura")
+        if (hardwareThermalZones.isEmpty()) {
+            DiagnosticRow("Zonas térmicas del kernel", "No disponibles o no legibles")
+        } else {
+            DiagnosticRow("Zonas térmicas del kernel", "${hardwareThermalZones.size} detectadas")
+            hardwareThermalZones.take(8).forEach { zone ->
+                DiagnosticRow("Zona ${zone.type}", "%.1f°C".format(zone.tempC))
+            }
+        }
         DiagnosticRow("Nivel de batería", batteryLevel?.let { "$it%" } ?: "No disponible")
         DiagnosticRow(
             "Estado de carga",

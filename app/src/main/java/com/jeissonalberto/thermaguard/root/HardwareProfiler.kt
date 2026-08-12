@@ -60,6 +60,9 @@ object HardwareProfiler {
 
     fun resetCache() { cachedProfile = null }
 
+    /** Reads currently exposed kernel thermal zones without requiring root access. */
+    fun readCurrentThermalZones(): List<ThermalZoneInfo> = detectThermalZones()
+
     // ─────────────────────────────────────────────────────────────────────────
     //  DETECCIÓN PRINCIPAL
     // ─────────────────────────────────────────────────────────────────────────
