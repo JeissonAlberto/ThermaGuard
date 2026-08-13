@@ -39,6 +39,14 @@ class SystemThermalStatusTest {
     }
 
     @Test
+    fun historyStorageErrorClearsAfterSuccessfulCleanupWithoutSensorSample() {
+        assertEquals(true, historyStorageWriteSucceeded(null, true))
+        assertEquals(true, historyStorageWriteSucceeded(true, true))
+        assertEquals(false, historyStorageWriteSucceeded(false, true))
+        assertEquals(false, historyStorageWriteSucceeded(true, false))
+    }
+
+    @Test
     fun thermalNotificationOnlyFiresWhenEnteringAnAlertState() {
         assertEquals(true, shouldNotifyThermalStatus(null, "ALERT"))
         assertEquals(true, shouldNotifyThermalStatus("ALERT", "CRITICAL"))

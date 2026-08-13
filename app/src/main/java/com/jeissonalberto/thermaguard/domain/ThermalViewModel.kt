@@ -51,6 +51,10 @@ internal fun batteryTemperatureCelsius(rawTemperature: Int): Float? =
 internal fun isSystemThermalRisk(status: String?): Boolean =
     status in setOf("SEVERE", "CRITICAL", "EMERGENCY", "SHUTDOWN")
 
+/** A missing sample is valid when the sensor is unavailable; cleanup still proves storage works. */
+internal fun historyStorageWriteSucceeded(sampleWriteSucceeded: Boolean?, cleanupSucceeded: Boolean): Boolean =
+    sampleWriteSucceeded != false && cleanupSucceeded
+
 /**
  * Exposes readings from the Android battery service.
  *
@@ -270,6 +274,9 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     }
                     if (insertResult?.isFailure == true || cleanupResult.isFailure) {
                         _historyStorageError.value = true
+                    } else if (historyStorageWriteSucceeded(insertResult?.isSuccess, cleanupResult.isSuccess)) {
+                        // A later successful write clears a transient database error.
+                        _historyStorageError.value = false
                     }
                 }
             }
