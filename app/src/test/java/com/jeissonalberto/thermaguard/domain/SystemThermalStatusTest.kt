@@ -34,4 +34,14 @@ class SystemThermalStatusTest {
         assertEquals(false, shouldNotifyThermalStatus("ALERT", "ALERT"))
         assertEquals(false, shouldNotifyThermalStatus("CRITICAL", "NOMINAL"))
     }
+
+    @Test
+    fun preservesValidSubZeroBatteryTemperature() {
+        assertEquals(-3.5f, batteryTemperatureCelsius(-35))
+    }
+
+    @Test
+    fun mapsMissingBatteryTemperatureToNull() {
+        assertEquals(null, batteryTemperatureCelsius(Int.MIN_VALUE))
+    }
 }

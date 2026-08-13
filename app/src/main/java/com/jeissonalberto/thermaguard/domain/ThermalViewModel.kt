@@ -43,6 +43,10 @@ internal fun systemThermalStatusLabel(status: Int): String = when (status) {
 internal fun shouldNotifyThermalStatus(previous: String?, current: String): Boolean =
     current in setOf("ALERT", "CRITICAL") && previous != current
 
+/** Converts Android's tenths-of-a-degree value without discarding valid sub-zero readings. */
+internal fun batteryTemperatureCelsius(rawTemperature: Int): Float? =
+    rawTemperature.takeUnless { it == Int.MIN_VALUE }?.div(10f)
+
 /**
  * Exposes readings from the Android battery service.
  *
@@ -211,9 +215,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         val batteryLevel = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, UNAVAILABLE)
         val batteryScale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, UNAVAILABLE)
         val chargingStatus = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, UNAVAILABLE)
-        val temperature = rawTemperature
-            .takeUnless { it == UNAVAILABLE || it <= 0 }
-            ?.div(10f)
+        val temperature = batteryTemperatureCelsius(rawTemperature)
         val now = System.currentTimeMillis()
         refreshHardwareThermalZones(now)
 
