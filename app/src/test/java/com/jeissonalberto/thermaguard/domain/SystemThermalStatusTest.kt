@@ -28,6 +28,17 @@ class SystemThermalStatusTest {
     }
 
     @Test
+    fun onlyElevatedSystemStatesAreThermalRisks() {
+        assertEquals(false, isSystemThermalRisk(null))
+        assertEquals(false, isSystemThermalRisk("NORMAL"))
+        assertEquals(false, isSystemThermalRisk("MODERATE"))
+        assertEquals(true, isSystemThermalRisk("SEVERE"))
+        assertEquals(true, isSystemThermalRisk("CRITICAL"))
+        assertEquals(true, isSystemThermalRisk("EMERGENCY"))
+        assertEquals(true, isSystemThermalRisk("SHUTDOWN"))
+    }
+
+    @Test
     fun thermalNotificationOnlyFiresWhenEnteringAnAlertState() {
         assertEquals(true, shouldNotifyThermalStatus(null, "ALERT"))
         assertEquals(true, shouldNotifyThermalStatus("ALERT", "CRITICAL"))

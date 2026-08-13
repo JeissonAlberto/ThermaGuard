@@ -47,6 +47,10 @@ internal fun shouldNotifyThermalStatus(previous: String?, current: String): Bool
 internal fun batteryTemperatureCelsius(rawTemperature: Int): Float? =
     rawTemperature.takeUnless { it == Int.MIN_VALUE }?.div(10f)
 
+/** Android reports these states when the system needs the user to reduce thermal load. */
+internal fun isSystemThermalRisk(status: String?): Boolean =
+    status in setOf("SEVERE", "CRITICAL", "EMERGENCY", "SHUTDOWN")
+
 /**
  * Exposes readings from the Android battery service.
  *

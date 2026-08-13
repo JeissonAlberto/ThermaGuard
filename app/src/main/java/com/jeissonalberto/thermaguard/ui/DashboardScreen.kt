@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
+import com.jeissonalberto.thermaguard.domain.isSystemThermalRisk
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -36,10 +37,12 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
     val batteryLevel by viewModel.batteryLevel.collectAsState()
     val isCharging by viewModel.isCharging.collectAsState()
     val status by viewModel.engineStatus.collectAsState()
+    val systemThermalStatus by viewModel.systemThermalStatus.collectAsState()
     val threshold by viewModel.alertThreshold.collectAsState()
     val lastUpdated by viewModel.lastUpdated.collectAsState()
     val history by viewModel.history.collectAsState()
     val historyStorageError by viewModel.historyStorageError.collectAsState()
+    val systemThermalRisk = isSystemThermalRisk(systemThermalStatus)
 
     val temperatureLabel = temp?.let {
         String.format(Locale.getDefault(), "%.1f°C", it)
@@ -190,6 +193,36 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                             "≥ ${threshold.toInt()}°C",
                             color = Color(0xFFFFB74D),
                             fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            if (systemThermalRisk) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF5D1717).copy(alpha = 0.9f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            "ESTADO TÉRMICO DEL SISTEMA",
+                            color = Color(0xFFFF8A80),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            "Android reporta ${systemThermalStatus ?: "un estado elevado"}. Reduce la carga del dispositivo.",
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
+                        Text(
+                            "Es una señal agregada del sistema; no identifica por sí sola CPU, GPU o batería.",
+                            color = Color.White.copy(alpha = 0.75f),
+                            fontSize = 11.sp
                         )
                     }
                 }

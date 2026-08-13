@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
+import com.jeissonalberto.thermaguard.domain.isSystemThermalRisk
 
 @Composable
 fun DiagnosisScreen(viewModel: ThermalViewModel) {
@@ -35,7 +36,7 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
     val history by viewModel.history.collectAsState()
     val historyStorageError by viewModel.historyStorageError.collectAsState()
 
-    val systemThermalRisk = systemThermalStatus in setOf("SEVERE", "CRITICAL", "EMERGENCY", "SHUTDOWN")
+    val systemThermalRisk = isSystemThermalRisk(systemThermalStatus)
     val diagnosis = when {
         systemThermalRisk -> "Android reporta un estado térmico del sistema que requiere reducir la carga."
         !sensorAvailable -> "Sin diagnóstico térmico: Android no entregó una temperatura de batería válida."
