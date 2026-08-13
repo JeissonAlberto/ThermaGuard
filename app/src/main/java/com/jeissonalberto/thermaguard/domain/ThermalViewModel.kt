@@ -253,12 +253,18 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             lastPersistedAt = now
             thermalDao?.let { dao ->
                 viewModelScope.launch(Dispatchers.IO) {
-                    runCatching {
-                        temperature?.let {
+                    // Cleanup must still run if a new sample cannot be written.
+                    val insertResult = temperature?.let {
+                        runCatching {
                             dao.insert(ThermalSnapshot(timestamp = now, batteryTemp = it))
                         }
+                    }
+                    val cleanupResult = runCatching {
                         dao.deleteOlderThan(now - HISTORY_RETENTION_MS)
-                    }.onFailure { _historyStorageError.value = true }
+                    }
+                    if (insertResult?.isFailure == true || cleanupResult.isFailure) {
+                        _historyStorageError.value = true
+                    }
                 }
             }
         }
