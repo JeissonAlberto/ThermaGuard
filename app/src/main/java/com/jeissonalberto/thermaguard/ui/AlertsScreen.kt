@@ -54,7 +54,7 @@ fun AlertsScreen(viewModel: ThermalViewModel) {
     ) {
         Text("ALERTAS TÉRMICAS", color = Color(0xFF00F2FF), fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Text(
-            "Basadas únicamente en la temperatura real de batería expuesta por Android.",
+            "Basadas en la temperatura real de batería y el estado térmico agregado por Android.",
             color = Color.White.copy(alpha = 0.65f),
             fontSize = 12.sp
         )

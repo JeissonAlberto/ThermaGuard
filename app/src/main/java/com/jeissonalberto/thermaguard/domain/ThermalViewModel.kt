@@ -51,6 +51,16 @@ internal fun batteryTemperatureCelsius(rawTemperature: Int): Float? =
 internal fun isSystemThermalRisk(status: String?): Boolean =
     status in setOf("SEVERE", "CRITICAL", "EMERGENCY", "SHUTDOWN")
 
+/** Combines the battery reading with Android's aggregated thermal status. */
+internal fun thermalEngineStatus(temperature: Float?, systemStatus: String?): String = when {
+    systemStatus in setOf("CRITICAL", "EMERGENCY", "SHUTDOWN") -> "CRITICAL"
+    systemStatus == "SEVERE" -> "ALERT"
+    temperature == null -> "SENSOR UNAVAILABLE"
+    temperature >= 45f -> "CRITICAL"
+    temperature >= 40f -> "ALERT"
+    else -> "NOMINAL"
+}
+
 /** A missing sample is valid when the sensor is unavailable; cleanup still proves storage works. */
 internal fun historyStorageWriteSucceeded(sampleWriteSucceeded: Boolean?, cleanupSucceeded: Boolean): Boolean =
     sampleWriteSucceeded != false && cleanupSucceeded
@@ -71,8 +81,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         // One sample per minute, matching the 24-hour retention window.
         const val HISTORY_LIMIT = 24 * 60
         const val UNAVAILABLE = Int.MIN_VALUE
-        const val ALERT_THRESHOLD_C = 40f
-        const val CRITICAL_THRESHOLD_C = 45f
         const val THERMAL_ALERT_CHANNEL_ID = "therma_alerts"
         const val THERMAL_ALERT_NOTIFICATION_ID = 9902
     }
@@ -111,7 +119,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val hardwareThermalZones: StateFlow<List<HardwareProfiler.ThermalZoneInfo>> = _hardwareThermalZones
 
     /** Kept public for the alerts screen and shared threshold presentation. */
-    private val _alertThreshold = MutableStateFlow(ALERT_THRESHOLD_C)
+    private val _alertThreshold = MutableStateFlow(40f)
     val alertThreshold: StateFlow<Float> = _alertThreshold
 
     private val _history = MutableStateFlow<List<ThermalSnapshot>>(emptyList())
@@ -148,7 +156,11 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun notifyThermalAlert(status: String, temperature: Float): Boolean {
+    private fun notifyThermalAlert(
+        status: String,
+        temperature: Float,
+        systemStatus: String?
+    ): Boolean {
         val application = getApplication<Application>()
         if (!NotificationManagerCompat.from(application).areNotificationsEnabled()) return false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -172,11 +184,22 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             val notification = NotificationCompat.Builder(application, THERMAL_ALERT_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setContentTitle(if (status == "CRITICAL") "Alerta térmica crítica" else "Alerta térmica")
-                .setContentText("Temperatura real de batería: %.1f°C".format(temperature))
+                .setContentText(
+                    if (isSystemThermalRisk(systemStatus)) {
+                        "Estado térmico de Android: $systemStatus"
+                    } else {
+                        "Temperatura real de batería: %.1f°C".format(temperature)
+                    }
+                )
                 .setStyle(
                     NotificationCompat.BigTextStyle().bigText(
-                        ("Android reportó una temperatura real de batería de %.1f°C. " +
-                            "Reduce la carga y comprueba la ventilación del dispositivo.").format(temperature)
+                        if (isSystemThermalRisk(systemStatus)) {
+                            ("Android reportó un estado térmico $systemStatus; la batería marca %.1f°C. " +
+                                "Reduce la carga y comprueba la ventilación del dispositivo.").format(temperature)
+                        } else {
+                            ("Android reportó una temperatura real de batería de %.1f°C. " +
+                                "Reduce la carga y comprueba la ventilación del dispositivo.").format(temperature)
+                        }
                     )
                 )
                 .setContentIntent(
@@ -242,15 +265,11 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         if (intent != null) {
             _lastUpdated.value = now
         }
-        val currentStatus = when {
-            temperature == null -> "SENSOR UNAVAILABLE"
-            temperature >= CRITICAL_THRESHOLD_C -> "CRITICAL"
-            temperature >= ALERT_THRESHOLD_C -> "ALERT"
-            else -> "NOMINAL"
-        }
+        val systemStatus = _systemThermalStatus.value
+        val currentStatus = thermalEngineStatus(temperature, systemStatus)
         _engineStatus.value = currentStatus
         if (temperature != null && shouldNotifyThermalStatus(lastNotifiedEngineStatus, currentStatus)) {
-            if (notifyThermalAlert(currentStatus, temperature)) {
+            if (notifyThermalAlert(currentStatus, temperature, systemStatus)) {
                 lastNotifiedEngineStatus = currentStatus
             }
         } else if (currentStatus != "ALERT" && currentStatus != "CRITICAL") {
