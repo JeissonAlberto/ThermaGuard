@@ -158,7 +158,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
     private fun notifyThermalAlert(
         status: String,
-        temperature: Float,
+        temperature: Float?,
         systemStatus: String?
     ): Boolean {
         val application = getApplication<Application>()
@@ -177,10 +177,11 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         "Alertas térmicas",
                         NotificationManager.IMPORTANCE_HIGH
                     ).apply {
-                        description = "Avisos cuando la temperatura real de batería supera el umbral."
+                        description = "Avisos cuando la batería o el estado térmico del sistema indican riesgo."
                     }
                 )
             }
+            val batteryLabel = temperature?.let { "%.1f°C".format(it) } ?: "no disponible"
             val notification = NotificationCompat.Builder(application, THERMAL_ALERT_CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setContentTitle(if (status == "CRITICAL") "Alerta térmica crítica" else "Alerta térmica")
@@ -188,17 +189,17 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     if (isSystemThermalRisk(systemStatus)) {
                         "Estado térmico de Android: $systemStatus"
                     } else {
-                        "Temperatura real de batería: %.1f°C".format(temperature)
+                        "Temperatura real de batería: $batteryLabel"
                     }
                 )
                 .setStyle(
                     NotificationCompat.BigTextStyle().bigText(
                         if (isSystemThermalRisk(systemStatus)) {
-                            ("Android reportó un estado térmico $systemStatus; la batería marca %.1f°C. " +
-                                "Reduce la carga y comprueba la ventilación del dispositivo.").format(temperature)
+                            "Android reportó un estado térmico $systemStatus; la batería marca $batteryLabel. " +
+                                "Reduce la carga y comprueba la ventilación del dispositivo."
                         } else {
-                            ("Android reportó una temperatura real de batería de %.1f°C. " +
-                                "Reduce la carga y comprueba la ventilación del dispositivo.").format(temperature)
+                            "Android reportó una temperatura real de batería de $batteryLabel. " +
+                                "Reduce la carga y comprueba la ventilación del dispositivo."
                         }
                     )
                 )
@@ -268,7 +269,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         val systemStatus = _systemThermalStatus.value
         val currentStatus = thermalEngineStatus(temperature, systemStatus)
         _engineStatus.value = currentStatus
-        if (temperature != null && shouldNotifyThermalStatus(lastNotifiedEngineStatus, currentStatus)) {
+        if (shouldNotifyThermalStatus(lastNotifiedEngineStatus, currentStatus)) {
             if (notifyThermalAlert(currentStatus, temperature, systemStatus)) {
                 lastNotifiedEngineStatus = currentStatus
             }

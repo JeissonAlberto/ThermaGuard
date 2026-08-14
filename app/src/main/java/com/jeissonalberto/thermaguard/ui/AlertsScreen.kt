@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
+import com.jeissonalberto.thermaguard.domain.isSystemThermalRisk
 import java.util.Locale
 
 @Composable
@@ -37,6 +38,7 @@ fun AlertsScreen(viewModel: ThermalViewModel) {
     val systemThermalStatus by viewModel.systemThermalStatus.collectAsState()
     val history by viewModel.history.collectAsState()
     val historyStorageError by viewModel.historyStorageError.collectAsState()
+    val systemThermalRisk = isSystemThermalRisk(systemThermalStatus)
 
     val statusColor = when (status) {
         "CRITICAL" -> Color(0xFFFF8A80)
@@ -91,6 +93,7 @@ fun AlertsScreen(viewModel: ThermalViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             when {
+                systemThermalRisk -> "Android reporta un estado térmico ${systemThermalStatus ?: "elevado"}. Reduce la carga y comprueba la ventilación del dispositivo."
                 !sensorAvailable -> "No se puede activar una alerta térmica: este dispositivo no expone la temperatura de batería."
                 status == "CRITICAL" -> "Temperatura crítica detectada. Reduce la carga y comprueba la ventilación del dispositivo."
                 status == "ALERT" -> "Temperatura por encima del umbral configurado. Vigila la lectura y reduce la carga si continúa subiendo."

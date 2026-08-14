@@ -15,6 +15,12 @@ class ThermalStatusTest {
     }
 
     @Test
+    fun systemRiskIsActionableEvenWhenBatterySensorIsUnavailable() {
+        assertEquals("ALERT", thermalEngineStatus(null, "SEVERE"))
+        assertEquals("CRITICAL", thermalEngineStatus(null, "EMERGENCY"))
+    }
+
+    @Test
     fun batteryThresholdsRemainEffectiveWithoutSystemRisk() {
         assertEquals("ALERT", thermalEngineStatus(40f, "NORMAL"))
         assertEquals("CRITICAL", thermalEngineStatus(45f, "NORMAL"))
