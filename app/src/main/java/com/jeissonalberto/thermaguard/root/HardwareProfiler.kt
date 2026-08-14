@@ -9,6 +9,9 @@ import java.io.File
  * Funciona en cualquier dispositivo Android: Qualcomm, MediaTek, Exynos, Tensor, etc.
  * No asume rutas, frecuencias ni número de cores — todo se descubre en tiempo de ejecución.
  */
+internal fun thermalZoneTemperatureCelsius(rawTemperature: Int): Float =
+    if (rawTemperature >= 1_000 || rawTemperature < 0) rawTemperature / 1_000f else rawTemperature.toFloat()
+
 object HardwareProfiler {
 
     // ── Perfil detectado del dispositivo ─────────────────────────────────────
@@ -213,7 +216,7 @@ object HardwareProfiler {
                 val index = zone.name.removePrefix("thermal_zone").toIntOrNull() ?: return@mapNotNull null
                 val type  = File(zone, "type").readTextSafe()?.trim() ?: "unknown"
                 val tempRaw = File(zone, "temp").readTextSafe()?.trim()?.toIntOrNull() ?: return@mapNotNull null
-                val tempC = if (tempRaw > 1000) tempRaw / 1000f else tempRaw.toFloat()
+                val tempC = thermalZoneTemperatureCelsius(tempRaw)
                 ThermalZoneInfo(
                     index = index,
                     type  = type,
