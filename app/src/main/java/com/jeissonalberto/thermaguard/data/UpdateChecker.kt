@@ -79,7 +79,7 @@ object UpdateChecker {
             val current = getCurrentVersion(context)
 
             // Comparar versiones
-            if (!isNewer(tag, current)) return@withContext null
+            if (!isNewerVersion(tag, current)) return@withContext null
 
             // Buscar APK en assets
             val apkUrl = if (assets != null && assets.length() > 0) {
@@ -110,11 +110,12 @@ object UpdateChecker {
         } catch (_: Exception) { "0.0.0" }
     }
 
-    /** Compara semver: devuelve true si remoteTag es más nuevo que localVersion */
-    private fun isNewer(remoteTag: String, local: String): Boolean {
+    /** Compara semver: devuelve true si remoteTag es más nuevo que localVersion. */
+    internal fun isNewerVersion(remoteTag: String, local: String): Boolean {
         return try {
-            val r = remoteTag.trimStart('v').split(".").map { it.toInt() }
-            val l = local.trimStart('v').split(".").map { it.toInt() }
+            // Version names may carry a build suffix, e.g. 4.5.1-FINAL.
+            val r = remoteTag.trimStart('v').substringBefore('-').split(".").map { it.toInt() }
+            val l = local.trimStart('v').substringBefore('-').split(".").map { it.toInt() }
             for (i in 0..2) {
                 val ri = r.getOrElse(i) { 0 }
                 val li = l.getOrElse(i) { 0 }
