@@ -55,13 +55,19 @@ object UpdateChecker {
         if (!isAutoCheckEnabled(context)) return null
         val prefs     = context.getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE)
         val lastCheck = prefs.getLong(KEY_LAST_CHECK, 0L)
-        if (System.currentTimeMillis() - lastCheck < CHECK_INTERVAL_MS) return null
+        if (!isUpdateCheckDue(System.currentTimeMillis(), lastCheck)) return null
         val outcome = checkWithStatus(context)
         // A network/server failure must not consume the 6-hour retry window.
         if (outcome.succeeded) {
             prefs.edit().putLong(KEY_LAST_CHECK, System.currentTimeMillis()).apply()
         }
         return outcome.update
+    }
+
+    /** Returns true when an automatic check is allowed, including after a clock rollback. */
+    internal fun isUpdateCheckDue(nowMillis: Long, lastCheckMillis: Long): Boolean {
+        if (lastCheckMillis <= 0L || nowMillis < lastCheckMillis) return true
+        return nowMillis - lastCheckMillis >= CHECK_INTERVAL_MS
     }
 
     /** Verifica actualizaciones inmediatamente (llamada manual). */
