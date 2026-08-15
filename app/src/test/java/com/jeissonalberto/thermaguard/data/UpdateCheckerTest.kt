@@ -26,7 +26,7 @@ class UpdateCheckerTest {
 
     @Test
     fun respectsSixHourAutomaticCheckWindow() {
-        val now = 100_000L
+        val now = 100_000_000L
         val sixHours = 6 * 60 * 60 * 1_000L
         assertFalse(UpdateChecker.isUpdateCheckDue(now, now - sixHours + 1L))
         assertTrue(UpdateChecker.isUpdateCheckDue(now, now - sixHours))
