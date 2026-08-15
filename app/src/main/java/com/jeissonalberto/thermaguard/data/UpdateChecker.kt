@@ -35,6 +35,8 @@ object UpdateChecker {
     // Intervalo mínimo entre checks: 6 horas
     private const val CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000L
 
+    private data class CheckOutcome(val update: AppUpdate?, val succeeded: Boolean)
+
     fun isAutoCheckEnabled(context: Context): Boolean {
         return context.getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE)
             .getBoolean(KEY_AUTO_UPDATE, true)
@@ -54,13 +56,18 @@ object UpdateChecker {
         val prefs     = context.getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE)
         val lastCheck = prefs.getLong(KEY_LAST_CHECK, 0L)
         if (System.currentTimeMillis() - lastCheck < CHECK_INTERVAL_MS) return null
-        val result = check(context)
-        prefs.edit().putLong(KEY_LAST_CHECK, System.currentTimeMillis()).apply()
-        return result
+        val outcome = checkWithStatus(context)
+        // A network/server failure must not consume the 6-hour retry window.
+        if (outcome.succeeded) {
+            prefs.edit().putLong(KEY_LAST_CHECK, System.currentTimeMillis()).apply()
+        }
+        return outcome.update
     }
 
     /** Verifica actualizaciones inmediatamente (llamada manual). */
-    suspend fun check(context: Context): AppUpdate? = withContext(Dispatchers.IO) {
+    suspend fun check(context: Context): AppUpdate? = checkWithStatus(context).update
+
+    private suspend fun checkWithStatus(context: Context): CheckOutcome = withContext(Dispatchers.IO) {
         try {
             val url = URL(RELEASES_URL)
             val conn = url.openConnection() as HttpURLConnection
@@ -70,7 +77,7 @@ object UpdateChecker {
                 connectTimeout = 8_000
                 readTimeout    = 8_000
             }
-            if (conn.responseCode != 200) return@withContext null
+            if (conn.responseCode != 200) return@withContext CheckOutcome(null, false)
 
             val json    = JSONObject(conn.inputStream.bufferedReader().readText())
             val tag     = json.getString("tag_name")          // e.g. "v3.9.22"
@@ -79,7 +86,7 @@ object UpdateChecker {
             val current = getCurrentVersion(context)
 
             // Comparar versiones
-            if (!isNewerVersion(tag, current)) return@withContext null
+            if (!isNewerVersion(tag, current)) return@withContext CheckOutcome(null, true)
 
             // Buscar APK en assets
             val apkUrl = if (assets != null && assets.length() > 0) {
@@ -92,15 +99,18 @@ object UpdateChecker {
                 json.optString("html_url", "")
             }
 
-            AppUpdate(
-                version      = tag,
-                releaseNotes = notes.take(500),
-                downloadUrl  = apkUrl,
-                isForced     = notes.contains("[FORCED]", ignoreCase = true)
+            CheckOutcome(
+                update = AppUpdate(
+                    version      = tag,
+                    releaseNotes = notes.take(500),
+                    downloadUrl  = apkUrl,
+                    isForced     = notes.contains("[FORCED]", ignoreCase = true)
+                ),
+                succeeded = true
             )
         } catch (e: Exception) {
             android.util.Log.w("ThermaGuard", "UpdateCheck error: ${e.message}")
-            null
+            CheckOutcome(null, false)
         }
     }
 
