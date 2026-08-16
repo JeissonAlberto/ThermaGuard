@@ -7,6 +7,7 @@ import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
 import android.util.Log
+import androidx.work.BackoffPolicy
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -96,7 +97,12 @@ class ThermalMonitorWorker(
             val request = PeriodicWorkRequestBuilder<ThermalMonitorWorker>(
                 INTERVAL_MINUTES,
                 TimeUnit.MINUTES
-            ).build()
+            )
+                // Avoid an immediate duplicate wake-up when the UI schedules work.
+                .setInitialDelay(INTERVAL_MINUTES, TimeUnit.MINUTES)
+                // A failed run should not retry in a tight loop and drain the battery.
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, INTERVAL_MINUTES, TimeUnit.MINUTES)
+                .build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME,
                 ExistingPeriodicWorkPolicy.KEEP,
