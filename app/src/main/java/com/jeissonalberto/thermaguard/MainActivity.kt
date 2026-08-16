@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
+import com.jeissonalberto.thermaguard.service.ThermalMonitorWorker
 import com.jeissonalberto.thermaguard.service.UpdateWorker
 import com.jeissonalberto.thermaguard.ui.AlertsScreen
 import com.jeissonalberto.thermaguard.ui.DashboardScreen
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermissionIfNeeded()
         // WorkManager keeps the six-hour update check alive after the UI closes.
         UpdateWorker.schedule(applicationContext)
+        ThermalMonitorWorker.schedule(applicationContext)
         setContent {
             ThermaGuardTheme {
                 val viewModel: ThermalViewModel = viewModel()

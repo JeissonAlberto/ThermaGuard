@@ -1,21 +1,14 @@
 package com.jeissonalberto.thermaguard.domain
 
-import android.Manifest
 import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.jeissonalberto.thermaguard.MainActivity
+import com.jeissonalberto.thermaguard.data.ThermalAlertNotifier
 import com.jeissonalberto.thermaguard.data.ThermalDatabase
 import com.jeissonalberto.thermaguard.data.ThermalSnapshot
 import com.jeissonalberto.thermaguard.root.HardwareProfiler
@@ -81,8 +74,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         // One sample per minute, matching the 24-hour retention window.
         const val HISTORY_LIMIT = 24 * 60
         const val UNAVAILABLE = Int.MIN_VALUE
-        const val THERMAL_ALERT_CHANNEL_ID = "therma_alerts"
-        const val THERMAL_ALERT_NOTIFICATION_ID = 9902
     }
 
     private val powerManager = application.getSystemService(PowerManager::class.java)
@@ -156,71 +147,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    private fun notifyThermalAlert(
-        status: String,
-        temperature: Float?,
-        systemStatus: String?
-    ): Boolean {
-        val application = getApplication<Application>()
-        if (!NotificationManagerCompat.from(application).areNotificationsEnabled()) return false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(application, Manifest.permission.POST_NOTIFICATIONS) !=
-            PackageManager.PERMISSION_GRANTED
-        ) return false
-
-        return runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val manager = application.getSystemService(NotificationManager::class.java)
-                manager?.createNotificationChannel(
-                    NotificationChannel(
-                        THERMAL_ALERT_CHANNEL_ID,
-                        "Alertas térmicas",
-                        NotificationManager.IMPORTANCE_HIGH
-                    ).apply {
-                        description = "Avisos cuando la batería o el estado térmico del sistema indican riesgo."
-                    }
-                )
-            }
-            val batteryLabel = temperature?.let { "%.1f°C".format(it) } ?: "no disponible"
-            val notification = NotificationCompat.Builder(application, THERMAL_ALERT_CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .setContentTitle(if (status == "CRITICAL") "Alerta térmica crítica" else "Alerta térmica")
-                .setContentText(
-                    if (isSystemThermalRisk(systemStatus)) {
-                        "Estado térmico de Android: $systemStatus"
-                    } else {
-                        "Temperatura real de batería: $batteryLabel"
-                    }
-                )
-                .setStyle(
-                    NotificationCompat.BigTextStyle().bigText(
-                        if (isSystemThermalRisk(systemStatus)) {
-                            "Android reportó un estado térmico $systemStatus; la batería marca $batteryLabel. " +
-                                "Reduce la carga y comprueba la ventilación del dispositivo."
-                        } else {
-                            "Android reportó una temperatura real de batería de $batteryLabel. " +
-                                "Reduce la carga y comprueba la ventilación del dispositivo."
-                        }
-                    )
-                )
-                .setContentIntent(
-                    android.app.PendingIntent.getActivity(
-                        application,
-                        0,
-                        Intent(application, MainActivity::class.java),
-                        android.app.PendingIntent.FLAG_UPDATE_CURRENT or
-                            android.app.PendingIntent.FLAG_IMMUTABLE
-                    )
-                )
-                .setAutoCancel(true)
-                .setOnlyAlertOnce(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .build()
-            NotificationManagerCompat.from(application).notify(THERMAL_ALERT_NOTIFICATION_ID, notification)
-            true
-        }.getOrDefault(false)
-    }
-
     private fun refreshHardwareThermalZones(now: Long) {
         if (now - lastHardwareZoneReadAt < HARDWARE_ZONE_REFRESH_INTERVAL_MS) return
         lastHardwareZoneReadAt = now
@@ -270,7 +196,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         val currentStatus = thermalEngineStatus(temperature, systemStatus)
         _engineStatus.value = currentStatus
         if (shouldNotifyThermalStatus(lastNotifiedEngineStatus, currentStatus)) {
-            if (notifyThermalAlert(currentStatus, temperature, systemStatus)) {
+            if (ThermalAlertNotifier.notify(application, currentStatus, temperature, systemStatus)) {
                 lastNotifiedEngineStatus = currentStatus
             }
         } else if (currentStatus != "ALERT" && currentStatus != "CRITICAL") {

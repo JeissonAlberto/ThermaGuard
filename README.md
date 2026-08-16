@@ -33,6 +33,6 @@ El workflow de GitHub Actions ejecuta `assembleDebug` y `bundleRelease` en cada 
 
 - La lectura implementada es la temperatura de batería proporcionada por el sistema; no se asume acceso root ni se inventan sensores CPU/GPU.
 - El historial es local, tiene una retención de 24 horas e incluye una tendencia visual dentro de la app; aún no incluye exportación ni sincronización.
-- Las alertas se muestran dentro de la app y, cuando el usuario concede el permiso de notificaciones, también como notificación del sistema al entrar en estado ALERT o CRITICAL. La notificación depende de que la app esté activa; todavía no se monitorea en segundo plano.
+- Las alertas se muestran dentro de la app y, cuando el usuario concede el permiso de notificaciones, también como notificación del sistema al entrar en estado ALERT o CRITICAL. La app programa comprobaciones térmicas reales en segundo plano con WorkManager cada 15 minutos como mínimo; Android puede aplazar cada ejecución según batería y sus políticas.
 - El diagnóstico interpreta únicamente las señales expuestas por Android y el historial local; no mide CPU/GPU.
 - No se deben interpretar las lecturas como consejo médico ni como garantía de protección térmica.
