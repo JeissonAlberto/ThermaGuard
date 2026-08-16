@@ -196,7 +196,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         val currentStatus = thermalEngineStatus(temperature, systemStatus)
         _engineStatus.value = currentStatus
         if (shouldNotifyThermalStatus(lastNotifiedEngineStatus, currentStatus)) {
-            if (ThermalAlertNotifier.notify(application, currentStatus, temperature, systemStatus)) {
+            if (ThermalAlertNotifier.notify(getApplication<Application>(), currentStatus, temperature, systemStatus)) {
                 lastNotifiedEngineStatus = currentStatus
             }
         } else if (currentStatus != "ALERT" && currentStatus != "CRITICAL") {
