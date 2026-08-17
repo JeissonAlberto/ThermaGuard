@@ -36,6 +36,8 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
     val available by viewModel.sensorAvailable.collectAsState()
     val batteryLevel by viewModel.batteryLevel.collectAsState()
     val isCharging by viewModel.isCharging.collectAsState()
+    val batteryVoltageMv by viewModel.batteryVoltageMv.collectAsState()
+    val batteryCurrentMicroamps by viewModel.batteryCurrentMicroamps.collectAsState()
     val status by viewModel.engineStatus.collectAsState()
     val systemThermalStatus by viewModel.systemThermalStatus.collectAsState()
     val threshold by viewModel.alertThreshold.collectAsState()
@@ -186,6 +188,14 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                             color = Color.White.copy(alpha = 0.55f),
                             fontSize = 11.sp
                         )
+                        Text(
+                            buildList {
+                                batteryVoltageMv?.let { add("${it}mV") }
+                                batteryCurrentMicroamps?.let { add("${it / 1000f}mA") }
+                            }.joinToString(" • ").ifEmpty { "Voltaje/corriente no disponibles" },
+                            color = Color.White.copy(alpha = 0.55f),
+                            fontSize = 11.sp
+                        )
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text("ALERTA", color = Color.Gray, fontSize = 12.sp)
@@ -249,7 +259,7 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                         fontSize = 14.sp
                     )
                     Text(
-                        "Se guarda una lectura real por minuto; los datos no se inventan.",
+                        "Se guarda localmente una lectura real por minuto; sin envío externo ni datos inventados.",
                         color = Color.White.copy(alpha = 0.55f),
                         fontSize = 11.sp
                     )
@@ -266,6 +276,18 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                             color = Color.White.copy(alpha = 0.8f),
                             fontSize = 12.sp
                         )
+                        val metadata = buildList {
+                            latest.batteryLevel?.let { add("$it%") }
+                            latest.batteryVoltageMv?.let { add("${it}mV") }
+                            latest.batteryCurrentMicroamps?.let { add("${it / 1000f}mA") }
+                        }.joinToString(" • ")
+                        if (metadata.isNotEmpty()) {
+                            Text(
+                                "Telemetría local: $metadata",
+                                color = Color.White.copy(alpha = 0.65f),
+                                fontSize = 11.sp
+                            )
+                        }
                     }
                     history.drop(1).lastOrNull()?.let { oldest ->
                         val timeLabel = SimpleDateFormat("HH:mm", Locale.getDefault())

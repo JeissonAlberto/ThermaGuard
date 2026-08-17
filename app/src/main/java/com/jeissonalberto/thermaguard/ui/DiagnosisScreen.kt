@@ -32,6 +32,8 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
     val hardwareThermalZones by viewModel.hardwareThermalZones.collectAsState()
     val batteryLevel by viewModel.batteryLevel.collectAsState()
     val isCharging by viewModel.isCharging.collectAsState()
+    val batteryVoltageMv by viewModel.batteryVoltageMv.collectAsState()
+    val batteryCurrentMicroamps by viewModel.batteryCurrentMicroamps.collectAsState()
     val lastUpdated by viewModel.lastUpdated.collectAsState()
     val history by viewModel.history.collectAsState()
     val historyStorageError by viewModel.historyStorageError.collectAsState()
@@ -92,6 +94,11 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
                 false -> "Sin carga"
                 null -> "No disponible"
             }
+        )
+        DiagnosticRow("Voltaje de batería", batteryVoltageMv?.let { "${it}mV" } ?: "No disponible")
+        DiagnosticRow(
+            "Corriente de batería",
+            batteryCurrentMicroamps?.let { "${it / 1000f}mA" } ?: "No disponible"
         )
         DiagnosticRow("Última actualización", if (lastUpdated != null) "Recibida" else "Pendiente")
         DiagnosticRow(

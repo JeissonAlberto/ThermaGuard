@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.jeissonalberto.thermaguard.data.ThermalAlertNotifier
 import com.jeissonalberto.thermaguard.data.ThermalDatabase
 import com.jeissonalberto.thermaguard.data.ThermalSnapshot
+import com.jeissonalberto.thermaguard.data.readBatteryTelemetry
 import com.jeissonalberto.thermaguard.root.HardwareProfiler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -95,6 +96,12 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _isCharging = MutableStateFlow<Boolean?>(null)
     val isCharging: StateFlow<Boolean?> = _isCharging
 
+    private val _batteryVoltageMv = MutableStateFlow<Int?>(null)
+    val batteryVoltageMv: StateFlow<Int?> = _batteryVoltageMv
+
+    private val _batteryCurrentMicroamps = MutableStateFlow<Int?>(null)
+    val batteryCurrentMicroamps: StateFlow<Int?> = _batteryCurrentMicroamps
+
     private val _lastUpdated = MutableStateFlow<Long?>(null)
     val lastUpdated: StateFlow<Long?> = _lastUpdated
 
@@ -170,25 +177,17 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             BatteryManager.EXTRA_TEMPERATURE,
             UNAVAILABLE
         ) ?: UNAVAILABLE
-        val batteryLevel = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, UNAVAILABLE)
-        val batteryScale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, UNAVAILABLE)
-        val chargingStatus = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, UNAVAILABLE)
+        val batteryTelemetry = readBatteryTelemetry(intent)
         val temperature = batteryTemperatureCelsius(rawTemperature)
         val now = System.currentTimeMillis()
         refreshHardwareThermalZones(now)
 
         _batteryTemp.value = temperature
         _sensorAvailable.value = temperature != null
-        _batteryLevel.value = if (batteryLevel != null && batteryScale != null && batteryLevel >= 0 && batteryScale > 0) {
-            (batteryLevel * 100f / batteryScale).toInt().coerceIn(0, 100)
-        } else {
-            null
-        }
-        _isCharging.value = when (chargingStatus) {
-            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> true
-            BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> false
-            else -> null
-        }
+        _batteryLevel.value = batteryTelemetry.levelPercent
+        _isCharging.value = batteryTelemetry.isCharging
+        _batteryVoltageMv.value = batteryTelemetry.voltageMv
+        _batteryCurrentMicroamps.value = batteryTelemetry.currentMicroamps
         if (intent != null) {
             _lastUpdated.value = now
         }
@@ -212,7 +211,16 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     // Cleanup must still run if a new sample cannot be written.
                     val insertResult = temperature?.let {
                         runCatching {
-                            dao.insert(ThermalSnapshot(timestamp = now, batteryTemp = it))
+                            dao.insert(
+                                ThermalSnapshot(
+                                    timestamp = now,
+                                    batteryTemp = it,
+                                    batteryLevel = batteryTelemetry.levelPercent,
+                                    isCharging = batteryTelemetry.isCharging,
+                                    batteryVoltageMv = batteryTelemetry.voltageMv,
+                                    batteryCurrentMicroamps = batteryTelemetry.currentMicroamps
+                                )
+                            )
                         }
                     }
                     val cleanupResult = runCatching {

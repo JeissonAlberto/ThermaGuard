@@ -8,6 +8,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -22,11 +24,20 @@ interface ThermalDao {
     suspend fun deleteOlderThan(cutoff: Long)
 }
 
-@Database(entities = [ThermalSnapshot::class], version = 1, exportSchema = false)
+@Database(entities = [ThermalSnapshot::class], version = 2, exportSchema = false)
 abstract class ThermalDatabase : RoomDatabase() {
     abstract fun thermalDao(): ThermalDao
 
     companion object {
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE thermal_history ADD COLUMN batteryLevel INTEGER")
+                database.execSQL("ALTER TABLE thermal_history ADD COLUMN isCharging INTEGER")
+                database.execSQL("ALTER TABLE thermal_history ADD COLUMN batteryVoltageMv INTEGER")
+                database.execSQL("ALTER TABLE thermal_history ADD COLUMN batteryCurrentMicroamps INTEGER")
+            }
+        }
+
         @Volatile
         private var instance: ThermalDatabase? = null
 
@@ -36,7 +47,10 @@ abstract class ThermalDatabase : RoomDatabase() {
                     context.applicationContext,
                     ThermalDatabase::class.java,
                     "thermal_history.db"
-                ).build().also { instance = it }
+                )
+                    .addMigrations(MIGRATION_1_2)
+                    .build()
+                    .also { instance = it }
             }
     }
 }

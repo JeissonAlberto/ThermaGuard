@@ -1,4 +1,7 @@
 package com.jeissonalberto.thermaguard.data
+
+import android.content.Intent
+import android.os.BatteryManager
 import androidx.compose.ui.graphics.Color
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -8,7 +11,11 @@ data class ThermalSnapshot(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val timestamp: Long = System.currentTimeMillis(),
     val batteryTemp: Float = 0f,
-    val cpuTemp: Float = 0f
+    val cpuTemp: Float = 0f,
+    val batteryLevel: Int? = null,
+    val isCharging: Boolean? = null,
+    val batteryVoltageMv: Int? = null,
+    val batteryCurrentMicroamps: Int? = null
 )
 
 enum class ThermalLevel { COOL, NORMAL, WARM, HOT, CRITICAL, EMERGENCY }
@@ -19,3 +26,35 @@ object TG {
 }
 data class GovernorConfig(val name: String = "")
 fun detectDevicePhysicsParams(): Map<String, Any> = emptyMap()
+
+/**
+ * Reads optional battery metadata from Android's sticky battery broadcast.
+ * Missing extras remain null; no value is inferred or simulated.
+ */
+data class BatteryTelemetry(
+    val levelPercent: Int?,
+    val isCharging: Boolean?,
+    val voltageMv: Int?,
+    val currentMicroamps: Int?
+)
+
+fun readBatteryTelemetry(intent: Intent?): BatteryTelemetry {
+    val unavailable = Int.MIN_VALUE
+    val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, unavailable)
+    val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, unavailable)
+    val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, unavailable)
+    val voltage = intent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, unavailable)
+    val current = intent?.getIntExtra(BatteryManager.EXTRA_CURRENT_NOW, unavailable)
+    return BatteryTelemetry(
+        levelPercent = if (level != null && scale != null && level >= 0 && scale > 0) {
+            (level * 100f / scale).toInt().coerceIn(0, 100)
+        } else null,
+        isCharging = when (status) {
+            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> true
+            BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> false
+            else -> null
+        },
+        voltageMv = voltage?.takeUnless { it == unavailable || it <= 0 },
+        currentMicroamps = current?.takeUnless { it == unavailable }
+    )
+}

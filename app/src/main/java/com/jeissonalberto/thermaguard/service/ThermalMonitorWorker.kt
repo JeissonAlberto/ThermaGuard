@@ -14,8 +14,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.jeissonalberto.thermaguard.data.ThermalAlertNotifier
+import com.jeissonalberto.thermaguard.data.BatteryTelemetry
 import com.jeissonalberto.thermaguard.data.ThermalDatabase
 import com.jeissonalberto.thermaguard.data.ThermalSnapshot
+import com.jeissonalberto.thermaguard.data.readBatteryTelemetry
 import com.jeissonalberto.thermaguard.domain.batteryTemperatureCelsius
 import com.jeissonalberto.thermaguard.domain.shouldNotifyThermalStatus
 import com.jeissonalberto.thermaguard.domain.systemThermalStatusLabel
@@ -45,6 +47,7 @@ class ThermalMonitorWorker(
                 Int.MIN_VALUE
             ) ?: Int.MIN_VALUE
             val temperature = batteryTemperatureCelsius(rawTemperature)
+            val batteryTelemetry = readBatteryTelemetry(batteryIntent)
             val systemStatus = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 context.getSystemService(PowerManager::class.java)
                     ?.currentThermalStatus
@@ -54,7 +57,7 @@ class ThermalMonitorWorker(
             }
             val status = thermalEngineStatus(temperature, systemStatus)
             notifyOnTransition(context, status, temperature, systemStatus)
-            persistSnapshot(context, temperature)
+            persistSnapshot(context, temperature, batteryTelemetry)
             Result.success()
         }.getOrElse { error ->
             Log.w("ThermaGuard", "ThermalMonitorWorker failed: ${error.message}")
@@ -79,10 +82,25 @@ class ThermalMonitorWorker(
         }
     }
 
-    private suspend fun persistSnapshot(context: Context, temperature: Float?) {
+    private suspend fun persistSnapshot(
+        context: Context,
+        temperature: Float?,
+        batteryTelemetry: BatteryTelemetry
+    ) {
         val now = System.currentTimeMillis()
         val dao = ThermalDatabase.getInstance(context).thermalDao()
-        temperature?.let { dao.insert(ThermalSnapshot(timestamp = now, batteryTemp = it)) }
+        temperature?.let {
+            dao.insert(
+                ThermalSnapshot(
+                    timestamp = now,
+                    batteryTemp = it,
+                    batteryLevel = batteryTelemetry.levelPercent,
+                    isCharging = batteryTelemetry.isCharging,
+                    batteryVoltageMv = batteryTelemetry.voltageMv,
+                    batteryCurrentMicroamps = batteryTelemetry.currentMicroamps
+                )
+            )
+        }
         dao.deleteOlderThan(now - HISTORY_RETENTION_MS)
     }
 
