@@ -31,6 +31,8 @@ fun detectDevicePhysicsParams(): Map<String, Any> = emptyMap()
  * Reads optional battery metadata from Android's sticky battery broadcast.
  * Missing extras remain null; no value is inferred or simulated.
  */
+private const val BATTERY_EXTRA_CURRENT_NOW = "current_now"
+
 data class BatteryTelemetry(
     val levelPercent: Int?,
     val isCharging: Boolean?,
@@ -44,7 +46,8 @@ fun readBatteryTelemetry(intent: Intent?): BatteryTelemetry {
     val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, unavailable)
     val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, unavailable)
     val voltage = intent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, unavailable)
-    val current = intent?.getIntExtra(BatteryManager.EXTRA_CURRENT_NOW, unavailable)
+    // The documented "current_now" broadcast extra is not exposed by every SDK stub.
+    val current = intent?.getIntExtra(BATTERY_EXTRA_CURRENT_NOW, unavailable)
     return BatteryTelemetry(
         levelPercent = if (level != null && scale != null && level >= 0 && scale > 0) {
             (level * 100f / scale).toInt().coerceIn(0, 100)

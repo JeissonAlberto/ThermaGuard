@@ -13,7 +13,7 @@ class BatteryTelemetryTest {
             putExtra(BatteryManager.EXTRA_SCALE, 100)
             putExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_CHARGING)
             putExtra(BatteryManager.EXTRA_VOLTAGE, 4_120)
-            putExtra(BatteryManager.EXTRA_CURRENT_NOW, 850_000)
+            putExtra("current_now", 850_000)
         }
 
         assertEquals(
@@ -28,7 +28,7 @@ class BatteryTelemetryTest {
             putExtra(BatteryManager.EXTRA_LEVEL, 100)
             putExtra(BatteryManager.EXTRA_SCALE, 0)
             putExtra(BatteryManager.EXTRA_VOLTAGE, -1)
-            putExtra(BatteryManager.EXTRA_CURRENT_NOW, Int.MIN_VALUE)
+            putExtra("current_now", Int.MIN_VALUE)
         })
 
         assertEquals(null, telemetry.levelPercent)
