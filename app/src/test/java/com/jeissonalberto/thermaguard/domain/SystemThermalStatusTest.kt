@@ -47,6 +47,15 @@ class SystemThermalStatusTest {
     }
 
     @Test
+    fun historyRetentionIsBoundedToSupportedChoices() {
+        assertEquals(6, normalizeHistoryRetentionHours(6))
+        assertEquals(24, normalizeHistoryRetentionHours(24))
+        assertEquals(72, normalizeHistoryRetentionHours(72))
+        assertEquals(24, normalizeHistoryRetentionHours(0))
+        assertEquals(24, normalizeHistoryRetentionHours(999))
+    }
+
+    @Test
     fun thermalNotificationOnlyFiresWhenEnteringAnAlertState() {
         assertEquals(true, shouldNotifyThermalStatus(null, "ALERT"))
         assertEquals(true, shouldNotifyThermalStatus("ALERT", "CRITICAL"))

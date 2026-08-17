@@ -1,6 +1,7 @@
 package com.jeissonalberto.thermaguard.domain
 
 import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
@@ -59,6 +60,12 @@ internal fun thermalEngineStatus(temperature: Float?, systemStatus: String?): St
 internal fun historyStorageWriteSucceeded(sampleWriteSucceeded: Boolean?, cleanupSucceeded: Boolean): Boolean =
     sampleWriteSucceeded != false && cleanupSucceeded
 
+/** Keeps user-selected retention within small, predictable local-storage bounds. */
+internal fun normalizeHistoryRetentionHours(hours: Int): Int = when (hours) {
+    6, 72 -> hours
+    else -> 24
+}
+
 /**
  * Exposes readings from the Android battery service.
  *
@@ -70,14 +77,28 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private companion object {
         const val POLL_INTERVAL_MS = 5_000L
         const val HISTORY_SAMPLE_INTERVAL_MS = 60_000L
-        const val HISTORY_RETENTION_MS = 24 * 60 * 60 * 1_000L
+        const val DEFAULT_HISTORY_RETENTION_HOURS = 24
+        const val RETENTION_PREFERENCES = "telemetry_preferences"
+        const val RETENTION_HOURS_KEY = "history_retention_hours"
         const val HARDWARE_ZONE_REFRESH_INTERVAL_MS = 15_000L
-        // One sample per minute, matching the 24-hour retention window.
-        const val HISTORY_LIMIT = 24 * 60
+        // One sample per minute; 72 hours is the largest supported local history.
+        const val MAX_HISTORY_LIMIT = 72 * 60
         const val UNAVAILABLE = Int.MIN_VALUE
     }
 
     private val powerManager = application.getSystemService(PowerManager::class.java)
+    private val retentionPreferences = application.getSharedPreferences(
+        RETENTION_PREFERENCES,
+        Context.MODE_PRIVATE
+    )
+    private val _retentionHours = MutableStateFlow(
+        normalizeHistoryRetentionHours(
+            retentionPreferences.getInt(RETENTION_HOURS_KEY, DEFAULT_HISTORY_RETENTION_HOURS)
+        )
+    )
+    val retentionHours: StateFlow<Int> = _retentionHours
+
+    private fun historyRetentionMs(): Long = _retentionHours.value * 60 * 60 * 1_000L
     private var lastNotifiedEngineStatus: String? = null
 
     private val thermalDao = runCatching {
@@ -132,7 +153,13 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     init {
         thermalDao?.let { dao ->
             viewModelScope.launch(Dispatchers.IO) {
-                dao.observeRecent(HISTORY_LIMIT)
+                val cleanupResult = runCatching {
+                    dao.deleteOlderThan(System.currentTimeMillis() - historyRetentionMs())
+                }
+                if (cleanupResult.isFailure) {
+                    _historyStorageError.value = true
+                }
+                dao.observeRecent(MAX_HISTORY_LIMIT)
                     .catch { _historyStorageError.value = true }
                     .collect { snapshots -> _history.value = snapshots }
             }
@@ -170,6 +197,20 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         val dao = thermalDao ?: return
         viewModelScope.launch(Dispatchers.IO) {
             runCatching { dao.deleteAll() }
+                .onSuccess { _historyStorageError.value = false }
+                .onFailure { _historyStorageError.value = true }
+        }
+    }
+
+    /** Persists a bounded local-retention choice and immediately removes older samples. */
+    fun setRetentionHours(hours: Int) {
+        val normalized = normalizeHistoryRetentionHours(hours)
+        if (_retentionHours.value == normalized) return
+        retentionPreferences.edit().putInt(RETENTION_HOURS_KEY, normalized).apply()
+        _retentionHours.value = normalized
+        val dao = thermalDao ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { dao.deleteOlderThan(System.currentTimeMillis() - historyRetentionMs()) }
                 .onSuccess { _historyStorageError.value = false }
                 .onFailure { _historyStorageError.value = true }
         }
@@ -234,7 +275,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         }
                     }
                     val cleanupResult = runCatching {
-                        dao.deleteOlderThan(now - HISTORY_RETENTION_MS)
+                        dao.deleteOlderThan(now - historyRetentionMs())
                     }
                     if (insertResult?.isFailure == true || cleanupResult.isFailure) {
                         _historyStorageError.value = true

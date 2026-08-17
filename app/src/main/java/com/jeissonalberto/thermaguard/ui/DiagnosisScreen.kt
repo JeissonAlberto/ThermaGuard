@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,7 +43,9 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
     val lastUpdated by viewModel.lastUpdated.collectAsState()
     val history by viewModel.history.collectAsState()
     val historyStorageError by viewModel.historyStorageError.collectAsState()
+    val retentionHours by viewModel.retentionHours.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showRetentionDialog by remember { mutableStateOf(false) }
 
     val systemThermalRisk = isSystemThermalRisk(systemThermalStatus)
     val diagnosis = when {
@@ -115,10 +118,16 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
             }
         )
         Text(
-            "La app conserva estas señales únicamente en el dispositivo durante 24 horas.",
+            "La app conserva estas señales únicamente en el dispositivo durante $retentionHours horas.",
             color = Color.White.copy(alpha = 0.65f),
             fontSize = 11.sp
         )
+        Button(
+            onClick = { showRetentionDialog = true },
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("CAMBIAR RETENCIÓN")
+        }
         Button(
             onClick = { showDeleteDialog = true },
             enabled = !historyStorageError && history.isNotEmpty(),
@@ -132,6 +141,33 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
             "El estado térmico del sistema es una señal agregada de Android; no identifica un componente concreto ni sustituye sus protecciones.",
             color = Color.White.copy(alpha = 0.55f),
             fontSize = 11.sp
+        )
+    }
+
+    if (showRetentionDialog) {
+        AlertDialog(
+            onDismissRequest = { showRetentionDialog = false },
+            title = { Text("Retención local") },
+            text = {
+                Column {
+                    Text("Elige cuánto tiempo conservar las lecturas en este dispositivo.")
+                    listOf(6, 24, 72).forEach { hours ->
+                        TextButton(
+                            onClick = {
+                                viewModel.setRetentionHours(hours)
+                                showRetentionDialog = false
+                            }
+                        ) {
+                            Text(if (hours == retentionHours) "$hours horas (actual)" else "$hours horas")
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showRetentionDialog = false }) {
+                    Text("CERRAR")
+                }
+            }
         )
     }
 
