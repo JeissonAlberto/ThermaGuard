@@ -165,6 +165,16 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /** Refreshes the sticky battery broadcast without requiring a permission. */
+    /** Deletes only this app's locally persisted telemetry; no remote data is touched. */
+    fun clearLocalHistory() {
+        val dao = thermalDao ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { dao.deleteAll() }
+                .onSuccess { _historyStorageError.value = false }
+                .onFailure { _historyStorageError.value = true }
+        }
+    }
+
     fun refreshReading() {
         updateSystemThermalStatus()
         val intent = runCatching {

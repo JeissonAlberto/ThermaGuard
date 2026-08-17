@@ -22,6 +22,9 @@ interface ThermalDao {
 
     @Query("DELETE FROM thermal_history WHERE timestamp < :cutoff")
     suspend fun deleteOlderThan(cutoff: Long)
+
+    @Query("DELETE FROM thermal_history")
+    suspend fun deleteAll()
 }
 
 @Database(entities = [ThermalSnapshot::class], version = 2, exportSchema = false)
