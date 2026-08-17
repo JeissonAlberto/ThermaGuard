@@ -40,14 +40,14 @@ data class BatteryTelemetry(
     val currentMicroamps: Int?
 )
 
-fun readBatteryTelemetry(intent: Intent?): BatteryTelemetry {
+internal fun batteryTelemetryFromExtras(
+    level: Int?,
+    scale: Int?,
+    status: Int?,
+    voltage: Int?,
+    current: Int?
+): BatteryTelemetry {
     val unavailable = Int.MIN_VALUE
-    val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, unavailable)
-    val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, unavailable)
-    val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, unavailable)
-    val voltage = intent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, unavailable)
-    // The documented "current_now" broadcast extra is not exposed by every SDK stub.
-    val current = intent?.getIntExtra(BATTERY_EXTRA_CURRENT_NOW, unavailable)
     return BatteryTelemetry(
         levelPercent = if (level != null && scale != null && level >= 0 && scale > 0) {
             (level * 100f / scale).toInt().coerceIn(0, 100)
@@ -59,5 +59,17 @@ fun readBatteryTelemetry(intent: Intent?): BatteryTelemetry {
         },
         voltageMv = voltage?.takeUnless { it == unavailable || it <= 0 },
         currentMicroamps = current?.takeUnless { it == unavailable }
+    )
+}
+
+fun readBatteryTelemetry(intent: Intent?): BatteryTelemetry {
+    val unavailable = Int.MIN_VALUE
+    // The documented "current_now" broadcast extra is not exposed by every SDK stub.
+    return batteryTelemetryFromExtras(
+        level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, unavailable),
+        scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, unavailable),
+        status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, unavailable),
+        voltage = intent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, unavailable),
+        current = intent?.getIntExtra(BATTERY_EXTRA_CURRENT_NOW, unavailable)
     )
 }
