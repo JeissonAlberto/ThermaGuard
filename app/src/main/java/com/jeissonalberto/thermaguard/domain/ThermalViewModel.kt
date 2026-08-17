@@ -14,6 +14,7 @@ import com.jeissonalberto.thermaguard.data.ThermalDatabase
 import com.jeissonalberto.thermaguard.data.ThermalSnapshot
 import com.jeissonalberto.thermaguard.data.readBatteryTelemetry
 import com.jeissonalberto.thermaguard.root.HardwareProfiler
+import com.jeissonalberto.thermaguard.service.ThermalMonitorWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -99,6 +100,16 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val retentionHours: StateFlow<Int> = _retentionHours
 
     private fun historyRetentionMs(): Long = _retentionHours.value * 60 * 60 * 1_000L
+    private val monitoringPreferences = application.getSharedPreferences(
+        MonitoringMode.PREFS_NAME,
+        Context.MODE_PRIVATE
+    )
+    private val _monitoringMode = MutableStateFlow(
+        MonitoringMode.fromStored(
+            monitoringPreferences.getString(MonitoringMode.MODE_KEY, null)
+        )
+    )
+    val monitoringMode: StateFlow<MonitoringMode> = _monitoringMode
     private var lastNotifiedEngineStatus: String? = null
 
     private val thermalDao = runCatching {
@@ -214,6 +225,14 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                 .onSuccess { _historyStorageError.value = false }
                 .onFailure { _historyStorageError.value = true }
         }
+    }
+
+    /** Changes the persisted cadence and replaces the WorkManager schedule immediately. */
+    fun setMonitoringMode(mode: MonitoringMode) {
+        if (_monitoringMode.value == mode) return
+        monitoringPreferences.edit().putString(MonitoringMode.MODE_KEY, mode.name).apply()
+        _monitoringMode.value = mode
+        ThermalMonitorWorker.schedule(getApplication<Application>())
     }
 
     fun refreshReading() {

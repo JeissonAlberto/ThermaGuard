@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jeissonalberto.thermaguard.domain.MonitoringMode
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
 import com.jeissonalberto.thermaguard.domain.isSystemThermalRisk
 import java.text.SimpleDateFormat
@@ -44,6 +45,7 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
     val lastUpdated by viewModel.lastUpdated.collectAsState()
     val history by viewModel.history.collectAsState()
     val historyStorageError by viewModel.historyStorageError.collectAsState()
+    val monitoringMode by viewModel.monitoringMode.collectAsState()
     val systemThermalRisk = isSystemThermalRisk(systemThermalStatus)
 
     val temperatureLabel = temp?.let {
@@ -75,7 +77,47 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                 fontSize = 10.sp
             )
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.07f)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("MODO DE MONITOREO: ${monitoringMode.label}", color = Color(0xFF00F2FF), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text(
+                        "Cada ${monitoringMode.intervalMinutes} min${if (monitoringMode == MonitoringMode.PREVENTIVE) " • solo mientras carga" else ""}",
+                        color = Color.White,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        monitoringMode.description,
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 11.sp
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        MonitoringMode.values().forEach { mode ->
+                            Button(
+                                onClick = { viewModel.setMonitoringMode(mode) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(mode.label, fontSize = 9.sp)
+                            }
+                        }
+                    }
+                    Text(
+                        "Con batería ≤15% y sin carga se omite la persistencia no esencial; las alertas térmicas siguen evaluándose.",
+                        color = Color.White.copy(alpha = 0.55f),
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),

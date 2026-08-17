@@ -39,6 +39,18 @@ class SystemThermalStatusTest {
     }
 
     @Test
+    fun monitoringModePreferenceAndLowBatteryPolicyStayBounded() {
+        assertEquals(MonitoringMode.BALANCED, MonitoringMode.fromStored(null))
+        assertEquals(MonitoringMode.SAVER, MonitoringMode.fromStored("SAVER"))
+        assertEquals(MonitoringMode.PREVENTIVE, MonitoringMode.fromStored("PREVENTIVE"))
+        assertEquals(MonitoringMode.BALANCED, MonitoringMode.fromStored("unknown"))
+        assertEquals(true, shouldPauseNonEssentialWork(15, false))
+        assertEquals(false, shouldPauseNonEssentialWork(16, false))
+        assertEquals(false, shouldPauseNonEssentialWork(15, true))
+        assertEquals(false, shouldPauseNonEssentialWork(null, false))
+    }
+
+    @Test
     fun historyStorageErrorClearsAfterSuccessfulCleanupWithoutSensorSample() {
         assertEquals(true, historyStorageWriteSucceeded(null, true))
         assertEquals(true, historyStorageWriteSucceeded(true, true))

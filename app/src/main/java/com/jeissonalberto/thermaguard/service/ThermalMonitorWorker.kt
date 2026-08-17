@@ -18,10 +18,12 @@ import com.jeissonalberto.thermaguard.data.BatteryTelemetry
 import com.jeissonalberto.thermaguard.data.ThermalDatabase
 import com.jeissonalberto.thermaguard.data.ThermalSnapshot
 import com.jeissonalberto.thermaguard.data.readBatteryTelemetry
+import com.jeissonalberto.thermaguard.domain.MonitoringMode
 import com.jeissonalberto.thermaguard.domain.batteryTemperatureCelsius
 import com.jeissonalberto.thermaguard.domain.shouldNotifyThermalStatus
 import com.jeissonalberto.thermaguard.domain.systemThermalStatusLabel
 import com.jeissonalberto.thermaguard.domain.thermalEngineStatus
+import com.jeissonalberto.thermaguard.domain.shouldPauseNonEssentialWork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -57,7 +59,9 @@ class ThermalMonitorWorker(
             }
             val status = thermalEngineStatus(temperature, systemStatus)
             notifyOnTransition(context, status, temperature, systemStatus)
-            persistSnapshot(context, temperature, batteryTelemetry)
+            if (!shouldPauseNonEssentialWork(batteryTelemetry.levelPercent, batteryTelemetry.isCharging)) {
+                persistSnapshot(context, temperature, batteryTelemetry)
+            }
             Result.success()
         }.getOrElse { error ->
             Log.w("ThermaGuard", "ThermalMonitorWorker failed: ${error.message}")
@@ -109,21 +113,35 @@ class ThermalMonitorWorker(
         private const val PREFS_NAME = "therma_background_monitor"
         private const val KEY_LAST_STATUS = "last_alert_status"
         private const val HISTORY_RETENTION_MS = 24 * 60 * 60 * 1_000L
-        private const val INTERVAL_MINUTES = 15L
 
         fun schedule(context: Context) {
+            val appContext = context.applicationContext
+            val mode = appContext.getSharedPreferences(
+                MonitoringMode.PREFS_NAME,
+                Context.MODE_PRIVATE
+            ).getString(MonitoringMode.MODE_KEY, null)?.let(MonitoringMode::fromStored)
+                ?: MonitoringMode.BALANCED
+            val constraints = androidx.work.Constraints.Builder()
+                .apply {
+                    if (mode == MonitoringMode.PREVENTIVE) {
+                        // Intensive cadence is available only while the device is charging.
+                        setRequiresCharging(true)
+                    }
+                }
+                .build()
             val request = PeriodicWorkRequestBuilder<ThermalMonitorWorker>(
-                INTERVAL_MINUTES,
+                mode.intervalMinutes,
                 TimeUnit.MINUTES
             )
+                .setConstraints(constraints)
                 // Avoid an immediate duplicate wake-up when the UI schedules work.
-                .setInitialDelay(INTERVAL_MINUTES, TimeUnit.MINUTES)
+                .setInitialDelay(mode.intervalMinutes, TimeUnit.MINUTES)
                 // A failed run should not retry in a tight loop and drain the battery.
-                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, INTERVAL_MINUTES, TimeUnit.MINUTES)
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, mode.intervalMinutes, TimeUnit.MINUTES)
                 .build()
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            WorkManager.getInstance(appContext).enqueueUniquePeriodicWork(
                 WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 request
             )
         }
