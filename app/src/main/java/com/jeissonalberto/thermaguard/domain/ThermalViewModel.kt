@@ -274,7 +274,11 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
 
         // Keep retention maintenance independent from sensor availability. A device
         // that stops exposing temperature must not keep stale history indefinitely.
-        if (now - lastPersistedAt >= HISTORY_SAMPLE_INTERVAL_MS) {
+        // Match the background worker: alert evaluation continues, but local history
+        // writes and retention cleanup pause below the low-battery threshold.
+        if (!shouldPauseNonEssentialWork(batteryTelemetry.levelPercent, batteryTelemetry.isCharging) &&
+            now - lastPersistedAt >= HISTORY_SAMPLE_INTERVAL_MS
+        ) {
             lastPersistedAt = now
             thermalDao?.let { dao ->
                 viewModelScope.launch(Dispatchers.IO) {
