@@ -50,6 +50,7 @@ fun DashboardScreen(
     val history by viewModel.history.collectAsState()
     val historyStorageError by viewModel.historyStorageError.collectAsState()
     val monitoringMode by viewModel.monitoringMode.collectAsState()
+    val retentionHours by viewModel.retentionHours.collectAsState()
     val systemThermalRisk = isSystemThermalRisk(systemThermalStatus)
 
     val temperatureLabel = temp?.let {
@@ -328,7 +329,7 @@ fun DashboardScreen(
                         when {
                             historyStorageError -> "No disponible en este dispositivo"
                             history.isEmpty() -> "Sin lecturas persistidas"
-                            else -> "${history.size} lecturas recientes • retención de 24 h"
+                            else -> "${history.size} lecturas recientes • retención de ${retentionHours} h"
                         },
                         color = Color.White,
                         fontSize = 14.sp
