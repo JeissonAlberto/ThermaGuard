@@ -20,6 +20,7 @@ import com.jeissonalberto.thermaguard.data.ThermalSnapshot
 import com.jeissonalberto.thermaguard.data.readBatteryTelemetry
 import com.jeissonalberto.thermaguard.domain.MonitoringMode
 import com.jeissonalberto.thermaguard.domain.batteryTemperatureCelsius
+import com.jeissonalberto.thermaguard.domain.normalizeHistoryRetentionHours
 import com.jeissonalberto.thermaguard.domain.shouldNotifyThermalStatus
 import com.jeissonalberto.thermaguard.domain.systemThermalStatusLabel
 import com.jeissonalberto.thermaguard.domain.thermalEngineStatus
@@ -105,14 +106,23 @@ class ThermalMonitorWorker(
                 )
             )
         }
-        dao.deleteOlderThan(now - HISTORY_RETENTION_MS)
+        val retentionHours = normalizeHistoryRetentionHours(
+            context.getSharedPreferences(
+                RETENTION_PREFERENCES,
+                Context.MODE_PRIVATE
+            ).getInt(RETENTION_HOURS_KEY, DEFAULT_RETENTION_HOURS)
+        )
+        dao.deleteOlderThan(now - retentionHours * HOUR_MS)
     }
 
     companion object {
         private const val WORK_NAME = "therma_background_monitor"
         private const val PREFS_NAME = "therma_background_monitor"
         private const val KEY_LAST_STATUS = "last_alert_status"
-        private const val HISTORY_RETENTION_MS = 24 * 60 * 60 * 1_000L
+        private const val RETENTION_PREFERENCES = "telemetry_preferences"
+        private const val RETENTION_HOURS_KEY = "history_retention_hours"
+        private const val DEFAULT_RETENTION_HOURS = 24
+        private const val HOUR_MS = 60 * 60 * 1_000L
 
         fun schedule(context: Context) {
             val appContext = context.applicationContext
