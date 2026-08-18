@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jeissonalberto.thermaguard.domain.AndroidSettingsTarget
 import com.jeissonalberto.thermaguard.domain.MonitoringMode
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
 import com.jeissonalberto.thermaguard.domain.isSystemThermalRisk
@@ -32,7 +33,10 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun DashboardScreen(viewModel: ThermalViewModel) {
+fun DashboardScreen(
+    viewModel: ThermalViewModel,
+    onOpenSettings: (AndroidSettingsTarget) -> Unit
+) {
     val temp by viewModel.batteryTemp.collectAsState()
     val available by viewModel.sensorAvailable.collectAsState()
     val batteryLevel by viewModel.batteryLevel.collectAsState()
@@ -114,6 +118,35 @@ fun DashboardScreen(viewModel: ThermalViewModel) {
                         fontSize = 10.sp,
                         modifier = Modifier.padding(top = 6.dp)
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("CONFIGURACIÓN ANDROID", color = Color(0xFF00F2FF), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text(
+                        "Accesos directos para revisar opciones del sistema. ThermaGuard no cambia ajustes protegidos.",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 11.sp
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        AndroidSettingsTarget.values().forEach { target ->
+                            Button(
+                                onClick = { onOpenSettings(target) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(target.label, fontSize = 8.sp)
+                            }
+                        }
+                    }
                 }
             }
 

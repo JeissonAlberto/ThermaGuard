@@ -1,9 +1,12 @@
 package com.jeissonalberto.thermaguard
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.jeissonalberto.thermaguard.domain.AndroidSettingsTarget
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
 import com.jeissonalberto.thermaguard.service.ThermalMonitorWorker
 import com.jeissonalberto.thermaguard.service.UpdateWorker
@@ -42,7 +46,28 @@ class MainActivity : ComponentActivity() {
         setContent {
             ThermaGuardTheme {
                 val viewModel: ThermalViewModel = viewModel()
-                ThermaGuardApp(viewModel)
+                ThermaGuardApp(viewModel, ::openAndroidSettings)
+            }
+        }
+    }
+
+    /** Opens only user-controlled Android screens; no protected setting is changed by the app. */
+    private fun openAndroidSettings(target: AndroidSettingsTarget) {
+        val intent = Intent(target.action)
+        when (target) {
+            AndroidSettingsTarget.APP_DETAILS -> {
+                intent.data = Uri.fromParts("package", packageName, null)
+            }
+            AndroidSettingsTarget.NOTIFICATIONS -> {
+                intent.putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+            }
+            AndroidSettingsTarget.BATTERY_SAVER -> Unit
+        }
+        val fallback = Intent(Settings.ACTION_SETTINGS)
+        runCatching {
+            when {
+                intent.resolveActivity(packageManager) != null -> startActivity(intent)
+                fallback.resolveActivity(packageManager) != null -> startActivity(fallback)
             }
         }
     }
@@ -57,7 +82,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun ThermaGuardApp(viewModel: ThermalViewModel) {
+private fun ThermaGuardApp(
+    viewModel: ThermalViewModel,
+    onOpenSettings: (AndroidSettingsTarget) -> Unit
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -90,7 +118,7 @@ private fun ThermaGuardApp(viewModel: ThermalViewModel) {
             startDestination = "dashboard",
             modifier = Modifier.padding(contentPadding)
         ) {
-            composable("dashboard") { DashboardScreen(viewModel) }
+            composable("dashboard") { DashboardScreen(viewModel, onOpenSettings) }
             composable("alerts") { AlertsScreen(viewModel) }
             composable("diagnosis") { DiagnosisScreen(viewModel) }
         }
