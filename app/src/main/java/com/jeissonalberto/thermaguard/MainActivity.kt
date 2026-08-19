@@ -18,7 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -40,13 +42,23 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestNotificationPermissionIfNeeded()
-        // WorkManager keeps the six-hour update check alive after the UI closes.
+        // WorkManager keeps monitoring alive after the UI closes; foreground
+        // polling is explicitly tied to this Activity's visible lifecycle.
         UpdateWorker.schedule(applicationContext)
         ThermalMonitorWorker.schedule(applicationContext)
+        val thermalViewModel = ViewModelProvider(this)[ThermalViewModel::class.java]
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                thermalViewModel.setForegroundMonitoringActive(true)
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                thermalViewModel.setForegroundMonitoringActive(false)
+            }
+        })
         setContent {
             ThermaGuardTheme {
-                val viewModel: ThermalViewModel = viewModel()
-                ThermaGuardApp(viewModel, ::openAndroidSettings)
+                ThermaGuardApp(thermalViewModel, ::openAndroidSettings)
             }
         }
     }

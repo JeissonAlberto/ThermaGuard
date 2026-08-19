@@ -161,6 +161,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private var lastPersistedAt = 0L
     private var lastHardwareZoneReadAt = 0L
     private var foregroundPollingJob: Job? = null
+    private var foregroundMonitoringActive = false
 
     private val _foregroundPollingPolicy = MutableStateFlow(
         calculateForegroundPollingPolicy(_monitoringMode.value, null, null)
@@ -182,7 +183,20 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             }
         }
 
-        startForegroundPolling()
+    }
+
+    /**
+     * Starts or stops UI-only polling according to the Activity lifecycle.
+     * Background monitoring remains owned by WorkManager.
+     */
+    fun setForegroundMonitoringActive(active: Boolean) {
+        foregroundMonitoringActive = active
+        if (active) {
+            if (foregroundPollingJob?.isActive != true) startForegroundPolling()
+        } else {
+            foregroundPollingJob?.cancel()
+            foregroundPollingJob = null
+        }
     }
 
     /**
@@ -259,7 +273,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             _batteryLevel.value,
             _isCharging.value
         )
-        startForegroundPolling()
+        if (foregroundMonitoringActive) startForegroundPolling()
         ThermalMonitorWorker.schedule(getApplication<Application>())
     }
 
