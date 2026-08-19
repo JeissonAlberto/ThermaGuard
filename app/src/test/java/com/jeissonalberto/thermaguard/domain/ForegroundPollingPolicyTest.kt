@@ -1,1 +1,111 @@
-cGFja2FnZSBjb20uamVpc3NvbmFsYmVydG8udGhlcm1hZ3VhcmQuZG9tYWluCgppbXBvcnQgb3JnLmp1bml0LkFzc2VydC5hc3NlcnRFcXVhbHMKaW1wb3J0IG9yZy5qdW5pdC5Bc3NlcnQuYXNzZXJ0RmFsc2UKaW1wb3J0IG9yZy5qdW5pdC5Bc3NlcnQuYXNzZXJ0VHJ1ZQppbXBvcnQgb3JnLmp1bml0LlRlc3QKCmNsYXNzIEZvcmVncm91bmRQb2xsaW5nUG9saWN5VGVzdCB7CiAgICBAVGVzdAogICAgZnVuIHNlbGVjdGVkX21vZGVzX2hhdmVfcHJvZ3Jlc3NpdmVseV9mYXN0ZXJfZm9yZWdyb3VuZF9jYWRlbmNlKCkgewogICAgICAgIGFzc2VydEVxdWFscyg1ICogNjAgKiAxXzAwMEwsIGNhbGN1bGF0ZUZvcmVncm91bmRQb2xsaW5nUG9saWN5KE1vbml0b3JpbmdNb2RlLlNBVkVSLCA4MCwgZmFsc2UpLmludGVydmFsTXMpCiAgICAgICAgYXNzZXJ0RXF1YWxzKDIgKiA2MCAqIDFfMDAwTCwgY2FsY3VsYXRlRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3koTW9uaXRvcmluZ01vZGUuQkFMQU5DRUQsIDgwLCBmYWxzZSkuaW50ZXJ2YWxNcykKICAgICAgICBhc3NlcnRFcXVhbHMoMzAgKiAxXzAwMEwsIGNhbGN1bGF0ZUZvcmVncm91bmRQb2xsaW5nUG9saWN5KE1vbml0b3JpbmdNb2RlLlBSRVZFTlRJVkUsIDgwLCB0cnVlKS5pbnRlcnZhbE1zKQogICAgfQoKICAgIEBUZXN0CiAgICBmdW4gbG93X2JhdHRlcnlfc3RyZXRjaGVzX3BvbGxpbmdfd2l0aG91dF9kaXNhYmxpbmdfYWxlcnRfZXZhbHVhdGlvbigpIHsKICAgICAgICB2YWwgcG9saWN5ID0gY2FsY3VsYXRlRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3koTW9uaXRvcmluZ01vZGUuUFJFVkVOVElWRSwgMTUsIGZhbHNlKQoKICAgICAgICBhc3NlcnRFcXVhbHMoTE9XX0JBVFRFUllfRk9SRUdST1VORF9JTlRFUlZBTF9NUywgcG9saWN5LmludGVydmFsTXMpCiAgICAgICAgYXNzZXJ0VHJ1ZShwb2xpY3kubG93QmF0dGVyeUxpbWl0ZWQpCiAgICB9CgogICAgQFRlc3QKICAgIGZ1biBjaGFyZ2luZ19hdF9sb3dfbGV2ZWxfa2VlcHNfc2VsZWN0ZWRfbW9kZV9jYWRlbmNlKCkgewogICAgICAgIHZhbCBwb2xpY3kgPSBjYWxjdWxhdGVGb3JlZ3JvdW5kUG9sbGluZ1BvbGljeShNb25pdG9yaW5nTW9kZS5TQVZFUiwgMTAsIHRydWUpCgogICAgICAgIGFzc2VydEVxdWFscyhNb25pdG9yaW5nTW9kZS5TQVZFUi5mb3JlZ3JvdW5kSW50ZXJ2YWxNcywgcG9saWN5LmludGVydmFsTXMpCiAgICAgICAgYXNzZXJ0RmFsc2UocG9saWN5Lmxvd0JhdHRlcnlMaW1pdGVkKQogICAgfQp9Cg==
+package com.jeissonalberto.thermaguard.service
+
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
+import android.os.Build
+import android.os.PowerManager
+import android.util.Log
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import com.jeissonalberto.thermaguard.data.ThermalAlertNotifier
+import com.jeissonalberto.thermaguard.data.ThermalDatabase
+import com.jeissonalberto.thermaguard.data.ThermalSnapshot
+import com.jeissonalberto.thermaguard.domain.batteryTemperatureCelsius
+import com.jeissonalberto.thermaguard.domain.shouldNotifyThermalStatus
+import com.jeissonalberto.thermaguard.domain.systemThermalStatusLabel
+import com.jeissonalberto.thermaguard.domain.thermalEngineStatus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
+
+/**
+ * Keeps real battery history and alert transitions alive when the UI is closed.
+ * WorkManager controls the cadence; Android may defer a run for battery policy.
+ */
+class ThermalMonitorWorker(
+    context: Context,
+    params: WorkerParameters
+) : CoroutineWorker(context, params) {
+
+    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        runCatching {
+            val context = applicationContext
+            val batteryIntent = context.registerReceiver(
+                null,
+                IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            )
+            val rawTemperature = batteryIntent?.getIntExtra(
+                BatteryManager.EXTRA_TEMPERATURE,
+                Int.MIN_VALUE
+            ) ?: Int.MIN_VALUE
+            val temperature = batteryTemperatureCelsius(rawTemperature)
+            val systemStatus = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.getSystemService(PowerManager::class.java)
+                    ?.currentThermalStatus
+                    ?.let(::systemThermalStatusLabel)
+            } else {
+                null
+            }
+            val status = thermalEngineStatus(temperature, systemStatus)
+            notifyOnTransition(context, status, temperature, systemStatus)
+            persistSnapshot(context, temperature)
+            Result.success()
+        }.getOrElse { error ->
+            Log.w("ThermaGuard", "ThermalMonitorWorker failed: ${error.message}")
+            Result.retry()
+        }
+    }
+
+    private fun notifyOnTransition(
+        context: Context,
+        status: String,
+        temperature: Float?,
+        systemStatus: String?
+    ) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val previous = prefs.getString(KEY_LAST_STATUS, null)
+        if (shouldNotifyThermalStatus(previous, status)) {
+            if (ThermalAlertNotifier.notify(context, status, temperature, systemStatus)) {
+                prefs.edit().putString(KEY_LAST_STATUS, status).apply()
+            }
+        } else if (status != "ALERT" && status != "CRITICAL") {
+            prefs.edit().remove(KEY_LAST_STATUS).apply()
+        }
+    }
+
+    private suspend fun persistSnapshot(context: Context, temperature: Float?) {
+        val now = System.currentTimeMillis()
+        val dao = ThermalDatabase.getInstance(context).thermalDao()
+        temperature?.let { dao.insert(ThermalSnapshot(timestamp = now, batteryTemp = it)) }
+        dao.deleteOlderThan(now - HISTORY_RETENTION_MS)
+    }
+
+    companion object {
+        private const val WORK_NAME = "therma_background_monitor"
+        private const val PREFS_NAME = "therma_background_monitor"
+        private const val KEY_LAST_STATUS = "last_alert_status"
+        private const val HISTORY_RETENTION_MS = 24 * 60 * 60 * 1_000L
+        private const val INTERVAL_MINUTES = 15L
+
+        fun schedule(context: Context) {
+            val request = PeriodicWorkRequestBuilder<ThermalMonitorWorker>(
+                INTERVAL_MINUTES,
+                TimeUnit.MINUTES
+            ).build()
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                WORK_NAME,
+                ExistingPeriodicWorkPolicy.KEEP,
+                request
+            )
+        }
+
+        fun cancel(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
+        }
+    }
+}

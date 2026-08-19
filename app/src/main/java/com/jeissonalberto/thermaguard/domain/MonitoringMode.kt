@@ -1,1 +1,98 @@
-cGFja2FnZSBjb20uamVpc3NvbmFsYmVydG8udGhlcm1hZ3VhcmQuZG9tYWluCgovKiogVXNlci1jb250cm9sbGVkIGNhZGVuY2UgZm9yIGJhY2tncm91bmQgYW5kIGZvcmVncm91bmQgdGhlcm1hbCBtb25pdG9yaW5nLiAqLwplbnVtIGNsYXNzIE1vbml0b3JpbmdNb2RlKAogICAgdmFsIGxhYmVsOiBTdHJpbmcsCiAgICB2YWwgaW50ZXJ2YWxNaW51dGVzOiBMb25nLAogICAgdmFsIGRlc2NyaXB0aW9uOiBTdHJpbmcsCiAgICAvKiogRm9yZWdyb3VuZCByZWZyZXNoIGNhZGVuY2U7IHRoZSBVSSBuZXZlciBwb2xscyBtb3JlIGZyZXF1ZW50bHkgdGhhbiB0aGlzLiAqLwogICAgdmFsIGZvcmVncm91bmRJbnRlcnZhbE1zOiBMb25nCikgewogICAgU0FWRVIoCiAgICAgICAgIkFIT1JSTyIsCiAgICAgICAgNjBMLAogICAgICAgICJNZW5vcyBlamVjdWNpb25lczsgY29uc2VydmEgYWxlcnRhcyBjdWFuZG8gQW5kcm9pZCBsbyBwZXJtaXRhLiIsCiAgICAgICAgNSAqIDYwICogMV8wMDBMCiAgICApLAogICAgQkFMQU5DRUQoCiAgICAgICAgIkVRVUlMSUJSQURPIiwKICAgICAgICAzMEwsCiAgICAgICAgIlZpZ2lsYW5jaWEgcGVyacOzZGljYSBjb24gY29uc3VtbyBtb2RlcmFkby4iLAogICAgICAgIDIgKiA2MCAqIDFfMDAwTAogICAgKSwKICAgIFBSRVZFTlRJVkUoCiAgICAgICAgIlBSRVZFTlRJVk8iLAogICAgICAgIDE1TCwKICAgICAgICAiTW9uaXRvcmVvIG3DoXMgZnJlY3VlbnRlIMO6bmljYW1lbnRlIG1pZW50cmFzIGNhcmdhLiIsCiAgICAgICAgMzAgKiAxXzAwMEwKICAgICk7CgogICAgY29tcGFuaW9uIG9iamVjdCB7CiAgICAgICAgY29uc3QgdmFsIFBSRUZTX05BTUUgPSAidGhlcm1hX21vbml0b3JpbmdfcHJlZmVyZW5jZXMiCiAgICAgICAgY29uc3QgdmFsIE1PREVfS0VZID0gIm1vbml0b3JpbmdfbW9kZSIKCiAgICAgICAgZnVuIGZyb21TdG9yZWQodmFsdWU6IFN0cmluZz8pOiBNb25pdG9yaW5nTW9kZSA9CiAgICAgICAgICAgIHZhbHVlcygpLmZpcnN0T3JOdWxsIHsgaXQubmFtZSA9PSB2YWx1ZSB9ID86IEJBTEFOQ0VECiAgICB9Cn0KCi8qKiBMb3cgYmF0dGVyeSBwYXVzZXMgbG9jYWwgcGVyc2lzdGVuY2UsIHdoaWxlIHRoZXJtYWwgYWxlcnRzIHJlbWFpbiBldmFsdWF0ZWQuICovCmludGVybmFsIGZ1biBzaG91bGRQYXVzZU5vbkVzc2VudGlhbFdvcmsobGV2ZWxQZXJjZW50OiBJbnQ/LCBpc0NoYXJnaW5nOiBCb29sZWFuPyk6IEJvb2xlYW4gPQogICAgbGV2ZWxQZXJjZW50ICE9IG51bGwgJiYgbGV2ZWxQZXJjZW50IDw9IDE1ICYmIGlzQ2hhcmdpbmcgIT0gdHJ1ZQoKLyoqCiAqIFBvbGljeSB1c2VkIGJ5IHRoZSBmb3JlZ3JvdW5kIGxvb3AuIEl0IGRlbGliZXJhdGVseSBzbG93cywgcmF0aGVyIHRoYW4gc3RvcHMsCiAqIHRoZXJtYWwgZXZhbHVhdGlvbiBvbiBhIGxvdyBiYXR0ZXJ5IHNvIGFsZXJ0IHRyYW5zaXRpb25zIHJlbWFpbiBvYnNlcnZhYmxlLgogKi8KZGF0YSBjbGFzcyBGb3JlZ3JvdW5kUG9sbGluZ1BvbGljeSgKICAgIHZhbCBpbnRlcnZhbE1zOiBMb25nLAogICAgdmFsIGxvd0JhdHRlcnlMaW1pdGVkOiBCb29sZWFuCikKCmludGVybmFsIGNvbnN0IHZhbCBMT1dfQkFUVEVSWV9GT1JFR1JPVU5EX0lOVEVSVkFMX01TID0gMTUgKiA2MCAqIDFfMDAwTAoKaW50ZXJuYWwgZnVuIGNhbGN1bGF0ZUZvcmVncm91bmRQb2xsaW5nUG9saWN5KAogICAgbW9kZTogTW9uaXRvcmluZ01vZGUsCiAgICBiYXR0ZXJ5TGV2ZWxQZXJjZW50OiBJbnQ/LAogICAgaXNDaGFyZ2luZzogQm9vbGVhbj8KKTogRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3kgewogICAgdmFsIGxvd0JhdHRlcnlMaW1pdGVkID0gc2hvdWxkUGF1c2VOb25Fc3NlbnRpYWxXb3JrKGJhdHRlcnlMZXZlbFBlcmNlbnQsIGlzQ2hhcmdpbmcpCiAgICByZXR1cm4gRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3koCiAgICAgICAgaW50ZXJ2YWxNcyA9IGlmIChsb3dCYXR0ZXJ5TGltaXRlZCkgewogICAgICAgICAgICBMT1dfQkFUVEVSWV9GT1JFR1JPVU5EX0lOVEVSVkFMX01TCiAgICAgICAgfSBlbHNlIHsKICAgICAgICAgICAgbW9kZS5mb3JlZ3JvdW5kSW50ZXJ2YWxNcwogICAgICAgIH0sCiAgICAgICAgbG93QmF0dGVyeUxpbWl0ZWQgPSBsb3dCYXR0ZXJ5TGltaXRlZAogICAgKQp9Cg==
+package com.jeissonalberto.thermaguard
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.jeissonalberto.thermaguard.domain.ThermalViewModel
+import com.jeissonalberto.thermaguard.service.ThermalMonitorWorker
+import com.jeissonalberto.thermaguard.service.UpdateWorker
+import com.jeissonalberto.thermaguard.ui.AlertsScreen
+import com.jeissonalberto.thermaguard.ui.DashboardScreen
+import com.jeissonalberto.thermaguard.ui.DiagnosisScreen
+import com.jeissonalberto.thermaguard.ui.theme.ThermaGuardTheme
+
+class MainActivity : ComponentActivity() {
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* Alerts remain visible in-app if permission is declined. */ }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requestNotificationPermissionIfNeeded()
+        // WorkManager keeps the six-hour update check alive after the UI closes.
+        UpdateWorker.schedule(applicationContext)
+        ThermalMonitorWorker.schedule(applicationContext)
+        setContent {
+            ThermaGuardTheme {
+                val viewModel: ThermalViewModel = viewModel()
+                ThermaGuardApp(viewModel)
+            }
+        }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+}
+
+@Composable
+private fun ThermaGuardApp(viewModel: ThermalViewModel) {
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    val tabs = listOf(
+        Triple("dashboard", "⌂", "INICIO"),
+        Triple("alerts", "!", "ALERTAS"),
+        Triple("diagnosis", "✓", "DIAGNÓSTICO")
+    )
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                tabs.forEach { (route, icon, label) ->
+                    NavigationBarItem(
+                        selected = currentRoute == route,
+                        onClick = {
+                            navController.navigate(route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        icon = { Text(icon) },
+                        label = { Text(label) }
+                    )
+                }
+            }
+        }
+    ) { contentPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "dashboard",
+            modifier = Modifier.padding(contentPadding)
+        ) {
+            composable("dashboard") { DashboardScreen(viewModel) }
+            composable("alerts") { AlertsScreen(viewModel) }
+            composable("diagnosis") { DiagnosisScreen(viewModel) }
+        }
+    }
+}

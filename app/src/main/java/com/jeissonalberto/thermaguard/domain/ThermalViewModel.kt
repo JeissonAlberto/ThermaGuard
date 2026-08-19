@@ -1,1 +1,231 @@
-cGFja2FnZSBjb20uamVpc3NvbmFsYmVydG8udGhlcm1hZ3VhcmQuZG9tYWluCgppbXBvcnQgYW5kcm9pZC5hcHAuQXBwbGljYXRpb24KaW1wb3J0IGFuZHJvaWQuY29udGVudC5Db250ZXh0CmltcG9ydCBhbmRyb2lkLmNvbnRlbnQuSW50ZW50CmltcG9ydCBhbmRyb2lkLmNvbnRlbnQuSW50ZW50RmlsdGVyCmltcG9ydCBhbmRyb2lkLm9zLkJhdHRlcnlNYW5hZ2VyCmltcG9ydCBhbmRyb2lkLm9zLkJ1aWxkCmltcG9ydCBhbmRyb2lkLm9zLlBvd2VyTWFuYWdlcgppbXBvcnQgYW5kcm9pZHgubGlmZWN5Y2xlLkFuZHJvaWRWaWV3TW9kZWwKaW1wb3J0IGFuZHJvaWR4LmxpZmVjeWNsZS52aWV3TW9kZWxTY29wZQppbXBvcnQgY29tLmplaXNzb25hbGJlcnRvLnRoZXJtYWd1YXJkLmRhdGEuVGhlcm1hbEFsZXJ0Tm90aWZpZXIKaW1wb3J0IGNvbS5qZWlzc29uYWxiZXJ0by50aGVybWFndWFyZC5kYXRhLlRoZXJtYWxEYXRhYmFzZQppbXBvcnQgY29tLmplaXNzb25hbGJlcnRvLnRoZXJtYWd1YXJkLmRhdGEuVGhlcm1hbFNuYXBzaG90CmltcG9ydCBjb20uamVpc3NvbmFsYmVydG8udGhlcm1hZ3VhcmQuZGF0YS5yZWFkQmF0dGVyeVRlbGVtZXRyeQppbXBvcnQgY29tLmplaXNzb25hbGJlcnRvLnRoZXJtYWd1YXJkLnJvb3QuSGFyZHdhcmVQcm9maWxlcgppbXBvcnQgY29tLmplaXNzb25hbGJlcnRvLnRoZXJtYWd1YXJkLnNlcnZpY2UuVGhlcm1hbE1vbml0b3JXb3JrZXIKaW1wb3J0IGtvdGxpbnguY29yb3V0aW5lcy5EaXNwYXRjaGVycwppbXBvcnQga290bGlueC5jb3JvdXRpbmVzLkpvYgppbXBvcnQga290bGlueC5jb3JvdXRpbmVzLmRlbGF5CmltcG9ydCBrb3RsaW54LmNvcm91dGluZXMuZmxvdy5NdXRhYmxlU3RhdGVGbG93CmltcG9ydCBrb3RsaW54LmNvcm91dGluZXMuZmxvdy5TdGF0ZUZsb3cKaW1wb3J0IGtvdGxpbnguY29yb3V0aW5lcy5mbG93LmNhdGNoCmltcG9ydCBrb3RsaW54LmNvcm91dGluZXMuaXNBY3RpdmUKaW1wb3J0IGtvdGxpbnguY29yb3V0aW5lcy5sYXVuY2gKCi8qKiBDb252ZXJ0cyBBbmRyb2lkJ3MgcHVibGljIHRoZXJtYWwgc3RhdHVzIGNvbnN0YW50cyB0byBzdGFibGUgVUkgbGFiZWxzLiAqLwppbnRlcm5hbCBmdW4gc3lzdGVtVGhlcm1hbFN0YXR1c0xhYmVsKHN0YXR1czogSW50KTogU3RyaW5nID0gd2hlbiAoc3RhdHVzKSB7CiAgICBQb3dlck1hbmFnZXIuVEhFUk1BTF9TVEFUVVNfTk9ORSAtPiAiTk9STUFMIgogICAgUG93ZXJNYW5hZ2VyLlRIRVJNQUxfU1RBVFVTX0xJR0hUIC0+ICJMSUdIVCIKICAgIFBvd2VyTWFuYWdlci5USEVSTUFMX1NUQVRVU19NT0RFUkFURSAtPiAiTU9ERVJBVEUiCiAgICBQb3dlck1hbmFnZXIuVEhFUk1BTF9TVEFUVVNfU0VWRVJFIC0+ICJTRVZFUkUiCiAgICBQb3dlck1hbmFnZXIuVEhFUk1BTF9TVEFUVVNfQ1JJVElDQUwgLT4gIkNSSVRJQ0FMIgogICAgUG93ZXJNYW5hZ2VyLlRIRVJNQUxfU1RBVFVTX0VNRVJHRU5DWSAtPiAiRU1FUkdFTkNZIgogICAgUG93ZXJNYW5hZ2VyLlRIRVJNQUxfU1RBVFVTX1NIVVRET1dOIC0+ICJTSFVURE9XTiIKICAgIGVsc2UgLT4gIlVOS05PV04iCn0KCi8qKiBBIG5vdGlmaWNhdGlvbiBpcyBlbWl0dGVkIG9ubHkgd2hlbiB0aGUgYXBwIGVudGVycyBhIG5ldyBhbGVydCBzdGF0ZS4gKi8KaW50ZXJuYWwgZnVuIHNob3VsZE5vdGlmeVRoZXJtYWxTdGF0dXMocHJldmlvdXM6IFN0cmluZz8sIGN1cnJlbnQ6IFN0cmluZyk6IEJvb2xlYW4gPQogICAgY3VycmVudCBpbiBzZXRPZigiQUxFUlQiLCAiQ1JJVElDQUwiKSAmJiBwcmV2aW91cyAhPSBjdXJyZW50CgovKiogQ29udmVydHMgQW5kcm9pZCdzIHRlbnRocy1vZi1hLWRlZ3JlZSB2YWx1ZSB3aXRob3V0IGRpc2NhcmRpbmcgdmFsaWQgc3ViLXplcm8gcmVhZGluZ3MuICovCmludGVybmFsIGZ1biBiYXR0ZXJ5VGVtcGVyYXR1cmVDZWxzaXVzKHJhd1RlbXBlcmF0dXJlOiBJbnQpOiBGbG9hdD8gPQogICAgcmF3VGVtcGVyYXR1cmUudGFrZVVubGVzcyB7IGl0ID09IEludC5NSU5fVkFMVUUgfT8uZGl2KDEwZikKCi8qKiBBbmRyb2lkIHJlcG9ydHMgdGhlc2Ugc3RhdGVzIHdoZW4gdGhlIHN5c3RlbSBuZWVkcyB0aGUgdXNlciB0byByZWR1Y2UgdGhlcm1hbCBsb2FkLiAqLwppbnRlcm5hbCBmdW4gaXNTeXN0ZW1UaGVybWFsUmlzayhzdGF0dXM6IFN0cmluZz8pOiBCb29sZWFuID0KICAgIHN0YXR1cyBpbiBzZXRPZigiU0VWRVJFIiwgIkNSSVRJQ0FMIiwgIkVNRVJHRU5DWSIsICJTSFVURE9XTiIpCgovKiogQ29tYmluZXMgdGhlIGJhdHRlcnkgcmVhZGluZyB3aXRoIEFuZHJvaWQncyBhZ2dyZWdhdGVkIHRoZXJtYWwgc3RhdHVzLiAqLwppbnRlcm5hbCBmdW4gdGhlcm1hbEVuZ2luZVN0YXR1cyh0ZW1wZXJhdHVyZTogRmxvYXQ/LCBzeXN0ZW1TdGF0dXM6IFN0cmluZz8pOiBTdHJpbmcgPSB3aGVuIHsKICAgIHN5c3RlbVN0YXR1cyBpbiBzZXRPZigiQ1JJVElDQUwiLCAiRU1FUkdFTkNZIiwgIlNIVVRET1dOIikgLT4gIkNSSVRJQ0FMIgogICAgc3lzdGVtU3RhdHVzID09ICJTRVZFUkUiIC0+ICJBTEVSVCIKICAgIHRlbXBlcmF0dXJlID09IG51bGwgLT4gIlNFTlNPUiBVTkFWQUlMQUJMRSIKICAgIHRlbXBlcmF0dXJlID49IDQ1ZiAtPiAiQ1JJVElDQUwiCiAgICB0ZW1wZXJhdHVyZSA+PSA0MGYgLT4gIkFMRVJUIgogICAgZWxzZSAtPiAiTk9NSU5BTCIKfQoKLyoqIEEgbWlzc2luZyBzYW1wbGUgaXMgdmFsaWQgd2hlbiB0aGUgc2Vuc29yIGlzIHVuYXZhaWxhYmxlOyBjbGVhbnVwIHN0aWxsIHByb3ZlcyBzdG9yYWdlIHdvcmtzLiAqLwppbnRlcm5hbCBmdW4gaGlzdG9yeVN0b3JhZ2VXcml0ZVN1Y2NlZWRlZChzYW1wbGVXcml0ZVN1Y2NlZWRlZDogQm9vbGVhbj8sIGNsZWFudXBTdWNjZWVkZWQ6IEJvb2xlYW4pOiBCb29sZWFuID0KICAgIHNhbXBsZVdyaXRlU3VjY2VlZGVkICE9IGZhbHNlICYmIGNsZWFudXBTdWNjZWVkZWQKCi8qKiBLZWVwcyB1c2VyLXNlbGVjdGVkIHJldGVudGlvbiB3aXRoaW4gc21hbGwsIHByZWRpY3RhYmxlIGxvY2FsLXN0b3JhZ2UgYm91bmRzLiAqLwppbnRlcm5hbCBmdW4gbm9ybWFsaXplSGlzdG9yeVJldGVudGlvbkhvdXJzKGhvdXJzOiBJbnQpOiBJbnQgPSB3aGVuIChob3VycykgewogICAgNiwgNzIgLT4gaG91cnMKICAgIGVsc2UgLT4gMjQKfQoKLyoqCiAqIEV4cG9zZXMgcmVhZGluZ3MgZnJvbSB0aGUgQW5kcm9pZCBiYXR0ZXJ5IHNlcnZpY2UuCiAqCiAqIEJhdHRlcnkgdGVtcGVyYXR1cmUgaXMgcmVwb3J0ZWQgYnkgdGhlIG9wZXJhdGluZyBzeXN0ZW0gaW4gdGVudGhzIG9mIGEKICogZGVncmVlIENlbHNpdXMuIFNvbWUgZGV2aWNlcyBkbyBub3QgZXhwb3NlIGl0OyBpbiB0aGF0IGNhc2UgdGhlIHZhbHVlIHN0YXlzCiAqIG51bGwgaW5zdGVhZCBvZiBiZWluZyByZXBsYWNlZCB3aXRoIGEgc2ltdWxhdGVkIHJlYWRpbmcuCiAqLwpjbGFzcyBUaGVybWFsVmlld01vZGVsKGFwcGxpY2F0aW9uOiBBcHBsaWNhdGlvbikgOiBBbmRyb2lkVmlld01vZGVsKGFwcGxpY2F0aW9uKSB7CiAgICBwcml2YXRlIGNvbXBhbmlvbiBvYmplY3QgewogICAgICAgIGNvbnN0IHZhbCBISVNUT1JZX1NBTVBMRV9JTlRFUlZBTF9NUyA9IDYwXzAwMEwKICAgICAgICBjb25zdCB2YWwgREVGQVVMVF9ISVNUT1JZX1JFVEVOVElPTl9IT1VSUyA9IDI0CiAgICAgICAgY29uc3QgdmFsIFJFVEVOVElPTl9QUkVGRVJFTkNFUyA9ICJ0ZWxlbWV0cnlfcHJlZmVyZW5jZXMiCiAgICAgICAgY29uc3QgdmFsIFJFVEVOVElPTl9IT1VSU19LRVkgPSAiaGlzdG9yeV9yZXRlbnRpb25faG91cnMiCiAgICAgICAgY29uc3QgdmFsIEhBUkRXQVJFX1pPTkVfUkVGUkVTSF9JTlRFUlZBTF9NUyA9IDE1XzAwMEwKICAgICAgICAvLyBPbmUgc2FtcGxlIHBlciBtaW51dGU7IDcyIGhvdXJzIGlzIHRoZSBsYXJnZXN0IHN1cHBvcnRlZCBsb2NhbCBoaXN0b3J5LgogICAgICAgIGNvbnN0IHZhbCBNQVhfSElTVE9SWV9MSU1JVCA9IDcyICogNjAKICAgICAgICBjb25zdCB2YWwgVU5BVkFJTEFCTEUgPSBJbnQuTUlOX1ZBTFVFCiAgICB9CgogICAgcHJpdmF0ZSB2YWwgcG93ZXJNYW5hZ2VyID0gYXBwbGljYXRpb24uZ2V0U3lzdGVtU2VydmljZShQb3dlck1hbmFnZXI6OmNsYXNzLmphdmEpCiAgICBwcml2YXRlIHZhbCByZXRlbnRpb25QcmVmZXJlbmNlcyA9IGFwcGxpY2F0aW9uLmdldFNoYXJlZFByZWZlcmVuY2VzKAogICAgICAgIFJFVEVOVElPTl9QUkVGRVJFTkNFUywKICAgICAgICBDb250ZXh0Lk1PREVfUFJJVkFURQogICAgKQogICAgcHJpdmF0ZSB2YWwgX3JldGVudGlvbkhvdXJzID0gTXV0YWJsZVN0YXRlRmxvdygKICAgICAgICBub3JtYWxpemVIaXN0b3J5UmV0ZW50aW9uSG91cnMoCiAgICAgICAgICAgIHJldGVudGlvblByZWZlcmVuY2VzLmdldEludChSRVRFTlRJT05fSE9VUlNfS0VZLCBERUZBVUxUX0hJU1RPUllfUkVURU5USU9OX0hPVVJTKQogICAgICAgICkKICAgICkKICAgIHZhbCByZXRlbnRpb25Ib3VyczogU3RhdGVGbG93PEludD4gPSBfcmV0ZW50aW9uSG91cnMKCiAgICBwcml2YXRlIGZ1biBoaXN0b3J5UmV0ZW50aW9uTXMoKTogTG9uZyA9IF9yZXRlbnRpb25Ib3Vycy52YWx1ZSAqIDYwICogNjAgKiAxXzAwMEwKICAgIHByaXZhdGUgdmFsIG1vbml0b3JpbmdQcmVmZXJlbmNlcyA9IGFwcGxpY2F0aW9uLmdldFNoYXJlZFByZWZlcmVuY2VzKAogICAgICAgIE1vbml0b3JpbmdNb2RlLlBSRUZTX05BTUUsCiAgICAgICAgQ29udGV4dC5NT0RFX1BSSVZBVEUKICAgICkKICAgIHByaXZhdGUgdmFsIF9tb25pdG9yaW5nTW9kZSA9IE11dGFibGVTdGF0ZUZsb3coCiAgICAgICAgTW9uaXRvcmluZ01vZGUuZnJvbVN0b3JlZCgKICAgICAgICAgICAgbW9uaXRvcmluZ1ByZWZlcmVuY2VzLmdldFN0cmluZyhNb25pdG9yaW5nTW9kZS5NT0RFX0tFWSwgbnVsbCkKICAgICAgICApCiAgICApCiAgICB2YWwgbW9uaXRvcmluZ01vZGU6IFN0YXRlRmxvdzxNb25pdG9yaW5nTW9kZT4gPSBfbW9uaXRvcmluZ01vZGUKICAgIHByaXZhdGUgdmFyIGxhc3ROb3RpZmllZEVuZ2luZVN0YXR1czogU3RyaW5nPyA9IG51bGwKCiAgICBwcml2YXRlIHZhbCB0aGVybWFsRGFvID0gcnVuQ2F0Y2hpbmcgewogICAgICAgIFRoZXJtYWxEYXRhYmFzZS5nZXRJbnN0YW5jZShhcHBsaWNhdGlvbikudGhlcm1hbERhbygpCiAgICB9LmdldE9yTnVsbCgpCgogICAgcHJpdmF0ZSB2YWwgX2JhdHRlcnlUZW1wID0gTXV0YWJsZVN0YXRlRmxvdzxGbG9hdD8+KG51bGwpCiAgICB2YWwgYmF0dGVyeVRlbXA6IFN0YXRlRmxvdzxGbG9hdD8+ID0gX2JhdHRlcnlUZW1wCgogICAgcHJpdmF0ZSB2YWwgX3NlbnNvckF2YWlsYWJsZSA9IE11dGFibGVTdGF0ZUZsb3coZmFsc2UpCiAgICB2YWwgc2Vuc29yQXZhaWxhYmxlOiBTdGF0ZUZsb3c8Qm9vbGVhbj4gPSBfc2Vuc29yQXZhaWxhYmxlCgogICAgcHJpdmF0ZSB2YWwgX2JhdHRlcnlMZXZlbCA9IE11dGFibGVTdGF0ZUZsb3c8SW50Pz4obnVsbCkKICAgIHZhbCBiYXR0ZXJ5TGV2ZWw6IFN0YXRlRmxvdzxJbnQ/PiA9IF9iYXR0ZXJ5TGV2ZWwKCiAgICBwcml2YXRlIHZhbCBfaXNDaGFyZ2luZyA9IE11dGFibGVTdGF0ZUZsb3c8Qm9vbGVhbj8+KG51bGwpCiAgICB2YWwgaXNDaGFyZ2luZzogU3RhdGVGbG93PEJvb2xlYW4/PiA9IF9pc0NoYXJnaW5nCgogICAgcHJpdmF0ZSB2YWwgX2JhdHRlcnlWb2x0YWdlTXYgPSBNdXRhYmxlU3RhdGVGbG93PEludD8+KG51bGwpCiAgICB2YWwgYmF0dGVyeVZvbHRhZ2VNdjogU3RhdGVGbG93PEludD8+ID0gX2JhdHRlcnlWb2x0YWdlTXYKCiAgICBwcml2YXRlIHZhbCBfYmF0dGVyeUN1cnJlbnRNaWNyb2FtcHMgPSBNdXRhYmxlU3RhdGVGbG93PEludD8+KG51bGwpCiAgICB2YWwgYmF0dGVyeUN1cnJlbnRNaWNyb2FtcHM6IFN0YXRlRmxvdzxJbnQ/PiA9IF9iYXR0ZXJ5Q3VycmVudE1pY3JvYW1wcwoKICAgIHByaXZhdGUgdmFsIF9sYXN0VXBkYXRlZCA9IE11dGFibGVTdGF0ZUZsb3c8TG9uZz8+KG51bGwpCiAgICB2YWwgbGFzdFVwZGF0ZWQ6IFN0YXRlRmxvdzxMb25nPz4gPSBfbGFzdFVwZGF0ZWQKCiAgICBwcml2YXRlIHZhbCBfZW5naW5lU3RhdHVzID0gTXV0YWJsZVN0YXRlRmxvdygiV0FJVElORyIpCiAgICB2YWwgZW5naW5lU3RhdHVzOiBTdGF0ZUZsb3c8U3RyaW5nPiA9IF9lbmdpbmVTdGF0dXMKCiAgICAvKiogQWdncmVnYXRlZCB0aGVybWFsIHN0YXR1cyByZXBvcnRlZCBieSBBbmRyb2lkIDEwKyAobm90IGEgQ1BVL0dQVSByZWFkaW5nKS4gKi8KICAgIHByaXZhdGUgdmFsIF9zeXN0ZW1UaGVybWFsU3RhdHVzID0gTXV0YWJsZVN0YXRlRmxvdzxTdHJpbmc/PihudWxsKQogICAgdmFsIHN5c3RlbVRoZXJtYWxTdGF0dXM6IFN0YXRlRmxvdzxTdHJpbmc/PiA9IF9zeXN0ZW1UaGVybWFsU3RhdHVzCgogICAgLyoqIFJhdyB0aGVybWFsIHpvbmVzIGV4cG9zZWQgYnkgdGhlIGtlcm5lbCwgd2hlbiB0aGUgZGV2aWNlIHBlcm1pdHMgcmVhZGluZyB0aGVtLiAqLwogICAgcHJpdmF0ZSB2YWwgX2hhcmR3YXJlVGhlcm1hbFpvbmVzID0gTXV0YWJsZVN0YXRlRmxvdzxMaXN0PEhhcmR3YXJlUHJvZmlsZXIuVGhlcm1hbFpvbmVJbmZvPj4oZW1wdHlMaXN0KCkpCiAgICB2YWwgaGFyZHdhcmVUaGVybWFsWm9uZXM6IFN0YXRlRmxvdzxMaXN0PEhhcmR3YXJlUHJvZmlsZXIuVGhlcm1hbFpvbmVJbmZvPj4gPSBfaGFyZHdhcmVUaGVybWFsWm9uZXMKCiAgICAvKiogS2VwdCBwdWJsaWMgZm9yIHRoZSBhbGVydHMgc2NyZWVuIGFuZCBzaGFyZWQgdGhyZXNob2xkIHByZXNlbnRhdGlvbi4gKi8KICAgIHByaXZhdGUgdmFsIF9hbGVydFRocmVzaG9sZCA9IE11dGFibGVTdGF0ZUZsb3coNDBmKQogICAgdmFsIGFsZXJ0VGhyZXNob2xkOiBTdGF0ZUZsb3c8RmxvYXQ+ID0gX2FsZXJ0VGhyZXNob2xkCgogICAgcHJpdmF0ZSB2YWwgX2hpc3RvcnkgPSBNdXRhYmxlU3RhdGVGbG93PExpc3Q8VGhlcm1hbFNuYXBzaG90Pj4oZW1wdHlMaXN0KCkpCiAgICB2YWwgaGlzdG9yeTogU3RhdGVGbG93PExpc3Q8VGhlcm1hbFNuYXBzaG90Pj4gPSBfaGlzdG9yeQoKICAgIHByaXZhdGUgdmFsIF9oaXN0b3J5U3RvcmFnZUVycm9yID0gTXV0YWJsZVN0YXRlRmxvdyh0aGVybWFsRGFvID09IG51bGwpCiAgICB2YWwgaGlzdG9yeVN0b3JhZ2VFcnJvcjogU3RhdGVGbG93PEJvb2xlYW4+ID0gX2hpc3RvcnlTdG9yYWdlRXJyb3IKCiAgICBwcml2YXRlIHZhciBsYXN0UGVyc2lzdGVkQXQgPSAwTAogICAgcHJpdmF0ZSB2YXIgbGFzdEhhcmR3YXJlWm9uZVJlYWRBdCA9IDBMCiAgICBwcml2YXRlIHZhciBmb3JlZ3JvdW5kUG9sbGluZ0pvYjogSm9iPyA9IG51bGwKCiAgICBwcml2YXRlIHZhbCBfZm9yZWdyb3VuZFBvbGxpbmdQb2xpY3kgPSBNdXRhYmxlU3RhdGVGbG93KAogICAgICAgIGNhbGN1bGF0ZUZvcmVncm91bmRQb2xsaW5nUG9saWN5KF9tb25pdG9yaW5nTW9kZS52YWx1ZSwgbnVsbCwgbnVsbCkKICAgICkKICAgIHZhbCBmb3JlZ3JvdW5kUG9sbGluZ1BvbGljeTogU3RhdGVGbG93PEZvcmVncm91bmRQb2xsaW5nUG9saWN5PiA9IF9mb3JlZ3JvdW5kUG9sbGluZ1BvbGljeQoKICAgIGluaXQgewogICAgICAgIHRoZXJtYWxEYW8/LmxldCB7IGRhbyAtPgogICAgICAgICAgICB2aWV3TW9kZWxTY29wZS5sYXVuY2goRGlzcGF0Y2hlcnMuSU8pIHsKICAgICAgICAgICAgICAgIHZhbCBjbGVhbnVwUmVzdWx0ID0gcnVuQ2F0Y2hpbmcgewogICAgICAgICAgICAgICAgICAgIGRhby5kZWxldGVPbGRlclRoYW4oU3lzdGVtLmN1cnJlbnRUaW1lTWlsbGlzKCkgLSBoaXN0b3J5UmV0ZW50aW9uTXMoKSkKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIGlmIChjbGVhbnVwUmVzdWx0LmlzRmFpbHVyZSkgewogICAgICAgICAgICAgICAgICAgIF9oaXN0b3J5U3RvcmFnZUVycm9yLnZhbHVlID0gdHJ1ZQogICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgZGFvLm9ic2VydmVSZWNlbnQoTUFYX0hJU1RPUllfTElNSVQpCiAgICAgICAgICAgICAgICAgICAgLmNhdGNoIHsgX2hpc3RvcnlTdG9yYWdlRXJyb3IudmFsdWUgPSB0cnVlIH0KICAgICAgICAgICAgICAgICAgICAuY29sbGVjdCB7IHNuYXBzaG90cyAtPiBfaGlzdG9yeS52YWx1ZSA9IHNuYXBzaG90cyB9CiAgICAgICAgICAgIH0KICAgICAgICB9CgogICAgICAgIHN0YXJ0Rm9yZWdyb3VuZFBvbGxpbmcoKQogICAgfQoKICAgIC8qKgogICAgICogS2VlcHMgdGhlIGZpcnN0IHJlYWRpbmcgaW1tZWRpYXRlLCB0aGVuIGZvbGxvd3MgdGhlIHNlbGVjdGVkIG1vZGUuIFRoZQogICAgICogYmF0dGVyeSBwb2xpY3kgY2FuIHN0cmV0Y2ggdGhlIGNhZGVuY2UgdG8gMTUgbWludXRlcywgYnV0IG5ldmVyIGRpc2FibGVzCiAgICAgKiByZWZyZXNoL2FsZXJ0IGV2YWx1YXRpb247IGEgbWFudWFsIHJlZnJlc2ggcmVtYWlucyBpbW1lZGlhdGUuCiAgICAgKi8KICAgIHByaXZhdGUgZnVuIHN0YXJ0Rm9yZWdyb3VuZFBvbGxpbmcoKSB7CiAgICAgICAgZm9yZWdyb3VuZFBvbGxpbmdKb2I/LmNhbmNlbCgpCiAgICAgICAgZm9yZWdyb3VuZFBvbGxpbmdKb2IgPSB2aWV3TW9kZWxTY29wZS5sYXVuY2ggewogICAgICAgICAgICB3aGlsZSAoaXNBY3RpdmUpIHsKICAgICAgICAgICAgICAgIHJlZnJlc2hSZWFkaW5nKCkKICAgICAgICAgICAgICAgIHZhbCBwb2xpY3kgPSBjYWxjdWxhdGVGb3JlZ3JvdW5kUG9sbGluZ1BvbGljeSgKICAgICAgICAgICAgICAgICAgICBfbW9uaXRvcmluZ01vZGUudmFsdWUsCiAgICAgICAgICAgICAgICAgICAgX2JhdHRlcnlMZXZlbC52YWx1ZSwKICAgICAgICAgICAgICAgICAgICBfaXNDaGFyZ2luZy52YWx1ZQogICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgX2ZvcmVncm91bmRQb2xsaW5nUG9saWN5LnZhbHVlID0gcG9saWN5CiAgICAgICAgICAgICAgICBkZWxheShwb2xpY3kuaW50ZXJ2YWxNcykKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KCiAgICBwcml2YXRlIGZ1biB1cGRhdGVTeXN0ZW1UaGVybWFsU3RhdHVzKCkgewogICAgICAgIF9zeXN0ZW1UaGVybWFsU3RhdHVzLnZhbHVlID0gaWYgKEJ1aWxkLlZFUlNJT04uU0RLX0lOVCA+PSBCdWlsZC5WRVJTSU9OX0NPREVTLlEpIHsKICAgICAgICAgICAgcG93ZXJNYW5hZ2VyPy5jdXJyZW50VGhlcm1hbFN0YXR1cz8ubGV0KDo6c3lzdGVtVGhlcm1hbFN0YXR1c0xhYmVsKSA/OiAiVU5LTk9XTiIKICAgICAgICB9IGVsc2UgewogICAgICAgICAgICBudWxsCiAgICAgICAgfQogICAgfQoKICAgIHByaXZhdGUgZnVuIHJlZnJlc2hIYXJkd2FyZVRoZXJtYWxab25lcyhub3c6IExvbmcpIHsKICAgICAgICBpZiAobm93IC0gbGFzdEhhcmR3YXJlWm9uZVJlYWRBdCA8IEhBUkRXQVJFX1pPTkVfUkVGUkVTSF9JTlRFUlZBTF9NUykgcmV0dXJuCiAgICAgICAgbGFzdEhhcmR3YXJlWm9uZVJlYWRBdCA9IG5vdwogICAgICAgIHZpZXdNb2RlbFNjb3BlLmxhdW5jaChEaXNwYXRjaGVycy5JTykgewogICAgICAgICAgICBfaGFyZHdhcmVUaGVybWFsWm9uZXMudmFsdWUgPSBydW5DYXRjaGluZyB7CiAgICAgICAgICAgICAgICBIYXJkd2FyZVByb2ZpbGVyLnJlYWRDdXJyZW50VGhlcm1hbFpvbmVzKCkKICAgICAgICAgICAgfS5nZXRPckRlZmF1bHQoZW1wdHlMaXN0KCkpCiAgICAgICAgfQogICAgfQoKICAgIC8qKiBSZWZyZXNoZXMgdGhlIHN0aWNreSBiYXR0ZXJ5IGJyb2FkY2FzdCB3aXRob3V0IHJlcXVpcmluZyBhIHBlcm1pc3Npb24uICovCiAgICAvKiogRGVsZXRlcyBvbmx5IHRoaXMgYXBwJ3MgbG9jYWxseSBwZXJzaXN0ZWQgdGVsZW1ldHJ5OyBubyByZW1vdGUgZGF0YSBpcyB0b3VjaGVkLiAqLwogICAgZnVuIGNsZWFyTG9jYWxIaXN0b3J5KCkgewogICAgICAgIHZhbCBkYW8gPSB0aGVybWFsRGFvID86IHJldHVybgogICAgICAgIHZpZXdNb2RlbFNjb3BlLmxhdW5jaChEaXNwYXRjaGVycy5JTykgewogICAgICAgICAgICBydW5DYXRjaGluZyB7IGRhby5kZWxldGVBbGwoKSB9CiAgICAgICAgICAgICAgICAub25TdWNjZXNzIHsgX2hpc3RvcnlTdG9yYWdlRXJyb3IudmFsdWUgPSBmYWxzZSB9CiAgICAgICAgICAgICAgICAub25GYWlsdXJlIHsgX2hpc3RvcnlTdG9yYWdlRXJyb3IudmFsdWUgPSB0cnVlIH0KICAgICAgICB9CiAgICB9CgogICAgLyoqIFBlcnNpc3RzIGEgYm91bmRlZCBsb2NhbC1yZXRlbnRpb24gY2hvaWNlIGFuZCBpbW1lZGlhdGVseSByZW1vdmVzIG9sZGVyIHNhbXBsZXMuICovCiAgICBmdW4gc2V0UmV0ZW50aW9uSG91cnMoaG91cnM6IEludCkgewogICAgICAgIHZhbCBub3JtYWxpemVkID0gbm9ybWFsaXplSGlzdG9yeVJldGVudGlvbkhvdXJzKGhvdXJzKQogICAgICAgIGlmIChfcmV0ZW50aW9uSG91cnMudmFsdWUgPT0gbm9ybWFsaXplZCkgcmV0dXJuCiAgICAgICAgcmV0ZW50aW9uUHJlZmVyZW5jZXMuZWRpdCgpLnB1dEludChSRVRFTlRJT05fSE9VUlNfS0VZLCBub3JtYWxpemVkKS5hcHBseSgpCiAgICAgICAgX3JldGVudGlvbkhvdXJzLnZhbHVlID0gbm9ybWFsaXplZAogICAgICAgIHZhbCBkYW8gPSB0aGVybWFsRGFvID86IHJldHVybgogICAgICAgIHZpZXdNb2RlbFNjb3BlLmxhdW5jaChEaXNwYXRjaGVycy5JTykgewogICAgICAgICAgICBydW5DYXRjaGluZyB7IGRhby5kZWxldGVPbGRlclRoYW4oU3lzdGVtLmN1cnJlbnRUaW1lTWlsbGlzKCkgLSBoaXN0b3J5UmV0ZW50aW9uTXMoKSkgfQogICAgICAgICAgICAgICAgLm9uU3VjY2VzcyB7IF9oaXN0b3J5U3RvcmFnZUVycm9yLnZhbHVlID0gZmFsc2UgfQogICAgICAgICAgICAgICAgLm9uRmFpbHVyZSB7IF9oaXN0b3J5U3RvcmFnZUVycm9yLnZhbHVlID0gdHJ1ZSB9CiAgICAgICAgfQogICAgfQoKICAgIC8qKiBDaGFuZ2VzIHRoZSBwZXJzaXN0ZWQgY2FkZW5jZSBhbmQgcmVwbGFjZXMgdGhlIFdvcmtNYW5hZ2VyIHNjaGVkdWxlIGltbWVkaWF0ZWx5LiAqLwogICAgZnVuIHNldE1vbml0b3JpbmdNb2RlKG1vZGU6IE1vbml0b3JpbmdNb2RlKSB7CiAgICAgICAgaWYgKF9tb25pdG9yaW5nTW9kZS52YWx1ZSA9PSBtb2RlKSByZXR1cm4KICAgICAgICBtb25pdG9yaW5nUHJlZmVyZW5jZXMuZWRpdCgpLnB1dFN0cmluZyhNb25pdG9yaW5nTW9kZS5NT0RFX0tFWSwgbW9kZS5uYW1lKS5hcHBseSgpCiAgICAgICAgX21vbml0b3JpbmdNb2RlLnZhbHVlID0gbW9kZQogICAgICAgIF9mb3JlZ3JvdW5kUG9sbGluZ1BvbGljeS52YWx1ZSA9IGNhbGN1bGF0ZUZvcmVncm91bmRQb2xsaW5nUG9saWN5KAogICAgICAgICAgICBtb2RlLAogICAgICAgICAgICBfYmF0dGVyeUxldmVsLnZhbHVlLAogICAgICAgICAgICBfaXNDaGFyZ2luZy52YWx1ZQogICAgICAgICkKICAgICAgICBzdGFydEZvcmVncm91bmRQb2xsaW5nKCkKICAgICAgICBUaGVybWFsTW9uaXRvcldvcmtlci5zY2hlZHVsZShnZXRBcHBsaWNhdGlvbjxBcHBsaWNhdGlvbj4oKSkKICAgIH0KCiAgICBmdW4gcmVmcmVzaFJlYWRpbmcoKSB7CiAgICAgICAgdXBkYXRlU3lzdGVtVGhlcm1hbFN0YXR1cygpCiAgICAgICAgdmFsIGludGVudCA9IHJ1bkNhdGNoaW5nIHsKICAgICAgICAgICAgZ2V0QXBwbGljYXRpb248QXBwbGljYXRpb24+KCkucmVnaXN0ZXJSZWNlaXZlcigKICAgICAgICAgICAgICAgIG51bGwsCiAgICAgICAgICAgICAgICBJbnRlbnRGaWx0ZXIoSW50ZW50LkFDVElPTl9CQVRURVJZX0NIQU5HRUQpCiAgICAgICAgICAgICkKICAgICAgICB9LmdldE9yTnVsbCgpCiAgICAgICAgdmFsIHJhd1RlbXBlcmF0dXJlID0gaW50ZW50Py5nZXRJbnRFeHRyYSgKICAgICAgICAgICAgQmF0dGVyeU1hbmFnZXIuRVhUUkFfVEVNUEVSQVRVUkUsCiAgICAgICAgICAgIFVOQVZBSUxBQkxFCiAgICAgICAgKSA/OiBVTkFWQUlMQUJMRQogICAgICAgIHZhbCBiYXR0ZXJ5VGVsZW1ldHJ5ID0gcmVhZEJhdHRlcnlUZWxlbWV0cnkoaW50ZW50KQogICAgICAgIHZhbCB0ZW1wZXJhdHVyZSA9IGJhdHRlcnlUZW1wZXJhdHVyZUNlbHNpdXMocmF3VGVtcGVyYXR1cmUpCiAgICAgICAgdmFsIG5vdyA9IFN5c3RlbS5jdXJyZW50VGltZU1pbGxpcygpCiAgICAgICAgcmVmcmVzaEhhcmR3YXJlVGhlcm1hbFpvbmVzKG5vdykKCiAgICAgICAgX2JhdHRlcnlUZW1wLnZhbHVlID0gdGVtcGVyYXR1cmUKICAgICAgICBfc2Vuc29yQXZhaWxhYmxlLnZhbHVlID0gdGVtcGVyYXR1cmUgIT0gbnVsbAogICAgICAgIF9iYXR0ZXJ5TGV2ZWwudmFsdWUgPSBiYXR0ZXJ5VGVsZW1ldHJ5LmxldmVsUGVyY2VudAogICAgICAgIF9pc0NoYXJnaW5nLnZhbHVlID0gYmF0dGVyeVRlbGVtZXRyeS5pc0NoYXJnaW5nCiAgICAgICAgX2JhdHRlcnlWb2x0YWdlTXYudmFsdWUgPSBiYXR0ZXJ5VGVsZW1ldHJ5LnZvbHRhZ2VNdgogICAgICAgIF9iYXR0ZXJ5Q3VycmVudE1pY3JvYW1wcy52YWx1ZSA9IGJhdHRlcnlUZWxlbWV0cnkuY3VycmVudE1pY3JvYW1wcwogICAgICAgIF9mb3JlZ3JvdW5kUG9sbGluZ1BvbGljeS52YWx1ZSA9IGNhbGN1bGF0ZUZvcmVncm91bmRQb2xsaW5nUG9saWN5KAogICAgICAgICAgICBfbW9uaXRvcmluZ01vZGUudmFsdWUsCiAgICAgICAgICAgIGJhdHRlcnlUZWxlbWV0cnkubGV2ZWxQZXJjZW50LAogICAgICAgICAgICBiYXR0ZXJ5VGVsZW1ldHJ5LmlzQ2hhcmdpbmcKICAgICAgICApCiAgICAgICAgaWYgKGludGVudCAhPSBudWxsKSB7CiAgICAgICAgICAgIF9sYXN0VXBkYXRlZC52YWx1ZSA9IG5vdwogICAgICAgIH0KICAgICAgICB2YWwgc3lzdGVtU3RhdHVzID0gX3N5c3RlbVRoZXJtYWxTdGF0dXMudmFsdWUKICAgICAgICB2YWwgY3VycmVudFN0YXR1cyA9IHRoZXJtYWxFbmdpbmVTdGF0dXModGVtcGVyYXR1cmUsIHN5c3RlbVN0YXR1cykKICAgICAgICBfZW5naW5lU3RhdHVzLnZhbHVlID0gY3VycmVudFN0YXR1cwogICAgICAgIGlmIChzaG91bGROb3RpZnlUaGVybWFsU3RhdHVzKGxhc3ROb3RpZmllZEVuZ2luZVN0YXR1cywgY3VycmVudFN0YXR1cykpIHsKICAgICAgICAgICAgaWYgKFRoZXJtYWxBbGVydE5vdGlmaWVyLm5vdGlmeShnZXRBcHBsaWNhdGlvbjxBcHBsaWNhdGlvbj4oKSwgY3VycmVudFN0YXR1cywgdGVtcGVyYXR1cmUsIHN5c3RlbVN0YXR1cykpIHsKICAgICAgICAgICAgICAgIGxhc3ROb3RpZmllZEVuZ2luZVN0YXR1cyA9IGN1cnJlbnRTdGF0dXMKICAgICAgICAgICAgfQogICAgICAgIH0gZWxzZSBpZiAoY3VycmVudFN0YXR1cyAhPSAiQUxFUlQiICYmIGN1cnJlbnRTdGF0dXMgIT0gIkNSSVRJQ0FMIikgewogICAgICAgICAgICBsYXN0Tm90aWZpZWRFbmdpbmVTdGF0dXMgPSBudWxsCiAgICAgICAgfQoKICAgICAgICAvLyBLZWVwIHJldGVudGlvbiBtYWludGVuYW5jZSBpbmRlcGVuZGVudCBmcm9tIHNlbnNvciBhdmFpbGFiaWxpdHkuIEEgZGV2aWNlCiAgICAgICAgLy8gdGhhdCBzdG9wcyBleHBvc2luZyB0ZW1wZXJhdHVyZSBtdXN0IG5vdCBrZWVwIHN0YWxlIGhpc3RvcnkgaW5kZWZpbml0ZWx5LgogICAgICAgIC8vIE1hdGNoIHRoZSBiYWNrZ3JvdW5kIHdvcmtlcjogYWxlcnQgZXZhbHVhdGlvbiBjb250aW51ZXMsIGJ1dCBsb2NhbCBoaXN0b3J5CiAgICAgICAgLy8gd3JpdGVzIGFuZCByZXRlbnRpb24gY2xlYW51cCBwYXVzZSBiZWxvdyB0aGUgbG93LWJhdHRlcnkgdGhyZXNob2xkLgogICAgICAgIGlmICghc2hvdWxkUGF1c2VOb25Fc3NlbnRpYWxXb3JrKGJhdHRlcnlUZWxlbWV0cnkubGV2ZWxQZXJjZW50LCBiYXR0ZXJ5VGVsZW1ldHJ5LmlzQ2hhcmdpbmcpICYmCiAgICAgICAgICAgIG5vdyAtIGxhc3RQZXJzaXN0ZWRBdCA+PSBISVNUT1JZX1NBTVBMRV9JTlRFUlZBTF9NUwogICAgICAgICkgewogICAgICAgICAgICBsYXN0UGVyc2lzdGVkQXQgPSBub3cKICAgICAgICAgICAgdGhlcm1hbERhbz8ubGV0IHsgZGFvIC0+CiAgICAgICAgICAgICAgICB2aWV3TW9kZWxTY29wZS5sYXVuY2goRGlzcGF0Y2hlcnMuSU8pIHsKICAgICAgICAgICAgICAgICAgICAvLyBDbGVhbnVwIG11c3Qgc3RpbGwgcnVuIGlmIGEgbmV3IHNhbXBsZSBjYW5ub3QgYmUgd3JpdHRlbi4KICAgICAgICAgICAgICAgICAgICB2YWwgaW5zZXJ0UmVzdWx0ID0gdGVtcGVyYXR1cmU/LmxldCB7CiAgICAgICAgICAgICAgICAgICAgICAgIHJ1bkNhdGNoaW5nIHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhby5pbnNlcnQoCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgVGhlcm1hbFNuYXBzaG90KAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0aW1lc3RhbXAgPSBub3csCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGJhdHRlcnlUZW1wID0gaXQsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGJhdHRlcnlMZXZlbCA9IGJhdHRlcnlUZWxlbWV0cnkubGV2ZWxQZXJjZW50LAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBpc0NoYXJnaW5nID0gYmF0dGVyeVRlbGVtZXRyeS5pc0NoYXJnaW5nLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBiYXR0ZXJ5Vm9sdGFnZU12ID0gYmF0dGVyeVRlbGVtZXRyeS52b2x0YWdlTXYsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGJhdHRlcnlDdXJyZW50TWljcm9hbXBzID0gYmF0dGVyeVRlbGVtZXRyeS5jdXJyZW50TWljcm9hbXBzCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIHZhbCBjbGVhbnVwUmVzdWx0ID0gcnVuQ2F0Y2hpbmcgewogICAgICAgICAgICAgICAgICAgICAgICBkYW8uZGVsZXRlT2xkZXJUaGFuKG5vdyAtIGhpc3RvcnlSZXRlbnRpb25NcygpKQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICBpZiAoaW5zZXJ0UmVzdWx0Py5pc0ZhaWx1cmUgPT0gdHJ1ZSB8fCBjbGVhbnVwUmVzdWx0LmlzRmFpbHVyZSkgewogICAgICAgICAgICAgICAgICAgICAgICBfaGlzdG9yeVN0b3JhZ2VFcnJvci52YWx1ZSA9IHRydWUKICAgICAgICAgICAgICAgICAgICB9IGVsc2UgaWYgKGhpc3RvcnlTdG9yYWdlV3JpdGVTdWNjZWVkZWQoaW5zZXJ0UmVzdWx0Py5pc1N1Y2Nlc3MsIGNsZWFudXBSZXN1bHQuaXNTdWNjZXNzKSkgewogICAgICAgICAgICAgICAgICAgICAgICAvLyBBIGxhdGVyIHN1Y2Nlc3NmdWwgd3JpdGUgY2xlYXJzIGEgdHJhbnNpZW50IGRhdGFiYXNlIGVycm9yLgogICAgICAgICAgICAgICAgICAgICAgICBfaGlzdG9yeVN0b3JhZ2VFcnJvci52YWx1ZSA9IGZhbHNlCiAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgfQogICAgfQp9Cgo=
+package com.jeissonalberto.thermaguard.domain
+
+import android.app.Application
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
+import android.os.Build
+import android.os.PowerManager
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.jeissonalberto.thermaguard.data.ThermalAlertNotifier
+import com.jeissonalberto.thermaguard.data.ThermalDatabase
+import com.jeissonalberto.thermaguard.data.ThermalSnapshot
+import com.jeissonalberto.thermaguard.root.HardwareProfiler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+
+/** Converts Android's public thermal status constants to stable UI labels. */
+internal fun systemThermalStatusLabel(status: Int): String = when (status) {
+    PowerManager.THERMAL_STATUS_NONE -> "NORMAL"
+    PowerManager.THERMAL_STATUS_LIGHT -> "LIGHT"
+    PowerManager.THERMAL_STATUS_MODERATE -> "MODERATE"
+    PowerManager.THERMAL_STATUS_SEVERE -> "SEVERE"
+    PowerManager.THERMAL_STATUS_CRITICAL -> "CRITICAL"
+    PowerManager.THERMAL_STATUS_EMERGENCY -> "EMERGENCY"
+    PowerManager.THERMAL_STATUS_SHUTDOWN -> "SHUTDOWN"
+    else -> "UNKNOWN"
+}
+
+/** A notification is emitted only when the app enters a new alert state. */
+internal fun shouldNotifyThermalStatus(previous: String?, current: String): Boolean =
+    current in setOf("ALERT", "CRITICAL") && previous != current
+
+/** Converts Android's tenths-of-a-degree value without discarding valid sub-zero readings. */
+internal fun batteryTemperatureCelsius(rawTemperature: Int): Float? =
+    rawTemperature.takeUnless { it == Int.MIN_VALUE }?.div(10f)
+
+/** Android reports these states when the system needs the user to reduce thermal load. */
+internal fun isSystemThermalRisk(status: String?): Boolean =
+    status in setOf("SEVERE", "CRITICAL", "EMERGENCY", "SHUTDOWN")
+
+/** Combines the battery reading with Android's aggregated thermal status. */
+internal fun thermalEngineStatus(temperature: Float?, systemStatus: String?): String = when {
+    systemStatus in setOf("CRITICAL", "EMERGENCY", "SHUTDOWN") -> "CRITICAL"
+    systemStatus == "SEVERE" -> "ALERT"
+    temperature == null -> "SENSOR UNAVAILABLE"
+    temperature >= 45f -> "CRITICAL"
+    temperature >= 40f -> "ALERT"
+    else -> "NOMINAL"
+}
+
+/** A missing sample is valid when the sensor is unavailable; cleanup still proves storage works. */
+internal fun historyStorageWriteSucceeded(sampleWriteSucceeded: Boolean?, cleanupSucceeded: Boolean): Boolean =
+    sampleWriteSucceeded != false && cleanupSucceeded
+
+/**
+ * Exposes readings from the Android battery service.
+ *
+ * Battery temperature is reported by the operating system in tenths of a
+ * degree Celsius. Some devices do not expose it; in that case the value stays
+ * null instead of being replaced with a simulated reading.
+ */
+class ThermalViewModel(application: Application) : AndroidViewModel(application) {
+    private companion object {
+        const val POLL_INTERVAL_MS = 5_000L
+        const val HISTORY_SAMPLE_INTERVAL_MS = 60_000L
+        const val HISTORY_RETENTION_MS = 24 * 60 * 60 * 1_000L
+        const val HARDWARE_ZONE_REFRESH_INTERVAL_MS = 15_000L
+        // One sample per minute, matching the 24-hour retention window.
+        const val HISTORY_LIMIT = 24 * 60
+        const val UNAVAILABLE = Int.MIN_VALUE
+    }
+
+    private val powerManager = application.getSystemService(PowerManager::class.java)
+    private var lastNotifiedEngineStatus: String? = null
+
+    private val thermalDao = runCatching {
+        ThermalDatabase.getInstance(application).thermalDao()
+    }.getOrNull()
+
+    private val _batteryTemp = MutableStateFlow<Float?>(null)
+    val batteryTemp: StateFlow<Float?> = _batteryTemp
+
+    private val _sensorAvailable = MutableStateFlow(false)
+    val sensorAvailable: StateFlow<Boolean> = _sensorAvailable
+
+    private val _batteryLevel = MutableStateFlow<Int?>(null)
+    val batteryLevel: StateFlow<Int?> = _batteryLevel
+
+    private val _isCharging = MutableStateFlow<Boolean?>(null)
+    val isCharging: StateFlow<Boolean?> = _isCharging
+
+    private val _lastUpdated = MutableStateFlow<Long?>(null)
+    val lastUpdated: StateFlow<Long?> = _lastUpdated
+
+    private val _engineStatus = MutableStateFlow("WAITING")
+    val engineStatus: StateFlow<String> = _engineStatus
+
+    /** Aggregated thermal status reported by Android 10+ (not a CPU/GPU reading). */
+    private val _systemThermalStatus = MutableStateFlow<String?>(null)
+    val systemThermalStatus: StateFlow<String?> = _systemThermalStatus
+
+    /** Raw thermal zones exposed by the kernel, when the device permits reading them. */
+    private val _hardwareThermalZones = MutableStateFlow<List<HardwareProfiler.ThermalZoneInfo>>(emptyList())
+    val hardwareThermalZones: StateFlow<List<HardwareProfiler.ThermalZoneInfo>> = _hardwareThermalZones
+
+    /** Kept public for the alerts screen and shared threshold presentation. */
+    private val _alertThreshold = MutableStateFlow(40f)
+    val alertThreshold: StateFlow<Float> = _alertThreshold
+
+    private val _history = MutableStateFlow<List<ThermalSnapshot>>(emptyList())
+    val history: StateFlow<List<ThermalSnapshot>> = _history
+
+    private val _historyStorageError = MutableStateFlow(thermalDao == null)
+    val historyStorageError: StateFlow<Boolean> = _historyStorageError
+
+    private var lastPersistedAt = 0L
+    private var lastHardwareZoneReadAt = 0L
+
+    init {
+        thermalDao?.let { dao ->
+            viewModelScope.launch(Dispatchers.IO) {
+                dao.observeRecent(HISTORY_LIMIT)
+                    .catch { _historyStorageError.value = true }
+                    .collect { snapshots -> _history.value = snapshots }
+            }
+        }
+
+        viewModelScope.launch {
+            while (isActive) {
+                refreshReading()
+                delay(POLL_INTERVAL_MS)
+            }
+        }
+    }
+
+    private fun updateSystemThermalStatus() {
+        _systemThermalStatus.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            powerManager?.currentThermalStatus?.let(::systemThermalStatusLabel) ?: "UNKNOWN"
+        } else {
+            null
+        }
+    }
+
+    private fun refreshHardwareThermalZones(now: Long) {
+        if (now - lastHardwareZoneReadAt < HARDWARE_ZONE_REFRESH_INTERVAL_MS) return
+        lastHardwareZoneReadAt = now
+        viewModelScope.launch(Dispatchers.IO) {
+            _hardwareThermalZones.value = runCatching {
+                HardwareProfiler.readCurrentThermalZones()
+            }.getOrDefault(emptyList())
+        }
+    }
+
+    /** Refreshes the sticky battery broadcast without requiring a permission. */
+    fun refreshReading() {
+        updateSystemThermalStatus()
+        val intent = runCatching {
+            getApplication<Application>().registerReceiver(
+                null,
+                IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            )
+        }.getOrNull()
+        val rawTemperature = intent?.getIntExtra(
+            BatteryManager.EXTRA_TEMPERATURE,
+            UNAVAILABLE
+        ) ?: UNAVAILABLE
+        val batteryLevel = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, UNAVAILABLE)
+        val batteryScale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, UNAVAILABLE)
+        val chargingStatus = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, UNAVAILABLE)
+        val temperature = batteryTemperatureCelsius(rawTemperature)
+        val now = System.currentTimeMillis()
+        refreshHardwareThermalZones(now)
+
+        _batteryTemp.value = temperature
+        _sensorAvailable.value = temperature != null
+        _batteryLevel.value = if (batteryLevel != null && batteryScale != null && batteryLevel >= 0 && batteryScale > 0) {
+            (batteryLevel * 100f / batteryScale).toInt().coerceIn(0, 100)
+        } else {
+            null
+        }
+        _isCharging.value = when (chargingStatus) {
+            BatteryManager.BATTERY_STATUS_CHARGING, BatteryManager.BATTERY_STATUS_FULL -> true
+            BatteryManager.BATTERY_STATUS_DISCHARGING, BatteryManager.BATTERY_STATUS_NOT_CHARGING -> false
+            else -> null
+        }
+        if (intent != null) {
+            _lastUpdated.value = now
+        }
+        val systemStatus = _systemThermalStatus.value
+        val currentStatus = thermalEngineStatus(temperature, systemStatus)
+        _engineStatus.value = currentStatus
+        if (shouldNotifyThermalStatus(lastNotifiedEngineStatus, currentStatus)) {
+            if (ThermalAlertNotifier.notify(application, currentStatus, temperature, systemStatus)) {
+                lastNotifiedEngineStatus = currentStatus
+            }
+        } else if (currentStatus != "ALERT" && currentStatus != "CRITICAL") {
+            lastNotifiedEngineStatus = null
+        }
+
+        // Keep retention maintenance independent from sensor availability. A device
+        // that stops exposing temperature must not keep stale history indefinitely.
+        if (now - lastPersistedAt >= HISTORY_SAMPLE_INTERVAL_MS) {
+            lastPersistedAt = now
+            thermalDao?.let { dao ->
+                viewModelScope.launch(Dispatchers.IO) {
+                    // Cleanup must still run if a new sample cannot be written.
+                    val insertResult = temperature?.let {
+                        runCatching {
+                            dao.insert(ThermalSnapshot(timestamp = now, batteryTemp = it))
+                        }
+                    }
+                    val cleanupResult = runCatching {
+                        dao.deleteOlderThan(now - HISTORY_RETENTION_MS)
+                    }
+                    if (insertResult?.isFailure == true || cleanupResult.isFailure) {
+                        _historyStorageError.value = true
+                    } else if (historyStorageWriteSucceeded(insertResult?.isSuccess, cleanupResult.isSuccess)) {
+                        // A later successful write clears a transient database error.
+                        _historyStorageError.value = false
+                    }
+                }
+            }
+        }
+    }
+}
