@@ -5,7 +5,8 @@ Monitor térmico para Android, con una interfaz Compose orientada a mostrar lect
 ## Estado actual
 
 - La pantalla principal consulta la temperatura de batería publicada por Android mediante `BatteryManager`.
-- La lectura se actualiza cada 5 segundos mientras la pantalla está activa.
+- La lectura automática en pantalla respeta el modo elegido: cada 5 minutos en Ahorro, 2 minutos en Equilibrado y 30 segundos en Preventivo.
+- Con batería de 15% o menos y sin carga, la actualización automática se extiende a 15 minutos para evitar actividad innecesaria; la evaluación térmica y las alertas no se desactivan. La actualización manual sigue siendo inmediata.
 - Si el dispositivo no expone la temperatura, la app muestra `—` y el estado `SENSOR UNAVAILABLE`; no genera valores simulados.
 - Se muestran la fuente de la lectura, la hora de actualización y un umbral de alerta de 40 °C.
 - Las lecturas disponibles se guardan en una base de datos Room local, aproximadamente una vez por minuto.
@@ -36,3 +37,4 @@ El workflow de GitHub Actions ejecuta `assembleDebug` y `bundleRelease` en cada 
 - Las alertas se muestran dentro de la app y, cuando el usuario concede el permiso de notificaciones, también como notificación del sistema al entrar en estado ALERT o CRITICAL. La app programa comprobaciones térmicas reales en segundo plano con WorkManager cada 15 minutos como mínimo; Android puede aplazar cada ejecución según batería y sus políticas.
 - El diagnóstico interpreta únicamente las señales expuestas por Android y el historial local; no mide CPU/GPU.
 - No se deben interpretar las lecturas como consejo médico ni como garantía de protección térmica.
+
