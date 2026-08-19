@@ -81,7 +81,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         const val DEFAULT_HISTORY_RETENTION_HOURS = 24
         const val RETENTION_PREFERENCES = "telemetry_preferences"
         const val RETENTION_HOURS_KEY = "history_retention_hours"
-        const val HARDWARE_ZONE_REFRESH_INTERVAL_MS = 15_000L
         // One sample per minute; 72 hours is the largest supported local history.
         const val MAX_HISTORY_LIMIT = 72 * 60
         const val UNAVAILABLE = Int.MIN_VALUE
@@ -162,6 +161,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private var lastHardwareZoneReadAt = 0L
     private var foregroundPollingJob: Job? = null
     private var foregroundMonitoringActive = false
+    private var diagnosticsVisible = false
 
     private val _foregroundPollingPolicy = MutableStateFlow(
         calculateForegroundPollingPolicy(_monitoringMode.value, null, null)
@@ -200,6 +200,16 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /**
+     * Kernel thermal-zone files are only useful while the diagnosis screen is
+     * visible. Avoid reading them during dashboard/alert polling, while the
+     * battery sensor and Android's aggregated thermal status remain active.
+     */
+    fun setDiagnosticsVisible(visible: Boolean) {
+        diagnosticsVisible = visible
+        if (visible) refreshHardwareThermalZones(System.currentTimeMillis())
+    }
+
+    /**
      * Keeps the first reading immediate, then follows the selected mode. The
      * battery policy can stretch the cadence to 15 minutes, but never disables
      * refresh/alert evaluation; a manual refresh remains immediate.
@@ -229,7 +239,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun refreshHardwareThermalZones(now: Long) {
-        if (now - lastHardwareZoneReadAt < HARDWARE_ZONE_REFRESH_INTERVAL_MS) return
+        if (!shouldRefreshHardwareZones(diagnosticsVisible, now, lastHardwareZoneReadAt)) return
         lastHardwareZoneReadAt = now
         viewModelScope.launch(Dispatchers.IO) {
             _hardwareThermalZones.value = runCatching {

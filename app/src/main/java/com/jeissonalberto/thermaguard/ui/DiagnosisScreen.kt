@@ -16,6 +16,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,11 @@ import com.jeissonalberto.thermaguard.domain.isSystemThermalRisk
 
 @Composable
 fun DiagnosisScreen(viewModel: ThermalViewModel) {
+    DisposableEffect(viewModel) {
+        viewModel.setDiagnosticsVisible(true)
+        onDispose { viewModel.setDiagnosticsVisible(false) }
+    }
+
     val temperature by viewModel.batteryTemp.collectAsState()
     val sensorAvailable by viewModel.sensorAvailable.collectAsState()
     val status by viewModel.engineStatus.collectAsState()
