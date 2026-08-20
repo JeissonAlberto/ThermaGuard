@@ -1,6 +1,9 @@
 package com.jeissonalberto.thermaguard.root
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.DataOutputStream
@@ -166,7 +169,14 @@ object RootEngine {
             // Contar aproximadamente (am kill-all no reporta número exacto)
             3
         } else {
-            // Fallback: ActivityManager normal (sin root)
+            // This quarantined fallback must not call the protected API without a grant.
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.KILL_BACKGROUND_PROCESSES
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return@withContext 0
+            }
             val am = context.getSystemService(Context.ACTIVITY_SERVICE)
                 as android.app.ActivityManager
             am.killBackgroundProcesses(context.packageName)
@@ -239,3 +249,4 @@ object RootEngine {
     enum class CpuLevel { NORMAL, THROTTLE, ULTRA }
     enum class GpuLevel { NORMAL, THROTTLE, ULTRA }
 }
+
