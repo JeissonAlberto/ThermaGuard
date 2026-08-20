@@ -2,14 +2,24 @@
 
 ## Revisión de alcance (2026-08-20)
 
-`RootEngine` permanece en el código fuente, pero está fuera del camino de producción:
+`RootEngine` es una fachada de compatibilidad completamente inerte. ThermaGuard
+no solicita root ni ejecuta comandos de shell, no escribe nodos `sysfs`, no
+modifica CPU/GPU, brillo o radios y no termina procesos.
 
-- No hay referencias de producción a `RootEngine`.
-- `HardwareProfiler` sí tiene referencias activas desde `ThermalViewModel` para leer zonas térmicas; esto no activa `RootEngine` ni sus controles root/sysfs.
-- No hay componentes Android, tareas de WorkManager ni acciones de UI que instancien o invoquen `RootEngine`.
+Las funciones históricas permanecen únicamente para evitar referencias de
+código accidentales durante la transición. Todas las operaciones mutantes
+retornan explícitamente `false`; `activateSuperCool` devuelve un resultado con
+todas sus capacidades en `false` y `appsKilled = 0`; la lectura de frecuencias
+retorna un mapa vacío. No existe una ruta de producción que pueda convertir
+esta fachada en control del sistema.
 
-No se elimina el archivo en este ciclo para mantener el cambio reversible. El fallback de control de procesos quedó desactivado (devuelve cero) y la aplicación no declara `KILL_BACKGROUND_PROCESSES`. Antes de conectar cualquier capacidad root/sysfs se debe hacer una revisión independiente de seguridad, permisos, validación de rutas y pruebas en dispositivos compatibles.
+`HardwareProfiler` es independiente y solo se utiliza para leer zonas térmicas
+expuestas por el kernel durante el diagnóstico. Esa lectura no habilita
+RootEngine ni implica control de hardware.
 
 ## Guardia de mantenimiento
 
-Las búsquedas de referencias de producción (`RootEngine`, sus métodos de mutación y sus acciones `su`) deben mantenerse en cero hasta que exista una decisión explícita de producto. Esta nota documenta la cuarentena actual y evita interpretar la presencia del archivo como una capacidad disponible de la aplicación.
+`RootEngineTest` verifica que root, CPU/GPU, radios, brillo, terminación de
+procesos y el resultado de super-enfriamiento permanezcan explícitamente no
+disponibles. No se deben añadir permisos invasivos, llamadas a `su`, escrituras
+`sysfs` ni acciones de control del sistema a esta aplicación.
