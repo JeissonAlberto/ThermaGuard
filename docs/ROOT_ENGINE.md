@@ -8,7 +8,7 @@
 - `HardwareProfiler` sí tiene referencias activas desde `ThermalViewModel` para leer zonas térmicas; esto no activa `RootEngine` ni sus controles root/sysfs.
 - No hay componentes Android, tareas de WorkManager ni acciones de UI que instancien o invoquen `RootEngine`.
 
-No se elimina el archivo en este ciclo para mantener el cambio reversible. El único fallback que invoca `ActivityManager.killBackgroundProcesses` comprueba explícitamente `KILL_BACKGROUND_PROCESSES` y sale sin acción si no está concedido; la aplicación no declara ese permiso. Antes de conectar cualquier capacidad root/sysfs se debe hacer una revisión independiente de seguridad, permisos, validación de rutas y pruebas en dispositivos compatibles.
+No se elimina el archivo en este ciclo para mantener el cambio reversible. El fallback de control de procesos quedó desactivado (devuelve cero) y la aplicación no declara `KILL_BACKGROUND_PROCESSES`. Antes de conectar cualquier capacidad root/sysfs se debe hacer una revisión independiente de seguridad, permisos, validación de rutas y pruebas en dispositivos compatibles.
 
 ## Guardia de mantenimiento
 
