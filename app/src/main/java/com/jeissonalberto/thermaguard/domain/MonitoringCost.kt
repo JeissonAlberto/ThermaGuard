@@ -1,1 +1,48 @@
-cGFja2FnZSBjb20uamVpc3NvbmFsYmVydG8udGhlcm1hZ3VhcmQuZG9tYWluCgovKioKICogTG9jYWwsIG9wdC1pbiBtZWFzdXJlbWVudCBvZiB0aGUgZm9yZWdyb3VuZCBtb25pdG9yJ3Mgb3duIHdvcmsuCiAqCiAqIE9ubHkgZWxhcHNlZCB3b3JrIHRpbWUgYW5kIGJvdW5kZWQgY291bnRlcnMgYXJlIGtlcHQuIE5vIHRlbXBlcmF0dXJlLAogKiBkZXZpY2UgaWRlbnRpZmllciwgb3IgbmV0d29yayBkYXRhIGlzIHBhcnQgb2YgdGhpcyBtZWFzdXJlbWVudC4KICovCmRhdGEgY2xhc3MgTW9uaXRvcmluZ0Nvc3RTYW1wbGUoCiAgICB2YWwgc2FtcGxlQ291bnQ6IEludCA9IDAsCiAgICB2YWwgdG90YWxFbGFwc2VkTXM6IExvbmcgPSAwTCwKICAgIHZhbCBtYXhFbGFwc2VkTXM6IExvbmcgPSAwTAopIHsKICAgIHZhbCBhdmVyYWdlRWxhcHNlZE1zOiBMb25nCiAgICAgICAgZ2V0KCkgPSBpZiAoc2FtcGxlQ291bnQgPT0gMCkgMEwgZWxzZSB0b3RhbEVsYXBzZWRNcyAvIHNhbXBsZUNvdW50CgogICAgZnVuIHJlY29yZChlbGFwc2VkTXM6IExvbmcpOiBNb25pdG9yaW5nQ29zdFNhbXBsZSB7CiAgICAgICAgdmFsIGJvdW5kZWRFbGFwc2VkID0gZWxhcHNlZE1zLmNvZXJjZUF0TGVhc3QoMEwpCiAgICAgICAgcmV0dXJuIE1vbml0b3JpbmdDb3N0U2FtcGxlKAogICAgICAgICAgICBzYW1wbGVDb3VudCA9IHNhbXBsZUNvdW50ICsgMSwKICAgICAgICAgICAgdG90YWxFbGFwc2VkTXMgPSB0b3RhbEVsYXBzZWRNcyArIGJvdW5kZWRFbGFwc2VkLAogICAgICAgICAgICBtYXhFbGFwc2VkTXMgPSBtYXhPZihtYXhFbGFwc2VkTXMsIGJvdW5kZWRFbGFwc2VkKQogICAgICAgICkKICAgIH0KfQoKaW50ZXJuYWwgY29uc3QgdmFsIENPU1RfQURBUFRBVElPTl9NSU5fU0FNUExFUyA9IDUKaW50ZXJuYWwgY29uc3QgdmFsIENPU1RfQURBUFRBVElPTl9USFJFU0hPTERfTVMgPSAxMDBMCmludGVybmFsIGNvbnN0IHZhbCBDT1NUX0FEQVBUQVRJT05fTUFYX0lOVEVSVkFMX01TID0gMTUgKiA2MCAqIDFfMDAwTAoKLyoqCiAqIFN0cmV0Y2ggZm9yZWdyb3VuZCBwb2xsaW5nIG9ubHkgYWZ0ZXIgcmVwZWF0ZWQsIGxvY2FsbHkgbWVhc3VyZWQgc2xvdyB3b3JrLgogKiBUaGlzIGNoYW5nZXMgY2FkZW5jZSwgbmV2ZXIgQ1BVL0dQVSBzZXR0aW5ncywgYW5kIGRvZXMgbm90IGNsYWltIGEgYmF0dGVyeQogKiBwZXJjZW50YWdlIHNhdmluZy4KICovCmludGVybmFsIGZ1biBzaG91bGRBZGFwdEZvcmVncm91bmRQb2xsaW5nKGNvc3Q6IE1vbml0b3JpbmdDb3N0U2FtcGxlPyk6IEJvb2xlYW4gPQogICAgY29zdCAhPSBudWxsICYmCiAgICAgICAgY29zdC5zYW1wbGVDb3VudCA+PSBDT1NUX0FEQVBUQVRJT05fTUlOX1NBTVBMRVMgJiYKICAgICAgICBjb3N0LmF2ZXJhZ2VFbGFwc2VkTXMgPj0gQ09TVF9BREFQVEFUSU9OX1RIUkVTSE9MRF9NUwoKaW50ZXJuYWwgZnVuIGFkYXB0ZWRGb3JlZ3JvdW5kSW50ZXJ2YWxNcygKICAgIGJhc2VJbnRlcnZhbE1zOiBMb25nLAogICAgY29zdDogTW9uaXRvcmluZ0Nvc3RTYW1wbGU/Cik6IExvbmcgPSBpZiAoc2hvdWxkQWRhcHRGb3JlZ3JvdW5kUG9sbGluZyhjb3N0KSkgewogICAgKGJhc2VJbnRlcnZhbE1zICogMkwpLmNvZXJjZUF0TW9zdChDT1NUX0FEQVBUQVRJT05fTUFYX0lOVEVSVkFMX01TKQp9IGVsc2UgewogICAgYmFzZUludGVydmFsTXMKfQo=
+package com.jeissonalberto.thermaguard.domain
+
+/**
+ * Local, opt-in measurement of the foreground monitor's own work.
+ *
+ * Only elapsed work time and bounded counters are kept. No temperature,
+ * device identifier, or network data is part of this measurement.
+ */
+data class MonitoringCostSample(
+    val sampleCount: Int = 0,
+    val totalElapsedMs: Long = 0L,
+    val maxElapsedMs: Long = 0L
+) {
+    val averageElapsedMs: Long
+        get() = if (sampleCount == 0) 0L else totalElapsedMs / sampleCount
+
+    fun record(elapsedMs: Long): MonitoringCostSample {
+        val boundedElapsed = elapsedMs.coerceAtLeast(0L)
+        return MonitoringCostSample(
+            sampleCount = sampleCount + 1,
+            totalElapsedMs = totalElapsedMs + boundedElapsed,
+            maxElapsedMs = maxOf(maxElapsedMs, boundedElapsed)
+        )
+    }
+}
+
+internal const val COST_ADAPTATION_MIN_SAMPLES = 5
+internal const val COST_ADAPTATION_THRESHOLD_MS = 100L
+internal const val COST_ADAPTATION_MAX_INTERVAL_MS = 15 * 60 * 1_000L
+
+/**
+ * Stretch foreground polling only after repeated, locally measured slow work.
+ * This changes cadence, never CPU/GPU settings, and does not claim a battery
+ * percentage saving.
+ */
+internal fun shouldAdaptForegroundPolling(cost: MonitoringCostSample?): Boolean =
+    cost != null &&
+        cost.sampleCount >= COST_ADAPTATION_MIN_SAMPLES &&
+        cost.averageElapsedMs >= COST_ADAPTATION_THRESHOLD_MS
+
+internal fun adaptedForegroundIntervalMs(
+    baseIntervalMs: Long,
+    cost: MonitoringCostSample?
+): Long = if (shouldAdaptForegroundPolling(cost)) {
+    (baseIntervalMs * 2L).coerceAtMost(COST_ADAPTATION_MAX_INTERVAL_MS)
+} else {
+    baseIntervalMs
+}

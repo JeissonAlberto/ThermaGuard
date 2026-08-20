@@ -1,1 +1,60 @@
-cGFja2FnZSBjb20uamVpc3NvbmFsYmVydG8udGhlcm1hZ3VhcmQuZG9tYWluCgppbXBvcnQgb3JnLmp1bml0LkFzc2VydC5hc3NlcnRFcXVhbHMKaW1wb3J0IG9yZy5qdW5pdC5Bc3NlcnQuYXNzZXJ0RmFsc2UKaW1wb3J0IG9yZy5qdW5pdC5Bc3NlcnQuYXNzZXJ0VHJ1ZQppbXBvcnQgb3JnLmp1bml0LlRlc3QKCmNsYXNzIE1vbml0b3JpbmdDb3N0VGVzdCB7CiAgICBAVGVzdAogICAgZnVuIGFnZ3JlZ2F0ZXNfb25seV9lbGFwc2VkX3dvcmtfYW5kX2V4cG9zZXNfYXZlcmFnZV9hbmRfbWF4KCkgewogICAgICAgIHZhbCBjb3N0ID0gTW9uaXRvcmluZ0Nvc3RTYW1wbGUoKS5yZWNvcmQoNDApLnJlY29yZCgxNjApCgogICAgICAgIGFzc2VydEVxdWFscygyLCBjb3N0LnNhbXBsZUNvdW50KQogICAgICAgIGFzc2VydEVxdWFscygxMDBMLCBjb3N0LmF2ZXJhZ2VFbGFwc2VkTXMpCiAgICAgICAgYXNzZXJ0RXF1YWxzKDE2MEwsIGNvc3QubWF4RWxhcHNlZE1zKQogICAgfQoKICAgIEBUZXN0CiAgICBmdW4gc2xvd193b3JrX3JlcXVpcmVzX3JlcGVhdGVkX3NhbXBsZXNfYmVmb3JlX2FkYXB0aW5nKCkgewogICAgICAgIHZhbCBmb3VyU2xvd1NhbXBsZXMgPSAoMS4uNCkuZm9sZChNb25pdG9yaW5nQ29zdFNhbXBsZSgpKSB7IHZhbHVlLCBfIC0+IHZhbHVlLnJlY29yZCgyMDApIH0KICAgICAgICB2YWwgZml2ZVNsb3dTYW1wbGVzID0gZm91clNsb3dTYW1wbGVzLnJlY29yZCgyMDApCgogICAgICAgIGFzc2VydEZhbHNlKHNob3VsZEFkYXB0Rm9yZWdyb3VuZFBvbGxpbmcoZm91clNsb3dTYW1wbGVzKSkKICAgICAgICBhc3NlcnRUcnVlKHNob3VsZEFkYXB0Rm9yZWdyb3VuZFBvbGxpbmcoZml2ZVNsb3dTYW1wbGVzKSkKICAgICAgICBhc3NlcnRFcXVhbHMoCiAgICAgICAgICAgIE1vbml0b3JpbmdNb2RlLkJBTEFOQ0VELmZvcmVncm91bmRJbnRlcnZhbE1zICogMiwKICAgICAgICAgICAgYWRhcHRlZEZvcmVncm91bmRJbnRlcnZhbE1zKE1vbml0b3JpbmdNb2RlLkJBTEFOQ0VELmZvcmVncm91bmRJbnRlcnZhbE1zLCBmaXZlU2xvd1NhbXBsZXMpCiAgICAgICAgKQogICAgfQoKICAgIEBUZXN0CiAgICBmdW4gbm9ybWFsX3dvcmtfZG9lc19ub3RfY2hhbmdlX3NlbGVjdGVkX2NhZGVuY2UoKSB7CiAgICAgICAgdmFsIGNvc3QgPSAoMS4uMTApLmZvbGQoTW9uaXRvcmluZ0Nvc3RTYW1wbGUoKSkgeyB2YWx1ZSwgXyAtPiB2YWx1ZS5yZWNvcmQoMjApIH0KCiAgICAgICAgdmFsIHBvbGljeSA9IGNhbGN1bGF0ZUZvcmVncm91bmRQb2xsaW5nUG9saWN5KAogICAgICAgICAgICBNb25pdG9yaW5nTW9kZS5QUkVWRU5USVZFLAogICAgICAgICAgICBiYXR0ZXJ5TGV2ZWxQZXJjZW50ID0gODAsCiAgICAgICAgICAgIGlzQ2hhcmdpbmcgPSB0cnVlLAogICAgICAgICAgICBtZWFzdXJlZENvc3QgPSBjb3N0CiAgICAgICAgKQoKICAgICAgICBhc3NlcnRFcXVhbHMoTW9uaXRvcmluZ01vZGUuUFJFVkVOVElWRS5mb3JlZ3JvdW5kSW50ZXJ2YWxNcywgcG9saWN5LmludGVydmFsTXMpCiAgICAgICAgYXNzZXJ0RmFsc2UocG9saWN5LmNvc3RMaW1pdGVkKQogICAgfQoKICAgIEBUZXN0CiAgICBmdW4gbG93X2JhdHRlcnlfbGltaXRfaGFzX3ByaW9yaXR5X292ZXJfY29zdF9hZGFwdGF0aW9uKCkgewogICAgICAgIHZhbCBjb3N0ID0gKDEuLjEwKS5mb2xkKE1vbml0b3JpbmdDb3N0U2FtcGxlKCkpIHsgdmFsdWUsIF8gLT4gdmFsdWUucmVjb3JkKDIwMCkgfQoKICAgICAgICB2YWwgcG9saWN5ID0gY2FsY3VsYXRlRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3koCiAgICAgICAgICAgIE1vbml0b3JpbmdNb2RlLlBSRVZFTlRJVkUsCiAgICAgICAgICAgIGJhdHRlcnlMZXZlbFBlcmNlbnQgPSAxMCwKICAgICAgICAgICAgaXNDaGFyZ2luZyA9IGZhbHNlLAogICAgICAgICAgICBtZWFzdXJlZENvc3QgPSBjb3N0CiAgICAgICAgKQoKICAgICAgICBhc3NlcnRFcXVhbHMoTE9XX0JBVFRFUllfRk9SRUdST1VORF9JTlRFUlZBTF9NUywgcG9saWN5LmludGVydmFsTXMpCiAgICAgICAgYXNzZXJ0RmFsc2UocG9saWN5LmNvc3RMaW1pdGVkKQogICAgfQp9Cg==
+package com.jeissonalberto.thermaguard.domain
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class MonitoringCostTest {
+    @Test
+    fun aggregates_only_elapsed_work_and_exposes_average_and_max() {
+        val cost = MonitoringCostSample().record(40).record(160)
+
+        assertEquals(2, cost.sampleCount)
+        assertEquals(100L, cost.averageElapsedMs)
+        assertEquals(160L, cost.maxElapsedMs)
+    }
+
+    @Test
+    fun slow_work_requires_repeated_samples_before_adapting() {
+        val fourSlowSamples = (1..4).fold(MonitoringCostSample()) { value, _ -> value.record(200) }
+        val fiveSlowSamples = fourSlowSamples.record(200)
+
+        assertFalse(shouldAdaptForegroundPolling(fourSlowSamples))
+        assertTrue(shouldAdaptForegroundPolling(fiveSlowSamples))
+        assertEquals(
+            MonitoringMode.BALANCED.foregroundIntervalMs * 2,
+            adaptedForegroundIntervalMs(MonitoringMode.BALANCED.foregroundIntervalMs, fiveSlowSamples)
+        )
+    }
+
+    @Test
+    fun normal_work_does_not_change_selected_cadence() {
+        val cost = (1..10).fold(MonitoringCostSample()) { value, _ -> value.record(20) }
+
+        val policy = calculateForegroundPollingPolicy(
+            MonitoringMode.PREVENTIVE,
+            batteryLevelPercent = 80,
+            isCharging = true,
+            measuredCost = cost
+        )
+
+        assertEquals(MonitoringMode.PREVENTIVE.foregroundIntervalMs, policy.intervalMs)
+        assertFalse(policy.costLimited)
+    }
+
+    @Test
+    fun low_battery_limit_has_priority_over_cost_adaptation() {
+        val cost = (1..10).fold(MonitoringCostSample()) { value, _ -> value.record(200) }
+
+        val policy = calculateForegroundPollingPolicy(
+            MonitoringMode.PREVENTIVE,
+            batteryLevelPercent = 10,
+            isCharging = false,
+            measuredCost = cost
+        )
+
+        assertEquals(LOW_BATTERY_FOREGROUND_INTERVAL_MS, policy.intervalMs)
+        assertFalse(policy.costLimited)
+    }
+}

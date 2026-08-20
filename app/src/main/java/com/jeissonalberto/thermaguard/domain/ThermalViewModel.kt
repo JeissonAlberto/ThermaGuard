@@ -1,1 +1,456 @@
-cGFja2FnZSBjb20uamVpc3NvbmFsYmVydG8udGhlcm1hZ3VhcmQuZG9tYWluCgppbXBvcnQgYW5kcm9pZC5hcHAuQXBwbGljYXRpb24KaW1wb3J0IGFuZHJvaWQuY29udGVudC5Db250ZXh0CmltcG9ydCBhbmRyb2lkLmNvbnRlbnQuSW50ZW50CmltcG9ydCBhbmRyb2lkLmNvbnRlbnQuSW50ZW50RmlsdGVyCmltcG9ydCBhbmRyb2lkLm9zLkJhdHRlcnlNYW5hZ2VyCmltcG9ydCBhbmRyb2lkLm9zLkJ1aWxkCmltcG9ydCBhbmRyb2lkLm9zLlBvd2VyTWFuYWdlcgppbXBvcnQgYW5kcm9pZC5vcy5TeXN0ZW1DbG9jawppbXBvcnQgYW5kcm9pZHgubGlmZWN5Y2xlLkFuZHJvaWRWaWV3TW9kZWwKaW1wb3J0IGFuZHJvaWR4LmxpZmVjeWNsZS52aWV3TW9kZWxTY29wZQppbXBvcnQgY29tLmplaXNzb25hbGJlcnRvLnRoZXJtYWd1YXJkLmRhdGEuVGhlcm1hbEFsZXJ0Tm90aWZpZXIKaW1wb3J0IGNvbS5qZWlzc29uYWxiZXJ0by50aGVybWFndWFyZC5kYXRhLlRoZXJtYWxEYXRhYmFzZQppbXBvcnQgY29tLmplaXNzb25hbGJlcnRvLnRoZXJtYWd1YXJkLmRhdGEuVGhlcm1hbFNuYXBzaG90CmltcG9ydCBjb20uamVpc3NvbmFsYmVydG8udGhlcm1hZ3VhcmQuZGF0YS5yZWFkQmF0dGVyeVRlbGVtZXRyeQppbXBvcnQgY29tLmplaXNzb25hbGJlcnRvLnRoZXJtYWd1YXJkLnJvb3QuSGFyZHdhcmVQcm9maWxlcgppbXBvcnQgY29tLmplaXNzb25hbGJlcnRvLnRoZXJtYWd1YXJkLnNlcnZpY2UuVGhlcm1hbE1vbml0b3JXb3JrZXIKaW1wb3J0IGtvdGxpbnguY29yb3V0aW5lcy5EaXNwYXRjaGVycwppbXBvcnQga290bGlueC5jb3JvdXRpbmVzLkpvYgppbXBvcnQga290bGlueC5jb3JvdXRpbmVzLmRlbGF5CmltcG9ydCBrb3RsaW54LmNvcm91dGluZXMuZmxvdy5NdXRhYmxlU3RhdGVGbG93CmltcG9ydCBrb3RsaW54LmNvcm91dGluZXMuZmxvdy5TdGF0ZUZsb3cKaW1wb3J0IGtvdGxpbnguY29yb3V0aW5lcy5mbG93LmNhdGNoCmltcG9ydCBrb3RsaW54LmNvcm91dGluZXMuaXNBY3RpdmUKaW1wb3J0IGtvdGxpbnguY29yb3V0aW5lcy5sYXVuY2gKCi8qKiBDb252ZXJ0cyBBbmRyb2lkJ3MgcHVibGljIHRoZXJtYWwgc3RhdHVzIGNvbnN0YW50cyB0byBzdGFibGUgVUkgbGFiZWxzLiAqLwppbnRlcm5hbCBmdW4gc3lzdGVtVGhlcm1hbFN0YXR1c0xhYmVsKHN0YXR1czogSW50KTogU3RyaW5nID0gd2hlbiAoc3RhdHVzKSB7CiAgICBQb3dlck1hbmFnZXIuVEhFUk1BTF9TVEFUVVNfTk9ORSAtPiAiTk9STUFMIgogICAgUG93ZXJNYW5hZ2VyLlRIRVJNQUxfU1RBVFVTX0xJR0hUIC0+ICJMSUdIVCIKICAgIFBvd2VyTWFuYWdlci5USEVSTUFMX1NUQVRVU19NT0RFUkFURSAtPiAiTU9ERVJBVEUiCiAgICBQb3dlck1hbmFnZXIuVEhFUk1BTF9TVEFUVVNfU0VWRVJFIC0+ICJTRVZFUkUiCiAgICBQb3dlck1hbmFnZXIuVEhFUk1BTF9TVEFUVVNfQ1JJVElDQUwgLT4gIkNSSVRJQ0FMIgogICAgUG93ZXJNYW5hZ2VyLlRIRVJNQUxfU1RBVFVTX0VNRVJHRU5DWSAtPiAiRU1FUkdFTkNZIgogICAgUG93ZXJNYW5hZ2VyLlRIRVJNQUxfU1RBVFVTX1NIVVRET1dOIC0+ICJTSFVURE9XTiIKICAgIGVsc2UgLT4gIlVOS05PV04iCn0KCi8qKiBBIG5vdGlmaWNhdGlvbiBpcyBlbWl0dGVkIG9ubHkgd2hlbiB0aGUgYXBwIGVudGVycyBhIG5ldyBhbGVydCBzdGF0ZS4gKi8KaW50ZXJuYWwgZnVuIHNob3VsZE5vdGlmeVRoZXJtYWxTdGF0dXMocHJldmlvdXM6IFN0cmluZz8sIGN1cnJlbnQ6IFN0cmluZyk6IEJvb2xlYW4gPQogICAgY3VycmVudCBpbiBzZXRPZigiQUxFUlQiLCAiQ1JJVElDQUwiKSAmJiBwcmV2aW91cyAhPSBjdXJyZW50CgovKiogQ29udmVydHMgQW5kcm9pZCdzIHRlbnRocy1vZi1hLWRlZ3JlZSB2YWx1ZSB3aXRob3V0IGRpc2NhcmRpbmcgdmFsaWQgc3ViLXplcm8gcmVhZGluZ3MuICovCmludGVybmFsIGZ1biBiYXR0ZXJ5VGVtcGVyYXR1cmVDZWxzaXVzKHJhd1RlbXBlcmF0dXJlOiBJbnQpOiBGbG9hdD8gPQogICAgcmF3VGVtcGVyYXR1cmUudGFrZVVubGVzcyB7IGl0ID09IEludC5NSU5fVkFMVUUgfT8uZGl2KDEwZikKCi8qKiBBbmRyb2lkIHJlcG9ydHMgdGhlc2Ugc3RhdGVzIHdoZW4gdGhlIHN5c3RlbSBuZWVkcyB0aGUgdXNlciB0byByZWR1Y2UgdGhlcm1hbCBsb2FkLiAqLwppbnRlcm5hbCBmdW4gaXNTeXN0ZW1UaGVybWFsUmlzayhzdGF0dXM6IFN0cmluZz8pOiBCb29sZWFuID0KICAgIHN0YXR1cyBpbiBzZXRPZigiU0VWRVJFIiwgIkNSSVRJQ0FMIiwgIkVNRVJHRU5DWSIsICJTSFVURE9XTiIpCgovKiogQ29tYmluZXMgdGhlIGJhdHRlcnkgcmVhZGluZyB3aXRoIEFuZHJvaWQncyBhZ2dyZWdhdGVkIHRoZXJtYWwgc3RhdHVzLiAqLwppbnRlcm5hbCBmdW4gdGhlcm1hbEVuZ2luZVN0YXR1cyh0ZW1wZXJhdHVyZTogRmxvYXQ/LCBzeXN0ZW1TdGF0dXM6IFN0cmluZz8pOiBTdHJpbmcgPSB3aGVuIHsKICAgIHN5c3RlbVN0YXR1cyBpbiBzZXRPZigiQ1JJVElDQUwiLCAiRU1FUkdFTkNZIiwgIlNIVVRET1dOIikgLT4gIkNSSVRJQ0FMIgogICAgc3lzdGVtU3RhdHVzID09ICJTRVZFUkUiIC0+ICJBTEVSVCIKICAgIHRlbXBlcmF0dXJlID09IG51bGwgLT4gIlNFTlNPUiBVTkFWQUlMQUJMRSIKICAgIHRlbXBlcmF0dXJlID49IDQ1ZiAtPiAiQ1JJVElDQUwiCiAgICB0ZW1wZXJhdHVyZSA+PSA0MGYgLT4gIkFMRVJUIgogICAgZWxzZSAtPiAiTk9NSU5BTCIKfQoKLyoqIEEgbWlzc2luZyBzYW1wbGUgaXMgdmFsaWQgd2hlbiB0aGUgc2Vuc29yIGlzIHVuYXZhaWxhYmxlOyBjbGVhbnVwIHN0aWxsIHByb3ZlcyBzdG9yYWdlIHdvcmtzLiAqLwppbnRlcm5hbCBmdW4gaGlzdG9yeVN0b3JhZ2VXcml0ZVN1Y2NlZWRlZChzYW1wbGVXcml0ZVN1Y2NlZWRlZDogQm9vbGVhbj8sIGNsZWFudXBTdWNjZWVkZWQ6IEJvb2xlYW4pOiBCb29sZWFuID0KICAgIHNhbXBsZVdyaXRlU3VjY2VlZGVkICE9IGZhbHNlICYmIGNsZWFudXBTdWNjZWVkZWQKCi8qKiBLZWVwcyB1c2VyLXNlbGVjdGVkIHJldGVudGlvbiB3aXRoaW4gc21hbGwsIHByZWRpY3RhYmxlIGxvY2FsLXN0b3JhZ2UgYm91bmRzLiAqLwppbnRlcm5hbCBmdW4gbm9ybWFsaXplSGlzdG9yeVJldGVudGlvbkhvdXJzKGhvdXJzOiBJbnQpOiBJbnQgPSB3aGVuIChob3VycykgewogICAgNiwgNzIgLT4gaG91cnMKICAgIGVsc2UgLT4gMjQKfQoKLyoqCiAqIEV4cG9zZXMgcmVhZGluZ3MgZnJvbSB0aGUgQW5kcm9pZCBiYXR0ZXJ5IHNlcnZpY2UuCiAqCiAqIEJhdHRlcnkgdGVtcGVyYXR1cmUgaXMgcmVwb3J0ZWQgYnkgdGhlIG9wZXJhdGluZyBzeXN0ZW0gaW4gdGVudGhzIG9mIGEKICogZGVncmVlIENlbHNpdXMuIFNvbWUgZGV2aWNlcyBkbyBub3QgZXhwb3NlIGl0OyBpbiB0aGF0IGNhc2UgdGhlIHZhbHVlIHN0YXlzCiAqIG51bGwgaW5zdGVhZCBvZiBiZWluZyByZXBsYWNlZCB3aXRoIGEgc2ltdWxhdGVkIHJlYWRpbmcuCiAqLwpjbGFzcyBUaGVybWFsVmlld01vZGVsKGFwcGxpY2F0aW9uOiBBcHBsaWNhdGlvbikgOiBBbmRyb2lkVmlld01vZGVsKGFwcGxpY2F0aW9uKSB7CiAgICBwcml2YXRlIGNvbXBhbmlvbiBvYmplY3QgewogICAgICAgIGNvbnN0IHZhbCBISVNUT1JZX1NBTVBMRV9JTlRFUlZBTF9NUyA9IDYwXzAwMEwKICAgICAgICBjb25zdCB2YWwgREVGQVVMVF9ISVNUT1JZX1JFVEVOVElPTl9IT1VSUyA9IDI0CiAgICAgICAgY29uc3QgdmFsIFJFVEVOVElPTl9QUkVGRVJFTkNFUyA9ICJ0ZWxlbWV0cnlfcHJlZmVyZW5jZXMiCiAgICAgICAgY29uc3QgdmFsIFJFVEVOVElPTl9IT1VSU19LRVkgPSAiaGlzdG9yeV9yZXRlbnRpb25faG91cnMiCiAgICAgICAgY29uc3QgdmFsIENPU1RfUFJFRkVSRU5DRVMgPSAibW9uaXRvcmluZ19jb3N0X3ByZWZlcmVuY2VzIgogICAgICAgIGNvbnN0IHZhbCBDT1NUX0VOQUJMRURfS0VZID0gImVuYWJsZWQiCiAgICAgICAgY29uc3QgdmFsIENPU1RfU0FNUExFU19LRVkgPSAic2FtcGxlX2NvdW50IgogICAgICAgIGNvbnN0IHZhbCBDT1NUX1RPVEFMX01TX0tFWSA9ICJ0b3RhbF9lbGFwc2VkX21zIgogICAgICAgIGNvbnN0IHZhbCBDT1NUX01BWF9NU19LRVkgPSAibWF4X2VsYXBzZWRfbXMiCiAgICAgICAgY29uc3QgdmFsIENPU1RfUEVSU0lTVF9FVkVSWV9TQU1QTEVTID0gMTAKICAgICAgICAvLyBPbmUgc2FtcGxlIHBlciBtaW51dGU7IDcyIGhvdXJzIGlzIHRoZSBsYXJnZXN0IHN1cHBvcnRlZCBsb2NhbCBoaXN0b3J5LgogICAgICAgIGNvbnN0IHZhbCBNQVhfSElTVE9SWV9MSU1JVCA9IDcyICogNjAKICAgICAgICBjb25zdCB2YWwgVU5BVkFJTEFCTEUgPSBJbnQuTUlOX1ZBTFVFCiAgICB9CgogICAgcHJpdmF0ZSB2YWwgcG93ZXJNYW5hZ2VyID0gYXBwbGljYXRpb24uZ2V0U3lzdGVtU2VydmljZShQb3dlck1hbmFnZXI6OmNsYXNzLmphdmEpCiAgICBwcml2YXRlIHZhbCByZXRlbnRpb25QcmVmZXJlbmNlcyA9IGFwcGxpY2F0aW9uLmdldFNoYXJlZFByZWZlcmVuY2VzKAogICAgICAgIFJFVEVOVElPTl9QUkVGRVJFTkNFUywKICAgICAgICBDb250ZXh0Lk1PREVfUFJJVkFURQogICAgKQogICAgcHJpdmF0ZSB2YWwgX3JldGVudGlvbkhvdXJzID0gTXV0YWJsZVN0YXRlRmxvdygKICAgICAgICBub3JtYWxpemVIaXN0b3J5UmV0ZW50aW9uSG91cnMoCiAgICAgICAgICAgIHJldGVudGlvblByZWZlcmVuY2VzLmdldEludChSRVRFTlRJT05fSE9VUlNfS0VZLCBERUZBVUxUX0hJU1RPUllfUkVURU5USU9OX0hPVVJTKQogICAgICAgICkKICAgICkKICAgIHZhbCByZXRlbnRpb25Ib3VyczogU3RhdGVGbG93PEludD4gPSBfcmV0ZW50aW9uSG91cnMKCiAgICBwcml2YXRlIHZhbCBjb3N0UHJlZmVyZW5jZXMgPSBhcHBsaWNhdGlvbi5nZXRTaGFyZWRQcmVmZXJlbmNlcygKICAgICAgICBDT1NUX1BSRUZFUkVOQ0VTLAogICAgICAgIENvbnRleHQuTU9ERV9QUklWQVRFCiAgICApCiAgICBwcml2YXRlIHZhbCBfY29zdE1lYXN1cmVtZW50RW5hYmxlZCA9IE11dGFibGVTdGF0ZUZsb3coCiAgICAgICAgY29zdFByZWZlcmVuY2VzLmdldEJvb2xlYW4oQ09TVF9FTkFCTEVEX0tFWSwgZmFsc2UpCiAgICApCiAgICB2YWwgY29zdE1lYXN1cmVtZW50RW5hYmxlZDogU3RhdGVGbG93PEJvb2xlYW4+ID0gX2Nvc3RNZWFzdXJlbWVudEVuYWJsZWQKICAgIHByaXZhdGUgdmFsIF9tb25pdG9yaW5nQ29zdCA9IE11dGFibGVTdGF0ZUZsb3coCiAgICAgICAgTW9uaXRvcmluZ0Nvc3RTYW1wbGUoCiAgICAgICAgICAgIHNhbXBsZUNvdW50ID0gY29zdFByZWZlcmVuY2VzLmdldEludChDT1NUX1NBTVBMRVNfS0VZLCAwKSwKICAgICAgICAgICAgdG90YWxFbGFwc2VkTXMgPSBjb3N0UHJlZmVyZW5jZXMuZ2V0TG9uZyhDT1NUX1RPVEFMX01TX0tFWSwgMEwpLAogICAgICAgICAgICBtYXhFbGFwc2VkTXMgPSBjb3N0UHJlZmVyZW5jZXMuZ2V0TG9uZyhDT1NUX01BWF9NU19LRVksIDBMKQogICAgICAgICkKICAgICkKICAgIHZhbCBtb25pdG9yaW5nQ29zdDogU3RhdGVGbG93PE1vbml0b3JpbmdDb3N0U2FtcGxlPiA9IF9tb25pdG9yaW5nQ29zdAogICAgcHJpdmF0ZSB2YXIgc2FtcGxlc0F0TGFzdENvc3RQZXJzaXN0ID0gX21vbml0b3JpbmdDb3N0LnZhbHVlLnNhbXBsZUNvdW50CgogICAgcHJpdmF0ZSBmdW4gaGlzdG9yeVJldGVudGlvbk1zKCk6IExvbmcgPSBfcmV0ZW50aW9uSG91cnMudmFsdWUgKiA2MCAqIDYwICogMV8wMDBMCiAgICBwcml2YXRlIHZhbCBtb25pdG9yaW5nUHJlZmVyZW5jZXMgPSBhcHBsaWNhdGlvbi5nZXRTaGFyZWRQcmVmZXJlbmNlcygKICAgICAgICBNb25pdG9yaW5nTW9kZS5QUkVGU19OQU1FLAogICAgICAgIENvbnRleHQuTU9ERV9QUklWQVRFCiAgICApCiAgICBwcml2YXRlIHZhbCBfbW9uaXRvcmluZ01vZGUgPSBNdXRhYmxlU3RhdGVGbG93KAogICAgICAgIE1vbml0b3JpbmdNb2RlLmZyb21TdG9yZWQoCiAgICAgICAgICAgIG1vbml0b3JpbmdQcmVmZXJlbmNlcy5nZXRTdHJpbmcoTW9uaXRvcmluZ01vZGUuTU9ERV9LRVksIG51bGwpCiAgICAgICAgKQogICAgKQogICAgdmFsIG1vbml0b3JpbmdNb2RlOiBTdGF0ZUZsb3c8TW9uaXRvcmluZ01vZGU+ID0gX21vbml0b3JpbmdNb2RlCiAgICBwcml2YXRlIHZhciBsYXN0Tm90aWZpZWRFbmdpbmVTdGF0dXM6IFN0cmluZz8gPSBudWxsCgogICAgcHJpdmF0ZSB2YWwgdGhlcm1hbERhbyA9IHJ1bkNhdGNoaW5nIHsKICAgICAgICBUaGVybWFsRGF0YWJhc2UuZ2V0SW5zdGFuY2UoYXBwbGljYXRpb24pLnRoZXJtYWxEYW8oKQogICAgfS5nZXRPck51bGwoKQoKICAgIHByaXZhdGUgdmFsIF9iYXR0ZXJ5VGVtcCA9IE11dGFibGVTdGF0ZUZsb3c8RmxvYXQ/PihudWxsKQogICAgdmFsIGJhdHRlcnlUZW1wOiBTdGF0ZUZsb3c8RmxvYXQ/PiA9IF9iYXR0ZXJ5VGVtcAoKICAgIHByaXZhdGUgdmFsIF9zZW5zb3JBdmFpbGFibGUgPSBNdXRhYmxlU3RhdGVGbG93KGZhbHNlKQogICAgdmFsIHNlbnNvckF2YWlsYWJsZTogU3RhdGVGbG93PEJvb2xlYW4+ID0gX3NlbnNvckF2YWlsYWJsZQoKICAgIHByaXZhdGUgdmFsIF9iYXR0ZXJ5TGV2ZWwgPSBNdXRhYmxlU3RhdGVGbG93PEludD8+KG51bGwpCiAgICB2YWwgYmF0dGVyeUxldmVsOiBTdGF0ZUZsb3c8SW50Pz4gPSBfYmF0dGVyeUxldmVsCgogICAgcHJpdmF0ZSB2YWwgX2lzQ2hhcmdpbmcgPSBNdXRhYmxlU3RhdGVGbG93PEJvb2xlYW4/PihudWxsKQogICAgdmFsIGlzQ2hhcmdpbmc6IFN0YXRlRmxvdzxCb29sZWFuPz4gPSBfaXNDaGFyZ2luZwoKICAgIHByaXZhdGUgdmFsIF9iYXR0ZXJ5Vm9sdGFnZU12ID0gTXV0YWJsZVN0YXRlRmxvdzxJbnQ/PihudWxsKQogICAgdmFsIGJhdHRlcnlWb2x0YWdlTXY6IFN0YXRlRmxvdzxJbnQ/PiA9IF9iYXR0ZXJ5Vm9sdGFnZU12CgogICAgcHJpdmF0ZSB2YWwgX2JhdHRlcnlDdXJyZW50TWljcm9hbXBzID0gTXV0YWJsZVN0YXRlRmxvdzxJbnQ/PihudWxsKQogICAgdmFsIGJhdHRlcnlDdXJyZW50TWljcm9hbXBzOiBTdGF0ZUZsb3c8SW50Pz4gPSBfYmF0dGVyeUN1cnJlbnRNaWNyb2FtcHMKCiAgICBwcml2YXRlIHZhbCBfbGFzdFVwZGF0ZWQgPSBNdXRhYmxlU3RhdGVGbG93PExvbmc/PihudWxsKQogICAgdmFsIGxhc3RVcGRhdGVkOiBTdGF0ZUZsb3c8TG9uZz8+ID0gX2xhc3RVcGRhdGVkCgogICAgcHJpdmF0ZSB2YWwgX2VuZ2luZVN0YXR1cyA9IE11dGFibGVTdGF0ZUZsb3coIldBSVRJTkciKQogICAgdmFsIGVuZ2luZVN0YXR1czogU3RhdGVGbG93PFN0cmluZz4gPSBfZW5naW5lU3RhdHVzCgogICAgLyoqIEFnZ3JlZ2F0ZWQgdGhlcm1hbCBzdGF0dXMgcmVwb3J0ZWQgYnkgQW5kcm9pZCAxMCsgKG5vdCBhIENQVS9HUFUgcmVhZGluZykuICovCiAgICBwcml2YXRlIHZhbCBfc3lzdGVtVGhlcm1hbFN0YXR1cyA9IE11dGFibGVTdGF0ZUZsb3c8U3RyaW5nPz4obnVsbCkKICAgIHZhbCBzeXN0ZW1UaGVybWFsU3RhdHVzOiBTdGF0ZUZsb3c8U3RyaW5nPz4gPSBfc3lzdGVtVGhlcm1hbFN0YXR1cwoKICAgIC8qKiBSYXcgdGhlcm1hbCB6b25lcyBleHBvc2VkIGJ5IHRoZSBrZXJuZWwsIHdoZW4gdGhlIGRldmljZSBwZXJtaXRzIHJlYWRpbmcgdGhlbS4gKi8KICAgIHByaXZhdGUgdmFsIF9oYXJkd2FyZVRoZXJtYWxab25lcyA9IE11dGFibGVTdGF0ZUZsb3c8TGlzdDxIYXJkd2FyZVByb2ZpbGVyLlRoZXJtYWxab25lSW5mbz4+KGVtcHR5TGlzdCgpKQogICAgdmFsIGhhcmR3YXJlVGhlcm1hbFpvbmVzOiBTdGF0ZUZsb3c8TGlzdDxIYXJkd2FyZVByb2ZpbGVyLlRoZXJtYWxab25lSW5mbz4+ID0gX2hhcmR3YXJlVGhlcm1hbFpvbmVzCgogICAgLyoqIEtlcHQgcHVibGljIGZvciB0aGUgYWxlcnRzIHNjcmVlbiBhbmQgc2hhcmVkIHRocmVzaG9sZCBwcmVzZW50YXRpb24uICovCiAgICBwcml2YXRlIHZhbCBfYWxlcnRUaHJlc2hvbGQgPSBNdXRhYmxlU3RhdGVGbG93KDQwZikKICAgIHZhbCBhbGVydFRocmVzaG9sZDogU3RhdGVGbG93PEZsb2F0PiA9IF9hbGVydFRocmVzaG9sZAoKICAgIHByaXZhdGUgdmFsIF9oaXN0b3J5ID0gTXV0YWJsZVN0YXRlRmxvdzxMaXN0PFRoZXJtYWxTbmFwc2hvdD4+KGVtcHR5TGlzdCgpKQogICAgdmFsIGhpc3Rvcnk6IFN0YXRlRmxvdzxMaXN0PFRoZXJtYWxTbmFwc2hvdD4+ID0gX2hpc3RvcnkKCiAgICBwcml2YXRlIHZhbCBfaGlzdG9yeVN0b3JhZ2VFcnJvciA9IE11dGFibGVTdGF0ZUZsb3codGhlcm1hbERhbyA9PSBudWxsKQogICAgdmFsIGhpc3RvcnlTdG9yYWdlRXJyb3I6IFN0YXRlRmxvdzxCb29sZWFuPiA9IF9oaXN0b3J5U3RvcmFnZUVycm9yCgogICAgcHJpdmF0ZSB2YXIgbGFzdFBlcnNpc3RlZEF0ID0gMEwKICAgIHByaXZhdGUgdmFyIGxhc3RIYXJkd2FyZVpvbmVSZWFkQXQgPSAwTAogICAgcHJpdmF0ZSB2YXIgZm9yZWdyb3VuZFBvbGxpbmdKb2I6IEpvYj8gPSBudWxsCiAgICBwcml2YXRlIHZhciBmb3JlZ3JvdW5kTW9uaXRvcmluZ0FjdGl2ZSA9IGZhbHNlCiAgICBwcml2YXRlIHZhciBkaWFnbm9zdGljc1Zpc2libGUgPSBmYWxzZQoKICAgIHByaXZhdGUgdmFsIF9mb3JlZ3JvdW5kUG9sbGluZ1BvbGljeSA9IE11dGFibGVTdGF0ZUZsb3coCiAgICAgICAgY2FsY3VsYXRlRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3koCiAgICAgICAgICAgIF9tb25pdG9yaW5nTW9kZS52YWx1ZSwKICAgICAgICAgICAgbnVsbCwKICAgICAgICAgICAgbnVsbCwKICAgICAgICAgICAgX21vbml0b3JpbmdDb3N0LnZhbHVlLnRha2VJZiB7IF9jb3N0TWVhc3VyZW1lbnRFbmFibGVkLnZhbHVlIH0KICAgICAgICApCiAgICApCiAgICB2YWwgZm9yZWdyb3VuZFBvbGxpbmdQb2xpY3k6IFN0YXRlRmxvdzxGb3JlZ3JvdW5kUG9sbGluZ1BvbGljeT4gPSBfZm9yZWdyb3VuZFBvbGxpbmdQb2xpY3kKCiAgICBpbml0IHsKICAgICAgICB0aGVybWFsRGFvPy5sZXQgeyBkYW8gLT4KICAgICAgICAgICAgdmlld01vZGVsU2NvcGUubGF1bmNoKERpc3BhdGNoZXJzLklPKSB7CiAgICAgICAgICAgICAgICB2YWwgY2xlYW51cFJlc3VsdCA9IHJ1bkNhdGNoaW5nIHsKICAgICAgICAgICAgICAgICAgICBkYW8uZGVsZXRlT2xkZXJUaGFuKFN5c3RlbS5jdXJyZW50VGltZU1pbGxpcygpIC0gaGlzdG9yeVJldGVudGlvbk1zKCkpCiAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICBpZiAoY2xlYW51cFJlc3VsdC5pc0ZhaWx1cmUpIHsKICAgICAgICAgICAgICAgICAgICBfaGlzdG9yeVN0b3JhZ2VFcnJvci52YWx1ZSA9IHRydWUKICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIGRhby5vYnNlcnZlUmVjZW50KE1BWF9ISVNUT1JZX0xJTUlUKQogICAgICAgICAgICAgICAgICAgIC5jYXRjaCB7IF9oaXN0b3J5U3RvcmFnZUVycm9yLnZhbHVlID0gdHJ1ZSB9CiAgICAgICAgICAgICAgICAgICAgLmNvbGxlY3QgeyBzbmFwc2hvdHMgLT4gX2hpc3RvcnkudmFsdWUgPSBzbmFwc2hvdHMgfQogICAgICAgICAgICB9CiAgICAgICAgfQoKICAgIH0KCiAgICAvKioKICAgICAqIFN0YXJ0cyBvciBzdG9wcyBVSS1vbmx5IHBvbGxpbmcgYWNjb3JkaW5nIHRvIHRoZSBBY3Rpdml0eSBsaWZlY3ljbGUuCiAgICAgKiBCYWNrZ3JvdW5kIG1vbml0b3JpbmcgcmVtYWlucyBvd25lZCBieSBXb3JrTWFuYWdlci4KICAgICAqLwogICAgZnVuIHNldEZvcmVncm91bmRNb25pdG9yaW5nQWN0aXZlKGFjdGl2ZTogQm9vbGVhbikgewogICAgICAgIGZvcmVncm91bmRNb25pdG9yaW5nQWN0aXZlID0gYWN0aXZlCiAgICAgICAgaWYgKGFjdGl2ZSkgewogICAgICAgICAgICBpZiAoZm9yZWdyb3VuZFBvbGxpbmdKb2I/LmlzQWN0aXZlICE9IHRydWUpIHN0YXJ0Rm9yZWdyb3VuZFBvbGxpbmcoKQogICAgICAgIH0gZWxzZSB7CiAgICAgICAgICAgIGZvcmVncm91bmRQb2xsaW5nSm9iPy5jYW5jZWwoKQogICAgICAgICAgICBmb3JlZ3JvdW5kUG9sbGluZ0pvYiA9IG51bGwKICAgICAgICB9CiAgICB9CgogICAgLyoqCiAgICAgKiBLZXJuZWwgdGhlcm1hbC16b25lIGZpbGVzIGFyZSBvbmx5IHVzZWZ1bCB3aGlsZSB0aGUgZGlhZ25vc2lzIHNjcmVlbiBpcwogICAgICogdmlzaWJsZS4gQXZvaWQgcmVhZGluZyB0aGVtIGR1cmluZyBkYXNoYm9hcmQvYWxlcnQgcG9sbGluZywgd2hpbGUgdGhlCiAgICAgKiBiYXR0ZXJ5IHNlbnNvciBhbmQgQW5kcm9pZCdzIGFnZ3JlZ2F0ZWQgdGhlcm1hbCBzdGF0dXMgcmVtYWluIGFjdGl2ZS4KICAgICAqLwogICAgZnVuIHNldERpYWdub3N0aWNzVmlzaWJsZSh2aXNpYmxlOiBCb29sZWFuKSB7CiAgICAgICAgZGlhZ25vc3RpY3NWaXNpYmxlID0gdmlzaWJsZQogICAgICAgIGlmICh2aXNpYmxlKSByZWZyZXNoSGFyZHdhcmVUaGVybWFsWm9uZXMoU3lzdGVtLmN1cnJlbnRUaW1lTWlsbGlzKCkpCiAgICB9CgogICAgLyoqCiAgICAgKiBLZWVwcyB0aGUgZmlyc3QgcmVhZGluZyBpbW1lZGlhdGUsIHRoZW4gZm9sbG93cyB0aGUgc2VsZWN0ZWQgbW9kZS4gVGhlCiAgICAgKiBiYXR0ZXJ5IHBvbGljeSBjYW4gc3RyZXRjaCB0aGUgY2FkZW5jZSB0byAxNSBtaW51dGVzLCBidXQgbmV2ZXIgZGlzYWJsZXMKICAgICAqIHJlZnJlc2gvYWxlcnQgZXZhbHVhdGlvbjsgYSBtYW51YWwgcmVmcmVzaCByZW1haW5zIGltbWVkaWF0ZS4KICAgICAqLwogICAgcHJpdmF0ZSBmdW4gc3RhcnRGb3JlZ3JvdW5kUG9sbGluZygpIHsKICAgICAgICBmb3JlZ3JvdW5kUG9sbGluZ0pvYj8uY2FuY2VsKCkKICAgICAgICBmb3JlZ3JvdW5kUG9sbGluZ0pvYiA9IHZpZXdNb2RlbFNjb3BlLmxhdW5jaCB7CiAgICAgICAgICAgIHdoaWxlIChpc0FjdGl2ZSkgewogICAgICAgICAgICAgICAgcmVmcmVzaFJlYWRpbmcoKQogICAgICAgICAgICAgICAgdmFsIHBvbGljeSA9IGNhbGN1bGF0ZUZvcmVncm91bmRQb2xsaW5nUG9saWN5KAogICAgICAgICAgICAgICAgICAgIF9tb25pdG9yaW5nTW9kZS52YWx1ZSwKICAgICAgICAgICAgICAgICAgICBfYmF0dGVyeUxldmVsLnZhbHVlLAogICAgICAgICAgICAgICAgICAgIF9pc0NoYXJnaW5nLnZhbHVlLAogICAgICAgICAgICAgICAgICAgIF9tb25pdG9yaW5nQ29zdC52YWx1ZS50YWtlSWYgeyBfY29zdE1lYXN1cmVtZW50RW5hYmxlZC52YWx1ZSB9CiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBfZm9yZWdyb3VuZFBvbGxpbmdQb2xpY3kudmFsdWUgPSBwb2xpY3kKICAgICAgICAgICAgICAgIGRlbGF5KHBvbGljeS5pbnRlcnZhbE1zKQogICAgICAgICAgICB9CiAgICAgICAgfQogICAgfQoKICAgIHByaXZhdGUgZnVuIHVwZGF0ZVN5c3RlbVRoZXJtYWxTdGF0dXMoKSB7CiAgICAgICAgX3N5c3RlbVRoZXJtYWxTdGF0dXMudmFsdWUgPSBpZiAoQnVpbGQuVkVSU0lPTi5TREtfSU5UID49IEJ1aWxkLlZFUlNJT05fQ09ERVMuUSkgewogICAgICAgICAgICBwb3dlck1hbmFnZXI/LmN1cnJlbnRUaGVybWFsU3RhdHVzPy5sZXQoOjpzeXN0ZW1UaGVybWFsU3RhdHVzTGFiZWwpID86ICJVTktOT1dOIgogICAgICAgIH0gZWxzZSB7CiAgICAgICAgICAgIG51bGwKICAgICAgICB9CiAgICB9CgogICAgcHJpdmF0ZSBmdW4gcmVmcmVzaEhhcmR3YXJlVGhlcm1hbFpvbmVzKG5vdzogTG9uZykgewogICAgICAgIGlmICghc2hvdWxkUmVmcmVzaEhhcmR3YXJlWm9uZXMoZGlhZ25vc3RpY3NWaXNpYmxlLCBub3csIGxhc3RIYXJkd2FyZVpvbmVSZWFkQXQpKSByZXR1cm4KICAgICAgICBsYXN0SGFyZHdhcmVab25lUmVhZEF0ID0gbm93CiAgICAgICAgdmlld01vZGVsU2NvcGUubGF1bmNoKERpc3BhdGNoZXJzLklPKSB7CiAgICAgICAgICAgIF9oYXJkd2FyZVRoZXJtYWxab25lcy52YWx1ZSA9IHJ1bkNhdGNoaW5nIHsKICAgICAgICAgICAgICAgIEhhcmR3YXJlUHJvZmlsZXIucmVhZEN1cnJlbnRUaGVybWFsWm9uZXMoKQogICAgICAgICAgICB9LmdldE9yRGVmYXVsdChlbXB0eUxpc3QoKSkKICAgICAgICB9CiAgICB9CgogICAgLyoqIEVuYWJsZXMgb3B0aW9uYWwgbG9jYWwgbWVhc3VyZW1lbnQgb2YgdGhpcyBhcHAncyBvd24gZm9yZWdyb3VuZCB3b3JrLiAqLwogICAgZnVuIHNldENvc3RNZWFzdXJlbWVudEVuYWJsZWQoZW5hYmxlZDogQm9vbGVhbikgewogICAgICAgIGNvc3RQcmVmZXJlbmNlcy5lZGl0KCkucHV0Qm9vbGVhbihDT1NUX0VOQUJMRURfS0VZLCBlbmFibGVkKS5hcHBseSgpCiAgICAgICAgX2Nvc3RNZWFzdXJlbWVudEVuYWJsZWQudmFsdWUgPSBlbmFibGVkCiAgICAgICAgaWYgKCFlbmFibGVkKSBjbGVhck1vbml0b3JpbmdDb3N0KCkKICAgICAgICB1cGRhdGVGb3JlZ3JvdW5kUG9sbGluZ1BvbGljeSgpCiAgICB9CgogICAgLyoqIERlbGV0ZXMgbG9jYWwgdGhlcm1hbCBoaXN0b3J5IGFuZCB0aGUgb3B0aW9uYWwgd29yay1jb3N0IGFnZ3JlZ2F0ZS4gKi8KICAgIGZ1biBjbGVhckxvY2FsSGlzdG9yeSgpIHsKICAgICAgICBjbGVhck1vbml0b3JpbmdDb3N0KCkKICAgICAgICB2YWwgZGFvID0gdGhlcm1hbERhbyA/OiByZXR1cm4KICAgICAgICB2aWV3TW9kZWxTY29wZS5sYXVuY2goRGlzcGF0Y2hlcnMuSU8pIHsKICAgICAgICAgICAgcnVuQ2F0Y2hpbmcgeyBkYW8uZGVsZXRlQWxsKCkgfQogICAgICAgICAgICAgICAgLm9uU3VjY2VzcyB7IF9oaXN0b3J5U3RvcmFnZUVycm9yLnZhbHVlID0gZmFsc2UgfQogICAgICAgICAgICAgICAgLm9uRmFpbHVyZSB7IF9oaXN0b3J5U3RvcmFnZUVycm9yLnZhbHVlID0gdHJ1ZSB9CiAgICAgICAgfQogICAgfQoKICAgIHByaXZhdGUgZnVuIGNsZWFyTW9uaXRvcmluZ0Nvc3QoKSB7CiAgICAgICAgY29zdFByZWZlcmVuY2VzLmVkaXQoKQogICAgICAgICAgICAucmVtb3ZlKENPU1RfU0FNUExFU19LRVkpCiAgICAgICAgICAgIC5yZW1vdmUoQ09TVF9UT1RBTF9NU19LRVkpCiAgICAgICAgICAgIC5yZW1vdmUoQ09TVF9NQVhfTVNfS0VZKQogICAgICAgICAgICAuYXBwbHkoKQogICAgICAgIF9tb25pdG9yaW5nQ29zdC52YWx1ZSA9IE1vbml0b3JpbmdDb3N0U2FtcGxlKCkKICAgICAgICBzYW1wbGVzQXRMYXN0Q29zdFBlcnNpc3QgPSAwCiAgICB9CgogICAgcHJpdmF0ZSBmdW4gdXBkYXRlRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3koKSB7CiAgICAgICAgX2ZvcmVncm91bmRQb2xsaW5nUG9saWN5LnZhbHVlID0gY2FsY3VsYXRlRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3koCiAgICAgICAgICAgIF9tb25pdG9yaW5nTW9kZS52YWx1ZSwKICAgICAgICAgICAgX2JhdHRlcnlMZXZlbC52YWx1ZSwKICAgICAgICAgICAgX2lzQ2hhcmdpbmcudmFsdWUsCiAgICAgICAgICAgIF9tb25pdG9yaW5nQ29zdC52YWx1ZS50YWtlSWYgeyBfY29zdE1lYXN1cmVtZW50RW5hYmxlZC52YWx1ZSB9CiAgICAgICAgKQogICAgfQoKICAgIHByaXZhdGUgZnVuIHJlY29yZFJlZnJlc2hDb3N0KGVsYXBzZWRNczogTG9uZykgewogICAgICAgIGlmICghX2Nvc3RNZWFzdXJlbWVudEVuYWJsZWQudmFsdWUpIHJldHVybgogICAgICAgIHZhbCB1cGRhdGVkID0gX21vbml0b3JpbmdDb3N0LnZhbHVlLnJlY29yZChlbGFwc2VkTXMpCiAgICAgICAgX21vbml0b3JpbmdDb3N0LnZhbHVlID0gdXBkYXRlZAogICAgICAgIGlmICh1cGRhdGVkLnNhbXBsZUNvdW50IC0gc2FtcGxlc0F0TGFzdENvc3RQZXJzaXN0ID49IENPU1RfUEVSU0lTVF9FVkVSWV9TQU1QTEVTKSB7CiAgICAgICAgICAgIHNhbXBsZXNBdExhc3RDb3N0UGVyc2lzdCA9IHVwZGF0ZWQuc2FtcGxlQ291bnQKICAgICAgICAgICAgY29zdFByZWZlcmVuY2VzLmVkaXQoKQogICAgICAgICAgICAgICAgLnB1dEludChDT1NUX1NBTVBMRVNfS0VZLCB1cGRhdGVkLnNhbXBsZUNvdW50KQogICAgICAgICAgICAgICAgLnB1dExvbmcoQ09TVF9UT1RBTF9NU19LRVksIHVwZGF0ZWQudG90YWxFbGFwc2VkTXMpCiAgICAgICAgICAgICAgICAucHV0TG9uZyhDT1NUX01BWF9NU19LRVksIHVwZGF0ZWQubWF4RWxhcHNlZE1zKQogICAgICAgICAgICAgICAgLmFwcGx5KCkKICAgICAgICB9CiAgICB9CgogICAgLyoqIFJlZnJlc2hlcyB0aGUgc3RpY2t5IGJhdHRlcnkgYnJvYWRjYXN0IHdpdGhvdXQgcmVxdWlyaW5nIGEgcGVybWlzc2lvbi4gKi8KICAgIGZ1biByZWZyZXNoUmVhZGluZygpIHsKICAgICAgICB2YWwgc3RhcnRlZEF0ID0gU3lzdGVtQ2xvY2suZWxhcHNlZFJlYWx0aW1lKCkKICAgICAgICB0cnkgewogICAgICAgICAgICByZWZyZXNoUmVhZGluZ0ludGVybmFsKCkKICAgICAgICB9IGZpbmFsbHkgewogICAgICAgICAgICByZWNvcmRSZWZyZXNoQ29zdChTeXN0ZW1DbG9jay5lbGFwc2VkUmVhbHRpbWUoKSAtIHN0YXJ0ZWRBdCkKICAgICAgICAgICAgdXBkYXRlRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3koKQogICAgICAgIH0KICAgIH0KCiAgICAvKiogUGVyc2lzdHMgYSBib3VuZGVkIGxvY2FsLXJldGVudGlvbiBjaG9pY2UgYW5kIGltbWVkaWF0ZWx5IHJlbW92ZXMgb2xkZXIgc2FtcGxlcy4gKi8KICAgIGZ1biBzZXRSZXRlbnRpb25Ib3Vycyhob3VyczogSW50KSB7CiAgICAgICAgdmFsIG5vcm1hbGl6ZWQgPSBub3JtYWxpemVIaXN0b3J5UmV0ZW50aW9uSG91cnMoaG91cnMpCiAgICAgICAgaWYgKF9yZXRlbnRpb25Ib3Vycy52YWx1ZSA9PSBub3JtYWxpemVkKSByZXR1cm4KICAgICAgICByZXRlbnRpb25QcmVmZXJlbmNlcy5lZGl0KCkucHV0SW50KFJFVEVOVElPTl9IT1VSU19LRVksIG5vcm1hbGl6ZWQpLmFwcGx5KCkKICAgICAgICBfcmV0ZW50aW9uSG91cnMudmFsdWUgPSBub3JtYWxpemVkCiAgICAgICAgdmFsIGRhbyA9IHRoZXJtYWxEYW8gPzogcmV0dXJuCiAgICAgICAgdmlld01vZGVsU2NvcGUubGF1bmNoKERpc3BhdGNoZXJzLklPKSB7CiAgICAgICAgICAgIHJ1bkNhdGNoaW5nIHsgZGFvLmRlbGV0ZU9sZGVyVGhhbihTeXN0ZW0uY3VycmVudFRpbWVNaWxsaXMoKSAtIGhpc3RvcnlSZXRlbnRpb25NcygpKSB9CiAgICAgICAgICAgICAgICAub25TdWNjZXNzIHsgX2hpc3RvcnlTdG9yYWdlRXJyb3IudmFsdWUgPSBmYWxzZSB9CiAgICAgICAgICAgICAgICAub25GYWlsdXJlIHsgX2hpc3RvcnlTdG9yYWdlRXJyb3IudmFsdWUgPSB0cnVlIH0KICAgICAgICB9CiAgICB9CgogICAgLyoqIENoYW5nZXMgdGhlIHBlcnNpc3RlZCBjYWRlbmNlIGFuZCByZXBsYWNlcyB0aGUgV29ya01hbmFnZXIgc2NoZWR1bGUgaW1tZWRpYXRlbHkuICovCiAgICBmdW4gc2V0TW9uaXRvcmluZ01vZGUobW9kZTogTW9uaXRvcmluZ01vZGUpIHsKICAgICAgICBpZiAoX21vbml0b3JpbmdNb2RlLnZhbHVlID09IG1vZGUpIHJldHVybgogICAgICAgIG1vbml0b3JpbmdQcmVmZXJlbmNlcy5lZGl0KCkucHV0U3RyaW5nKE1vbml0b3JpbmdNb2RlLk1PREVfS0VZLCBtb2RlLm5hbWUpLmFwcGx5KCkKICAgICAgICBfbW9uaXRvcmluZ01vZGUudmFsdWUgPSBtb2RlCiAgICAgICAgX2ZvcmVncm91bmRQb2xsaW5nUG9saWN5LnZhbHVlID0gY2FsY3VsYXRlRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3koCiAgICAgICAgICAgIG1vZGUsCiAgICAgICAgICAgIF9iYXR0ZXJ5TGV2ZWwudmFsdWUsCiAgICAgICAgICAgIF9pc0NoYXJnaW5nLnZhbHVlLAogICAgICAgICAgICBfbW9uaXRvcmluZ0Nvc3QudmFsdWUudGFrZUlmIHsgX2Nvc3RNZWFzdXJlbWVudEVuYWJsZWQudmFsdWUgfQogICAgICAgICkKICAgICAgICBpZiAoZm9yZWdyb3VuZE1vbml0b3JpbmdBY3RpdmUpIHN0YXJ0Rm9yZWdyb3VuZFBvbGxpbmcoKQogICAgICAgIFRoZXJtYWxNb25pdG9yV29ya2VyLnNjaGVkdWxlKGdldEFwcGxpY2F0aW9uPEFwcGxpY2F0aW9uPigpKQogICAgfQoKICAgIHByaXZhdGUgZnVuIHJlZnJlc2hSZWFkaW5nSW50ZXJuYWwoKSB7CiAgICAgICAgdXBkYXRlU3lzdGVtVGhlcm1hbFN0YXR1cygpCiAgICAgICAgdmFsIGludGVudCA9IHJ1bkNhdGNoaW5nIHsKICAgICAgICAgICAgZ2V0QXBwbGljYXRpb248QXBwbGljYXRpb24+KCkucmVnaXN0ZXJSZWNlaXZlcigKICAgICAgICAgICAgICAgIG51bGwsCiAgICAgICAgICAgICAgICBJbnRlbnRGaWx0ZXIoSW50ZW50LkFDVElPTl9CQVRURVJZX0NIQU5HRUQpCiAgICAgICAgICAgICkKICAgICAgICB9LmdldE9yTnVsbCgpCiAgICAgICAgdmFsIHJhd1RlbXBlcmF0dXJlID0gaW50ZW50Py5nZXRJbnRFeHRyYSgKICAgICAgICAgICAgQmF0dGVyeU1hbmFnZXIuRVhUUkFfVEVNUEVSQVRVUkUsCiAgICAgICAgICAgIFVOQVZBSUxBQkxFCiAgICAgICAgKSA/OiBVTkFWQUlMQUJMRQogICAgICAgIHZhbCBiYXR0ZXJ5VGVsZW1ldHJ5ID0gcmVhZEJhdHRlcnlUZWxlbWV0cnkoaW50ZW50KQogICAgICAgIHZhbCB0ZW1wZXJhdHVyZSA9IGJhdHRlcnlUZW1wZXJhdHVyZUNlbHNpdXMocmF3VGVtcGVyYXR1cmUpCiAgICAgICAgdmFsIG5vdyA9IFN5c3RlbS5jdXJyZW50VGltZU1pbGxpcygpCiAgICAgICAgcmVmcmVzaEhhcmR3YXJlVGhlcm1hbFpvbmVzKG5vdykKCiAgICAgICAgX2JhdHRlcnlUZW1wLnZhbHVlID0gdGVtcGVyYXR1cmUKICAgICAgICBfc2Vuc29yQXZhaWxhYmxlLnZhbHVlID0gdGVtcGVyYXR1cmUgIT0gbnVsbAogICAgICAgIF9iYXR0ZXJ5TGV2ZWwudmFsdWUgPSBiYXR0ZXJ5VGVsZW1ldHJ5LmxldmVsUGVyY2VudAogICAgICAgIF9pc0NoYXJnaW5nLnZhbHVlID0gYmF0dGVyeVRlbGVtZXRyeS5pc0NoYXJnaW5nCiAgICAgICAgX2JhdHRlcnlWb2x0YWdlTXYudmFsdWUgPSBiYXR0ZXJ5VGVsZW1ldHJ5LnZvbHRhZ2VNdgogICAgICAgIF9iYXR0ZXJ5Q3VycmVudE1pY3JvYW1wcy52YWx1ZSA9IGJhdHRlcnlUZWxlbWV0cnkuY3VycmVudE1pY3JvYW1wcwogICAgICAgIF9mb3JlZ3JvdW5kUG9sbGluZ1BvbGljeS52YWx1ZSA9IGNhbGN1bGF0ZUZvcmVncm91bmRQb2xsaW5nUG9saWN5KAogICAgICAgICAgICBfbW9uaXRvcmluZ01vZGUudmFsdWUsCiAgICAgICAgICAgIGJhdHRlcnlUZWxlbWV0cnkubGV2ZWxQZXJjZW50LAogICAgICAgICAgICBiYXR0ZXJ5VGVsZW1ldHJ5LmlzQ2hhcmdpbmcsCiAgICAgICAgICAgIF9tb25pdG9yaW5nQ29zdC52YWx1ZS50YWtlSWYgeyBfY29zdE1lYXN1cmVtZW50RW5hYmxlZC52YWx1ZSB9CiAgICAgICAgKQogICAgICAgIGlmIChpbnRlbnQgIT0gbnVsbCkgewogICAgICAgICAgICBfbGFzdFVwZGF0ZWQudmFsdWUgPSBub3cKICAgICAgICB9CiAgICAgICAgdmFsIHN5c3RlbVN0YXR1cyA9IF9zeXN0ZW1UaGVybWFsU3RhdHVzLnZhbHVlCiAgICAgICAgdmFsIGN1cnJlbnRTdGF0dXMgPSB0aGVybWFsRW5naW5lU3RhdHVzKHRlbXBlcmF0dXJlLCBzeXN0ZW1TdGF0dXMpCiAgICAgICAgX2VuZ2luZVN0YXR1cy52YWx1ZSA9IGN1cnJlbnRTdGF0dXMKICAgICAgICBpZiAoc2hvdWxkTm90aWZ5VGhlcm1hbFN0YXR1cyhsYXN0Tm90aWZpZWRFbmdpbmVTdGF0dXMsIGN1cnJlbnRTdGF0dXMpKSB7CiAgICAgICAgICAgIGlmIChUaGVybWFsQWxlcnROb3RpZmllci5ub3RpZnkoZ2V0QXBwbGljYXRpb248QXBwbGljYXRpb24+KCksIGN1cnJlbnRTdGF0dXMsIHRlbXBlcmF0dXJlLCBzeXN0ZW1TdGF0dXMpKSB7CiAgICAgICAgICAgICAgICBsYXN0Tm90aWZpZWRFbmdpbmVTdGF0dXMgPSBjdXJyZW50U3RhdHVzCiAgICAgICAgICAgIH0KICAgICAgICB9IGVsc2UgaWYgKGN1cnJlbnRTdGF0dXMgIT0gIkFMRVJUIiAmJiBjdXJyZW50U3RhdHVzICE9ICJDUklUSUNBTCIpIHsKICAgICAgICAgICAgbGFzdE5vdGlmaWVkRW5naW5lU3RhdHVzID0gbnVsbAogICAgICAgIH0KCiAgICAgICAgLy8gS2VlcCByZXRlbnRpb24gbWFpbnRlbmFuY2UgaW5kZXBlbmRlbnQgZnJvbSBzZW5zb3IgYXZhaWxhYmlsaXR5LiBBIGRldmljZQogICAgICAgIC8vIHRoYXQgc3RvcHMgZXhwb3NpbmcgdGVtcGVyYXR1cmUgbXVzdCBub3Qga2VlcCBzdGFsZSBoaXN0b3J5IGluZGVmaW5pdGVseS4KICAgICAgICAvLyBNYXRjaCB0aGUgYmFja2dyb3VuZCB3b3JrZXI6IGFsZXJ0IGV2YWx1YXRpb24gY29udGludWVzLCBidXQgbG9jYWwgaGlzdG9yeQogICAgICAgIC8vIHdyaXRlcyBhbmQgcmV0ZW50aW9uIGNsZWFudXAgcGF1c2UgYmVsb3cgdGhlIGxvdy1iYXR0ZXJ5IHRocmVzaG9sZC4KICAgICAgICBpZiAoIXNob3VsZFBhdXNlTm9uRXNzZW50aWFsV29yayhiYXR0ZXJ5VGVsZW1ldHJ5LmxldmVsUGVyY2VudCwgYmF0dGVyeVRlbGVtZXRyeS5pc0NoYXJnaW5nKSAmJgogICAgICAgICAgICBub3cgLSBsYXN0UGVyc2lzdGVkQXQgPj0gSElTVE9SWV9TQU1QTEVfSU5URVJWQUxfTVMKICAgICAgICApIHsKICAgICAgICAgICAgbGFzdFBlcnNpc3RlZEF0ID0gbm93CiAgICAgICAgICAgIHRoZXJtYWxEYW8/LmxldCB7IGRhbyAtPgogICAgICAgICAgICAgICAgdmlld01vZGVsU2NvcGUubGF1bmNoKERpc3BhdGNoZXJzLklPKSB7CiAgICAgICAgICAgICAgICAgICAgLy8gQ2xlYW51cCBtdXN0IHN0aWxsIHJ1biBpZiBhIG5ldyBzYW1wbGUgY2Fubm90IGJlIHdyaXR0ZW4uCiAgICAgICAgICAgICAgICAgICAgdmFsIGluc2VydFJlc3VsdCA9IHRlbXBlcmF0dXJlPy5sZXQgewogICAgICAgICAgICAgICAgICAgICAgICBydW5DYXRjaGluZyB7CiAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYW8uaW5zZXJ0KAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFRoZXJtYWxTbmFwc2hvdCgKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdGltZXN0YW1wID0gbm93LAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBiYXR0ZXJ5VGVtcCA9IGl0LAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBiYXR0ZXJ5TGV2ZWwgPSBiYXR0ZXJ5VGVsZW1ldHJ5LmxldmVsUGVyY2VudCwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaXNDaGFyZ2luZyA9IGJhdHRlcnlUZWxlbWV0cnkuaXNDaGFyZ2luZywKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgYmF0dGVyeVZvbHRhZ2VNdiA9IGJhdHRlcnlUZWxlbWV0cnkudm9sdGFnZU12LAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBiYXR0ZXJ5Q3VycmVudE1pY3JvYW1wcyA9IGJhdHRlcnlUZWxlbWV0cnkuY3VycmVudE1pY3JvYW1wcwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICkKICAgICAgICAgICAgICAgICAgICAgICAgICAgICkKICAgICAgICAgICAgICAgICAgICAgICAgfQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgICAgICB2YWwgY2xlYW51cFJlc3VsdCA9IHJ1bkNhdGNoaW5nIHsKICAgICAgICAgICAgICAgICAgICAgICAgZGFvLmRlbGV0ZU9sZGVyVGhhbihub3cgLSBoaXN0b3J5UmV0ZW50aW9uTXMoKSkKICAgICAgICAgICAgICAgICAgICB9CiAgICAgICAgICAgICAgICAgICAgaWYgKGluc2VydFJlc3VsdD8uaXNGYWlsdXJlID09IHRydWUgfHwgY2xlYW51cFJlc3VsdC5pc0ZhaWx1cmUpIHsKICAgICAgICAgICAgICAgICAgICAgICAgX2hpc3RvcnlTdG9yYWdlRXJyb3IudmFsdWUgPSB0cnVlCiAgICAgICAgICAgICAgICAgICAgfSBlbHNlIGlmIChoaXN0b3J5U3RvcmFnZVdyaXRlU3VjY2VlZGVkKGluc2VydFJlc3VsdD8uaXNTdWNjZXNzLCBjbGVhbnVwUmVzdWx0LmlzU3VjY2VzcykpIHsKICAgICAgICAgICAgICAgICAgICAgICAgLy8gQSBsYXRlciBzdWNjZXNzZnVsIHdyaXRlIGNsZWFycyBhIHRyYW5zaWVudCBkYXRhYmFzZSBlcnJvci4KICAgICAgICAgICAgICAgICAgICAgICAgX2hpc3RvcnlTdG9yYWdlRXJyb3IudmFsdWUgPSBmYWxzZQogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KfQoK
+package com.jeissonalberto.thermaguard.domain
+
+import android.app.Application
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
+import android.os.Build
+import android.os.PowerManager
+import android.os.SystemClock
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.jeissonalberto.thermaguard.data.ThermalAlertNotifier
+import com.jeissonalberto.thermaguard.data.ThermalDatabase
+import com.jeissonalberto.thermaguard.data.ThermalSnapshot
+import com.jeissonalberto.thermaguard.data.readBatteryTelemetry
+import com.jeissonalberto.thermaguard.root.HardwareProfiler
+import com.jeissonalberto.thermaguard.service.ThermalMonitorWorker
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+
+/** Converts Android's public thermal status constants to stable UI labels. */
+internal fun systemThermalStatusLabel(status: Int): String = when (status) {
+    PowerManager.THERMAL_STATUS_NONE -> "NORMAL"
+    PowerManager.THERMAL_STATUS_LIGHT -> "LIGHT"
+    PowerManager.THERMAL_STATUS_MODERATE -> "MODERATE"
+    PowerManager.THERMAL_STATUS_SEVERE -> "SEVERE"
+    PowerManager.THERMAL_STATUS_CRITICAL -> "CRITICAL"
+    PowerManager.THERMAL_STATUS_EMERGENCY -> "EMERGENCY"
+    PowerManager.THERMAL_STATUS_SHUTDOWN -> "SHUTDOWN"
+    else -> "UNKNOWN"
+}
+
+/** A notification is emitted only when the app enters a new alert state. */
+internal fun shouldNotifyThermalStatus(previous: String?, current: String): Boolean =
+    current in setOf("ALERT", "CRITICAL") && previous != current
+
+/** Converts Android's tenths-of-a-degree value without discarding valid sub-zero readings. */
+internal fun batteryTemperatureCelsius(rawTemperature: Int): Float? =
+    rawTemperature.takeUnless { it == Int.MIN_VALUE }?.div(10f)
+
+/** Android reports these states when the system needs the user to reduce thermal load. */
+internal fun isSystemThermalRisk(status: String?): Boolean =
+    status in setOf("SEVERE", "CRITICAL", "EMERGENCY", "SHUTDOWN")
+
+/** Combines the battery reading with Android's aggregated thermal status. */
+internal fun thermalEngineStatus(temperature: Float?, systemStatus: String?): String = when {
+    systemStatus in setOf("CRITICAL", "EMERGENCY", "SHUTDOWN") -> "CRITICAL"
+    systemStatus == "SEVERE" -> "ALERT"
+    temperature == null -> "SENSOR UNAVAILABLE"
+    temperature >= 45f -> "CRITICAL"
+    temperature >= 40f -> "ALERT"
+    else -> "NOMINAL"
+}
+
+/** A missing sample is valid when the sensor is unavailable; cleanup still proves storage works. */
+internal fun historyStorageWriteSucceeded(sampleWriteSucceeded: Boolean?, cleanupSucceeded: Boolean): Boolean =
+    sampleWriteSucceeded != false && cleanupSucceeded
+
+/** Keeps user-selected retention within small, predictable local-storage bounds. */
+internal fun normalizeHistoryRetentionHours(hours: Int): Int = when (hours) {
+    6, 72 -> hours
+    else -> 24
+}
+
+/**
+ * Exposes readings from the Android battery service.
+ *
+ * Battery temperature is reported by the operating system in tenths of a
+ * degree Celsius. Some devices do not expose it; in that case the value stays
+ * null instead of being replaced with a simulated reading.
+ */
+class ThermalViewModel(application: Application) : AndroidViewModel(application) {
+    private companion object {
+        const val HISTORY_SAMPLE_INTERVAL_MS = 60_000L
+        const val DEFAULT_HISTORY_RETENTION_HOURS = 24
+        const val RETENTION_PREFERENCES = "telemetry_preferences"
+        const val RETENTION_HOURS_KEY = "history_retention_hours"
+        const val COST_PREFERENCES = "monitoring_cost_preferences"
+        const val COST_ENABLED_KEY = "enabled"
+        const val COST_SAMPLES_KEY = "sample_count"
+        const val COST_TOTAL_MS_KEY = "total_elapsed_ms"
+        const val COST_MAX_MS_KEY = "max_elapsed_ms"
+        const val COST_PERSIST_EVERY_SAMPLES = 10
+        // One sample per minute; 72 hours is the largest supported local history.
+        const val MAX_HISTORY_LIMIT = 72 * 60
+        const val UNAVAILABLE = Int.MIN_VALUE
+    }
+
+    private val powerManager = application.getSystemService(PowerManager::class.java)
+    private val retentionPreferences = application.getSharedPreferences(
+        RETENTION_PREFERENCES,
+        Context.MODE_PRIVATE
+    )
+    private val _retentionHours = MutableStateFlow(
+        normalizeHistoryRetentionHours(
+            retentionPreferences.getInt(RETENTION_HOURS_KEY, DEFAULT_HISTORY_RETENTION_HOURS)
+        )
+    )
+    val retentionHours: StateFlow<Int> = _retentionHours
+
+    private val costPreferences = application.getSharedPreferences(
+        COST_PREFERENCES,
+        Context.MODE_PRIVATE
+    )
+    private val _costMeasurementEnabled = MutableStateFlow(
+        costPreferences.getBoolean(COST_ENABLED_KEY, false)
+    )
+    val costMeasurementEnabled: StateFlow<Boolean> = _costMeasurementEnabled
+    private val _monitoringCost = MutableStateFlow(
+        MonitoringCostSample(
+            sampleCount = costPreferences.getInt(COST_SAMPLES_KEY, 0),
+            totalElapsedMs = costPreferences.getLong(COST_TOTAL_MS_KEY, 0L),
+            maxElapsedMs = costPreferences.getLong(COST_MAX_MS_KEY, 0L)
+        )
+    )
+    val monitoringCost: StateFlow<MonitoringCostSample> = _monitoringCost
+    private var samplesAtLastCostPersist = _monitoringCost.value.sampleCount
+
+    private fun historyRetentionMs(): Long = _retentionHours.value * 60 * 60 * 1_000L
+    private val monitoringPreferences = application.getSharedPreferences(
+        MonitoringMode.PREFS_NAME,
+        Context.MODE_PRIVATE
+    )
+    private val _monitoringMode = MutableStateFlow(
+        MonitoringMode.fromStored(
+            monitoringPreferences.getString(MonitoringMode.MODE_KEY, null)
+        )
+    )
+    val monitoringMode: StateFlow<MonitoringMode> = _monitoringMode
+    private var lastNotifiedEngineStatus: String? = null
+
+    private val thermalDao = runCatching {
+        ThermalDatabase.getInstance(application).thermalDao()
+    }.getOrNull()
+
+    private val _batteryTemp = MutableStateFlow<Float?>(null)
+    val batteryTemp: StateFlow<Float?> = _batteryTemp
+
+    private val _sensorAvailable = MutableStateFlow(false)
+    val sensorAvailable: StateFlow<Boolean> = _sensorAvailable
+
+    private val _batteryLevel = MutableStateFlow<Int?>(null)
+    val batteryLevel: StateFlow<Int?> = _batteryLevel
+
+    private val _isCharging = MutableStateFlow<Boolean?>(null)
+    val isCharging: StateFlow<Boolean?> = _isCharging
+
+    private val _batteryVoltageMv = MutableStateFlow<Int?>(null)
+    val batteryVoltageMv: StateFlow<Int?> = _batteryVoltageMv
+
+    private val _batteryCurrentMicroamps = MutableStateFlow<Int?>(null)
+    val batteryCurrentMicroamps: StateFlow<Int?> = _batteryCurrentMicroamps
+
+    private val _lastUpdated = MutableStateFlow<Long?>(null)
+    val lastUpdated: StateFlow<Long?> = _lastUpdated
+
+    private val _engineStatus = MutableStateFlow("WAITING")
+    val engineStatus: StateFlow<String> = _engineStatus
+
+    /** Aggregated thermal status reported by Android 10+ (not a CPU/GPU reading). */
+    private val _systemThermalStatus = MutableStateFlow<String?>(null)
+    val systemThermalStatus: StateFlow<String?> = _systemThermalStatus
+
+    /** Raw thermal zones exposed by the kernel, when the device permits reading them. */
+    private val _hardwareThermalZones = MutableStateFlow<List<HardwareProfiler.ThermalZoneInfo>>(emptyList())
+    val hardwareThermalZones: StateFlow<List<HardwareProfiler.ThermalZoneInfo>> = _hardwareThermalZones
+
+    /** Kept public for the alerts screen and shared threshold presentation. */
+    private val _alertThreshold = MutableStateFlow(40f)
+    val alertThreshold: StateFlow<Float> = _alertThreshold
+
+    private val _history = MutableStateFlow<List<ThermalSnapshot>>(emptyList())
+    val history: StateFlow<List<ThermalSnapshot>> = _history
+
+    private val _historyStorageError = MutableStateFlow(thermalDao == null)
+    val historyStorageError: StateFlow<Boolean> = _historyStorageError
+
+    private var lastPersistedAt = 0L
+    private var lastHardwareZoneReadAt = 0L
+    private var foregroundPollingJob: Job? = null
+    private var foregroundMonitoringActive = false
+    private var diagnosticsVisible = false
+
+    private val _foregroundPollingPolicy = MutableStateFlow(
+        calculateForegroundPollingPolicy(
+            _monitoringMode.value,
+            null,
+            null,
+            _monitoringCost.value.takeIf { _costMeasurementEnabled.value }
+        )
+    )
+    val foregroundPollingPolicy: StateFlow<ForegroundPollingPolicy> = _foregroundPollingPolicy
+
+    init {
+        thermalDao?.let { dao ->
+            viewModelScope.launch(Dispatchers.IO) {
+                val cleanupResult = runCatching {
+                    dao.deleteOlderThan(System.currentTimeMillis() - historyRetentionMs())
+                }
+                if (cleanupResult.isFailure) {
+                    _historyStorageError.value = true
+                }
+                dao.observeRecent(MAX_HISTORY_LIMIT)
+                    .catch { _historyStorageError.value = true }
+                    .collect { snapshots -> _history.value = snapshots }
+            }
+        }
+
+    }
+
+    /**
+     * Starts or stops UI-only polling according to the Activity lifecycle.
+     * Background monitoring remains owned by WorkManager.
+     */
+    fun setForegroundMonitoringActive(active: Boolean) {
+        foregroundMonitoringActive = active
+        if (active) {
+            if (foregroundPollingJob?.isActive != true) startForegroundPolling()
+        } else {
+            foregroundPollingJob?.cancel()
+            foregroundPollingJob = null
+        }
+    }
+
+    /**
+     * Kernel thermal-zone files are only useful while the diagnosis screen is
+     * visible. Avoid reading them during dashboard/alert polling, while the
+     * battery sensor and Android's aggregated thermal status remain active.
+     */
+    fun setDiagnosticsVisible(visible: Boolean) {
+        diagnosticsVisible = visible
+        if (visible) refreshHardwareThermalZones(System.currentTimeMillis())
+    }
+
+    /**
+     * Keeps the first reading immediate, then follows the selected mode. The
+     * battery policy can stretch the cadence to 15 minutes, but never disables
+     * refresh/alert evaluation; a manual refresh remains immediate.
+     */
+    private fun startForegroundPolling() {
+        foregroundPollingJob?.cancel()
+        foregroundPollingJob = viewModelScope.launch {
+            while (isActive) {
+                refreshReading()
+                val policy = calculateForegroundPollingPolicy(
+                    _monitoringMode.value,
+                    _batteryLevel.value,
+                    _isCharging.value,
+                    _monitoringCost.value.takeIf { _costMeasurementEnabled.value }
+                )
+                _foregroundPollingPolicy.value = policy
+                delay(policy.intervalMs)
+            }
+        }
+    }
+
+    private fun updateSystemThermalStatus() {
+        _systemThermalStatus.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            powerManager?.currentThermalStatus?.let(::systemThermalStatusLabel) ?: "UNKNOWN"
+        } else {
+            null
+        }
+    }
+
+    private fun refreshHardwareThermalZones(now: Long) {
+        if (!shouldRefreshHardwareZones(diagnosticsVisible, now, lastHardwareZoneReadAt)) return
+        lastHardwareZoneReadAt = now
+        viewModelScope.launch(Dispatchers.IO) {
+            _hardwareThermalZones.value = runCatching {
+                HardwareProfiler.readCurrentThermalZones()
+            }.getOrDefault(emptyList())
+        }
+    }
+
+    /** Enables optional local measurement of this app's own foreground work. */
+    fun setCostMeasurementEnabled(enabled: Boolean) {
+        costPreferences.edit().putBoolean(COST_ENABLED_KEY, enabled).apply()
+        _costMeasurementEnabled.value = enabled
+        if (!enabled) clearMonitoringCost()
+        updateForegroundPollingPolicy()
+    }
+
+    /** Deletes local thermal history and the optional work-cost aggregate. */
+    fun clearLocalHistory() {
+        clearMonitoringCost()
+        val dao = thermalDao ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { dao.deleteAll() }
+                .onSuccess { _historyStorageError.value = false }
+                .onFailure { _historyStorageError.value = true }
+        }
+    }
+
+    private fun clearMonitoringCost() {
+        costPreferences.edit()
+            .remove(COST_SAMPLES_KEY)
+            .remove(COST_TOTAL_MS_KEY)
+            .remove(COST_MAX_MS_KEY)
+            .apply()
+        _monitoringCost.value = MonitoringCostSample()
+        samplesAtLastCostPersist = 0
+    }
+
+    private fun updateForegroundPollingPolicy() {
+        _foregroundPollingPolicy.value = calculateForegroundPollingPolicy(
+            _monitoringMode.value,
+            _batteryLevel.value,
+            _isCharging.value,
+            _monitoringCost.value.takeIf { _costMeasurementEnabled.value }
+        )
+    }
+
+    private fun recordRefreshCost(elapsedMs: Long) {
+        if (!_costMeasurementEnabled.value) return
+        val updated = _monitoringCost.value.record(elapsedMs)
+        _monitoringCost.value = updated
+        if (updated.sampleCount - samplesAtLastCostPersist >= COST_PERSIST_EVERY_SAMPLES) {
+            samplesAtLastCostPersist = updated.sampleCount
+            costPreferences.edit()
+                .putInt(COST_SAMPLES_KEY, updated.sampleCount)
+                .putLong(COST_TOTAL_MS_KEY, updated.totalElapsedMs)
+                .putLong(COST_MAX_MS_KEY, updated.maxElapsedMs)
+                .apply()
+        }
+    }
+
+    /** Refreshes the sticky battery broadcast without requiring a permission. */
+    fun refreshReading() {
+        val startedAt = SystemClock.elapsedRealtime()
+        try {
+            refreshReadingInternal()
+        } finally {
+            recordRefreshCost(SystemClock.elapsedRealtime() - startedAt)
+            updateForegroundPollingPolicy()
+        }
+    }
+
+    /** Persists a bounded local-retention choice and immediately removes older samples. */
+    fun setRetentionHours(hours: Int) {
+        val normalized = normalizeHistoryRetentionHours(hours)
+        if (_retentionHours.value == normalized) return
+        retentionPreferences.edit().putInt(RETENTION_HOURS_KEY, normalized).apply()
+        _retentionHours.value = normalized
+        val dao = thermalDao ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { dao.deleteOlderThan(System.currentTimeMillis() - historyRetentionMs()) }
+                .onSuccess { _historyStorageError.value = false }
+                .onFailure { _historyStorageError.value = true }
+        }
+    }
+
+    /** Changes the persisted cadence and replaces the WorkManager schedule immediately. */
+    fun setMonitoringMode(mode: MonitoringMode) {
+        if (_monitoringMode.value == mode) return
+        monitoringPreferences.edit().putString(MonitoringMode.MODE_KEY, mode.name).apply()
+        _monitoringMode.value = mode
+        _foregroundPollingPolicy.value = calculateForegroundPollingPolicy(
+            mode,
+            _batteryLevel.value,
+            _isCharging.value,
+            _monitoringCost.value.takeIf { _costMeasurementEnabled.value }
+        )
+        if (foregroundMonitoringActive) startForegroundPolling()
+        ThermalMonitorWorker.schedule(getApplication<Application>())
+    }
+
+    private fun refreshReadingInternal() {
+        updateSystemThermalStatus()
+        val intent = runCatching {
+            getApplication<Application>().registerReceiver(
+                null,
+                IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            )
+        }.getOrNull()
+        val rawTemperature = intent?.getIntExtra(
+            BatteryManager.EXTRA_TEMPERATURE,
+            UNAVAILABLE
+        ) ?: UNAVAILABLE
+        val batteryTelemetry = readBatteryTelemetry(intent)
+        val temperature = batteryTemperatureCelsius(rawTemperature)
+        val now = System.currentTimeMillis()
+        refreshHardwareThermalZones(now)
+
+        _batteryTemp.value = temperature
+        _sensorAvailable.value = temperature != null
+        _batteryLevel.value = batteryTelemetry.levelPercent
+        _isCharging.value = batteryTelemetry.isCharging
+        _batteryVoltageMv.value = batteryTelemetry.voltageMv
+        _batteryCurrentMicroamps.value = batteryTelemetry.currentMicroamps
+        _foregroundPollingPolicy.value = calculateForegroundPollingPolicy(
+            _monitoringMode.value,
+            batteryTelemetry.levelPercent,
+            batteryTelemetry.isCharging,
+            _monitoringCost.value.takeIf { _costMeasurementEnabled.value }
+        )
+        if (intent != null) {
+            _lastUpdated.value = now
+        }
+        val systemStatus = _systemThermalStatus.value
+        val currentStatus = thermalEngineStatus(temperature, systemStatus)
+        _engineStatus.value = currentStatus
+        if (shouldNotifyThermalStatus(lastNotifiedEngineStatus, currentStatus)) {
+            if (ThermalAlertNotifier.notify(getApplication<Application>(), currentStatus, temperature, systemStatus)) {
+                lastNotifiedEngineStatus = currentStatus
+            }
+        } else if (currentStatus != "ALERT" && currentStatus != "CRITICAL") {
+            lastNotifiedEngineStatus = null
+        }
+
+        // Keep retention maintenance independent from sensor availability. A device
+        // that stops exposing temperature must not keep stale history indefinitely.
+        // Match the background worker: alert evaluation continues, but local history
+        // writes and retention cleanup pause below the low-battery threshold.
+        if (!shouldPauseNonEssentialWork(batteryTelemetry.levelPercent, batteryTelemetry.isCharging) &&
+            now - lastPersistedAt >= HISTORY_SAMPLE_INTERVAL_MS
+        ) {
+            lastPersistedAt = now
+            thermalDao?.let { dao ->
+                viewModelScope.launch(Dispatchers.IO) {
+                    // Cleanup must still run if a new sample cannot be written.
+                    val insertResult = temperature?.let {
+                        runCatching {
+                            dao.insert(
+                                ThermalSnapshot(
+                                    timestamp = now,
+                                    batteryTemp = it,
+                                    batteryLevel = batteryTelemetry.levelPercent,
+                                    isCharging = batteryTelemetry.isCharging,
+                                    batteryVoltageMv = batteryTelemetry.voltageMv,
+                                    batteryCurrentMicroamps = batteryTelemetry.currentMicroamps
+                                )
+                            )
+                        }
+                    }
+                    val cleanupResult = runCatching {
+                        dao.deleteOlderThan(now - historyRetentionMs())
+                    }
+                    if (insertResult?.isFailure == true || cleanupResult.isFailure) {
+                        _historyStorageError.value = true
+                    } else if (historyStorageWriteSucceeded(insertResult?.isSuccess, cleanupResult.isSuccess)) {
+                        // A later successful write clears a transient database error.
+                        _historyStorageError.value = false
+                    }
+                }
+            }
+        }
+    }
+}
+

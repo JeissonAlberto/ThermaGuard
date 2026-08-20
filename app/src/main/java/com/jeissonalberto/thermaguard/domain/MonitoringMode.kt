@@ -1,1 +1,77 @@
-cGFja2FnZSBjb20uamVpc3NvbmFsYmVydG8udGhlcm1hZ3VhcmQuZG9tYWluCgovKiogVXNlci1jb250cm9sbGVkIGNhZGVuY2UgZm9yIGJhY2tncm91bmQgYW5kIGZvcmVncm91bmQgdGhlcm1hbCBtb25pdG9yaW5nLiAqLwplbnVtIGNsYXNzIE1vbml0b3JpbmdNb2RlKAogICAgdmFsIGxhYmVsOiBTdHJpbmcsCiAgICB2YWwgaW50ZXJ2YWxNaW51dGVzOiBMb25nLAogICAgdmFsIGRlc2NyaXB0aW9uOiBTdHJpbmcsCiAgICAvKiogRm9yZWdyb3VuZCByZWZyZXNoIGNhZGVuY2U7IHRoZSBVSSBuZXZlciBwb2xscyBtb3JlIGZyZXF1ZW50bHkgdGhhbiB0aGlzLiAqLwogICAgdmFsIGZvcmVncm91bmRJbnRlcnZhbE1zOiBMb25nCikgewogICAgU0FWRVIoCiAgICAgICAgIkFIT1JSTyIsCiAgICAgICAgNjBMLAogICAgICAgICJNZW5vcyBlamVjdWNpb25lczsgY29uc2VydmEgYWxlcnRhcyBjdWFuZG8gQW5kcm9pZCBsbyBwZXJtaXRhLiIsCiAgICAgICAgNSAqIDYwICogMV8wMDBMCiAgICApLAogICAgQkFMQU5DRUQoCiAgICAgICAgIkVRVUlMSUJSQURPIiwKICAgICAgICAzMEwsCiAgICAgICAgIlZpZ2lsYW5jaWEgcGVyacOzZGljYSBjb24gY29uc3VtbyBtb2RlcmFkby4iLAogICAgICAgIDIgKiA2MCAqIDFfMDAwTAogICAgKSwKICAgIFBSRVZFTlRJVkUoCiAgICAgICAgIlBSRVZFTlRJVk8iLAogICAgICAgIDE1TCwKICAgICAgICAiTW9uaXRvcmVvIG3DoXMgZnJlY3VlbnRlIMO6bmljYW1lbnRlIG1pZW50cmFzIGNhcmdhLiIsCiAgICAgICAgMzAgKiAxXzAwMEwKICAgICk7CgogICAgY29tcGFuaW9uIG9iamVjdCB7CiAgICAgICAgY29uc3QgdmFsIFBSRUZTX05BTUUgPSAidGhlcm1hX21vbml0b3JpbmdfcHJlZmVyZW5jZXMiCiAgICAgICAgY29uc3QgdmFsIE1PREVfS0VZID0gIm1vbml0b3JpbmdfbW9kZSIKCiAgICAgICAgZnVuIGZyb21TdG9yZWQodmFsdWU6IFN0cmluZz8pOiBNb25pdG9yaW5nTW9kZSA9CiAgICAgICAgICAgIHZhbHVlcygpLmZpcnN0T3JOdWxsIHsgaXQubmFtZSA9PSB2YWx1ZSB9ID86IEJBTEFOQ0VECiAgICB9Cn0KCi8qKiBMb3cgYmF0dGVyeSBwYXVzZXMgbG9jYWwgcGVyc2lzdGVuY2UsIHdoaWxlIHRoZXJtYWwgYWxlcnRzIHJlbWFpbiBldmFsdWF0ZWQuICovCmludGVybmFsIGZ1biBzaG91bGRQYXVzZU5vbkVzc2VudGlhbFdvcmsobGV2ZWxQZXJjZW50OiBJbnQ/LCBpc0NoYXJnaW5nOiBCb29sZWFuPyk6IEJvb2xlYW4gPQogICAgbGV2ZWxQZXJjZW50ICE9IG51bGwgJiYgbGV2ZWxQZXJjZW50IDw9IDE1ICYmIGlzQ2hhcmdpbmcgIT0gdHJ1ZQoKLyoqCiAqIFBvbGljeSB1c2VkIGJ5IHRoZSBmb3JlZ3JvdW5kIGxvb3AuIEl0IGRlbGliZXJhdGVseSBzbG93cywgcmF0aGVyIHRoYW4gc3RvcHMsCiAqIHRoZXJtYWwgZXZhbHVhdGlvbiBvbiBhIGxvdyBiYXR0ZXJ5IHNvIGFsZXJ0IHRyYW5zaXRpb25zIHJlbWFpbiBvYnNlcnZhYmxlLgogKi8KZGF0YSBjbGFzcyBGb3JlZ3JvdW5kUG9sbGluZ1BvbGljeSgKICAgIHZhbCBpbnRlcnZhbE1zOiBMb25nLAogICAgdmFsIGxvd0JhdHRlcnlMaW1pdGVkOiBCb29sZWFuLAogICAgdmFsIGNvc3RMaW1pdGVkOiBCb29sZWFuID0gZmFsc2UKKQoKaW50ZXJuYWwgY29uc3QgdmFsIExPV19CQVRURVJZX0ZPUkVHUk9VTkRfSU5URVJWQUxfTVMgPSAxNSAqIDYwICogMV8wMDBMCgppbnRlcm5hbCBmdW4gY2FsY3VsYXRlRm9yZWdyb3VuZFBvbGxpbmdQb2xpY3koCiAgICBtb2RlOiBNb25pdG9yaW5nTW9kZSwKICAgIGJhdHRlcnlMZXZlbFBlcmNlbnQ6IEludD8sCiAgICBpc0NoYXJnaW5nOiBCb29sZWFuPywKICAgIG1lYXN1cmVkQ29zdDogTW9uaXRvcmluZ0Nvc3RTYW1wbGU/ID0gbnVsbAopOiBGb3JlZ3JvdW5kUG9sbGluZ1BvbGljeSB7CiAgICB2YWwgbG93QmF0dGVyeUxpbWl0ZWQgPSBzaG91bGRQYXVzZU5vbkVzc2VudGlhbFdvcmsoYmF0dGVyeUxldmVsUGVyY2VudCwgaXNDaGFyZ2luZykKICAgIHZhbCBiYXNlSW50ZXJ2YWxNcyA9IGlmIChsb3dCYXR0ZXJ5TGltaXRlZCkgewogICAgICAgIExPV19CQVRURVJZX0ZPUkVHUk9VTkRfSU5URVJWQUxfTVMKICAgIH0gZWxzZSB7CiAgICAgICAgbW9kZS5mb3JlZ3JvdW5kSW50ZXJ2YWxNcwogICAgfQogICAgdmFsIGNvc3RMaW1pdGVkID0gIWxvd0JhdHRlcnlMaW1pdGVkICYmIHNob3VsZEFkYXB0Rm9yZWdyb3VuZFBvbGxpbmcobWVhc3VyZWRDb3N0KQogICAgcmV0dXJuIEZvcmVncm91bmRQb2xsaW5nUG9saWN5KAogICAgICAgIGludGVydmFsTXMgPSBpZiAoY29zdExpbWl0ZWQpIHsKICAgICAgICAgICAgYWRhcHRlZEZvcmVncm91bmRJbnRlcnZhbE1zKGJhc2VJbnRlcnZhbE1zLCBtZWFzdXJlZENvc3QpCiAgICAgICAgfSBlbHNlIHsKICAgICAgICAgICAgYmFzZUludGVydmFsTXMKICAgICAgICB9LAogICAgICAgIGxvd0JhdHRlcnlMaW1pdGVkID0gbG93QmF0dGVyeUxpbWl0ZWQsCiAgICAgICAgY29zdExpbWl0ZWQgPSBjb3N0TGltaXRlZAogICAgKQp9Cg==
+package com.jeissonalberto.thermaguard.domain
+
+/** User-controlled cadence for background and foreground thermal monitoring. */
+enum class MonitoringMode(
+    val label: String,
+    val intervalMinutes: Long,
+    val description: String,
+    /** Foreground refresh cadence; the UI never polls more frequently than this. */
+    val foregroundIntervalMs: Long
+) {
+    SAVER(
+        "AHORRO",
+        60L,
+        "Menos ejecuciones; conserva alertas cuando Android lo permita.",
+        5 * 60 * 1_000L
+    ),
+    BALANCED(
+        "EQUILIBRADO",
+        30L,
+        "Vigilancia periódica con consumo moderado.",
+        2 * 60 * 1_000L
+    ),
+    PREVENTIVE(
+        "PREVENTIVO",
+        15L,
+        "Monitoreo más frecuente únicamente mientras carga.",
+        30 * 1_000L
+    );
+
+    companion object {
+        const val PREFS_NAME = "therma_monitoring_preferences"
+        const val MODE_KEY = "monitoring_mode"
+
+        fun fromStored(value: String?): MonitoringMode =
+            values().firstOrNull { it.name == value } ?: BALANCED
+    }
+}
+
+/** Low battery pauses local persistence, while thermal alerts remain evaluated. */
+internal fun shouldPauseNonEssentialWork(levelPercent: Int?, isCharging: Boolean?): Boolean =
+    levelPercent != null && levelPercent <= 15 && isCharging != true
+
+/**
+ * Policy used by the foreground loop. It deliberately slows, rather than stops,
+ * thermal evaluation on a low battery so alert transitions remain observable.
+ */
+data class ForegroundPollingPolicy(
+    val intervalMs: Long,
+    val lowBatteryLimited: Boolean,
+    val costLimited: Boolean = false
+)
+
+internal const val LOW_BATTERY_FOREGROUND_INTERVAL_MS = 15 * 60 * 1_000L
+
+internal fun calculateForegroundPollingPolicy(
+    mode: MonitoringMode,
+    batteryLevelPercent: Int?,
+    isCharging: Boolean?,
+    measuredCost: MonitoringCostSample? = null
+): ForegroundPollingPolicy {
+    val lowBatteryLimited = shouldPauseNonEssentialWork(batteryLevelPercent, isCharging)
+    val baseIntervalMs = if (lowBatteryLimited) {
+        LOW_BATTERY_FOREGROUND_INTERVAL_MS
+    } else {
+        mode.foregroundIntervalMs
+    }
+    val costLimited = !lowBatteryLimited && shouldAdaptForegroundPolling(measuredCost)
+    return ForegroundPollingPolicy(
+        intervalMs = if (costLimited) {
+            adaptedForegroundIntervalMs(baseIntervalMs, measuredCost)
+        } else {
+            baseIntervalMs
+        },
+        lowBatteryLimited = lowBatteryLimited,
+        costLimited = costLimited
+    )
+}
