@@ -68,20 +68,11 @@ ThermaGuard solicita los siguientes permisos del sistema:
 
 | Permiso | Motivo |
 |---------|--------|
-| `FOREGROUND_SERVICE` | Mantener monitoreo activo en segundo plano |
 | `POST_NOTIFICATIONS` | Enviar alertas térmicas al usuario |
-| `RECEIVE_BOOT_COMPLETED` | Reiniciar monitoreo al encender el dispositivo |
-| `PACKAGE_USAGE_STATS` | Identificar apps con mayor carga térmica |
-| `INTERNET` / `NETWORK_STATE` | Enviar telemetría anónima y verificar actualizaciones |
-| `WAKE_LOCK` | Evitar que el servicio se suspenda durante alertas críticas |
-| `KILL_BACKGROUND_PROCESSES` | Aliviar carga térmica en emergencias (requiere root) |
-| `WRITE_SETTINGS` | Ajustar configuración de rendimiento del sistema |
-| `READ_PHONE_STATE` | Leer modelo del dispositivo para calibración |
-| `HIGH_SAMPLING_RATE_SENSORS` | Muestreo de sensores térmicos a alta frecuencia |
-| `DUMP` / `READ_LOGS` | Diagnóstico de hardware (requiere root/ADB) |
-| `DEVICE_POWER` | Control avanzado de energía del SoC (requiere root) |
+| `INTERNET` | Consultar las versiones publicadas en GitHub para el actualizador |
+| `ACCESS_NETWORK_STATE` | Permitir que WorkManager respete la condición de red del actualizador |
 
-Los permisos marcados como *requiere root* solo funcionan en dispositivos con acceso root concedido. En dispositivos sin root, esas funciones quedan deshabilitadas automáticamente.
+La aplicación no solicita permisos de overlay, arranque automático, estadísticas de uso, Bluetooth, telefonía, accesibilidad, escritura de ajustes ni control root/sysfs. El monitoreo periódico usa WorkManager y no declara un servicio propio en primer plano.
 
 ---
 
@@ -131,3 +122,4 @@ País: Colombia
 ---
 
 *Esta política fue elaborada con base en los requisitos de Google Play Data Safety, la DMCA (Sección 512) y las directrices de la FTC para claims de IA.*
+

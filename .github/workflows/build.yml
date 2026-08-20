@@ -31,11 +31,51 @@ jobs:
       - name: Dar permisos a gradlew
         run: chmod +x gradlew
 
+      - name: Ejecutar pruebas unitarias
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Lint Debug
+        run: ./gradlew lintDebug --stacktrace
+
+      - name: Lint Release
+        run: ./gradlew lintRelease --stacktrace
+
+      - name: Verificar manifiesto fusionado Debug
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew processDebugMainManifest --stacktrace
+          manifest="$(find app/build/intermediates -type f -path '*merged_manifests/debug*/AndroidManifest.xml' -print -quit)"
+          test -n "$manifest"
+          echo "Manifiesto fusionado: $manifest"
+          grep -q 'android.permission.POST_NOTIFICATIONS' "$manifest"
+          grep -q 'android.permission.INTERNET' "$manifest"
+          for absent in \
+            'FloatingWidgetService' \
+            'ThermalMonitorService' \
+            'BootReceiver' \
+            'NotificationActionReceiver' \
+            'android.permission.SYSTEM_ALERT_WINDOW' \
+            'android.permission.PACKAGE_USAGE_STATS' \
+            'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS' \
+            'android.permission.BATTERY_STATS' \
+            'android.permission.KILL_BACKGROUND_PROCESSES' \
+            'android.permission.BIND_ACCESSIBILITY_SERVICE' \
+            'android.permission.WRITE_SECURE_SETTINGS' \
+            'android.permission.READ_LOGS' \
+            'android.permission.DEVICE_POWER' \
+            'android.permission.HARDWARE_TEST'; do
+            if grep -Fq "$absent" "$manifest"; then
+              echo "Unexpected manifest entry: $absent" >&2
+              exit 1
+            fi
+          done
+
       - name: Compilar APK Debug
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Compilar AAB Release (sin firma — para Play Store App Signing)
-        run: ./gradlew bundleRelease -x lintRelease --stacktrace
+      - name: Compilar AAB Release
+        run: ./gradlew bundleRelease --stacktrace
 
       - name: Subir APK Debug
         uses: actions/upload-artifact@v4

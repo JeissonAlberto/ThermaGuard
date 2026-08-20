@@ -219,7 +219,7 @@ Diagnóstico periódico de salud de componentes.
 | `ThermalSnapshotDao.kt` | Data | CRUD y queries de snapshots |
 | `LearnedProfileDao.kt` | Data | Lectura/escritura del perfil aprendido |
 | `ComponentDiagnosisDao.kt` | Data | Registro de diagnósticos |
-| `ThermalMonitorService.kt` | Service | ForegroundService, ciclo de medición |
+| `ThermalMonitorWorker.kt` | Service | Worker de WorkManager para el monitoreo periódico |
 | `DashboardScreen.kt` | UI | Pantalla principal Compose |
 | `HistoryScreen.kt` | UI | Historial y gráficas Compose |
 | `NotificationManager.kt` | Util | Gestión de alertas térmicas |
@@ -240,3 +240,4 @@ implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.x"
 ---
 
 *Documento generado: Junio 2025 — ThermaGuard by Jasol Group*
+

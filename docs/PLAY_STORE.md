@@ -105,10 +105,9 @@ Solo recopilamos datos técnicos del dispositivo (temperatura, CPU, batería, ap
 🔑 PERMISOS Y POR QUÉ LOS NECESITAMOS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-• FOREGROUND_SERVICE — Para monitorear en segundo plano mientras usas el teléfono
-• PACKAGE_USAGE_STATS — Para detectar qué app está activa y causando calor
 • POST_NOTIFICATIONS — Para enviarte alertas cuando la temperatura sea crítica
-• RECEIVE_BOOT_COMPLETED — Para iniciar el monitoreo automáticamente al encender
+• INTERNET — Para consultar manualmente y en segundo plano las versiones publicadas en GitHub
+• ACCESS_NETWORK_STATE — Para que WorkManager respete la condición de red del chequeo de actualizaciones
 
 Ningún permiso accede a tus datos personales, contactos, ubicación, cámara ni micrófono.
 
@@ -165,10 +164,11 @@ overheat, temperature monitor, battery health, CPU monitor, system monitor
 ## Notas para el Equipo de Revisión de Google Play
 
 - La app **no requiere root**.
-- El permiso `PACKAGE_USAGE_STATS` se usa exclusivamente para identificar la app activa en primer plano con fines de diagnóstico térmico. No se leen datos de las apps.
-- Todos los datos permanecen en el dispositivo (Room/SQLite local). No existe ninguna comunicación de red.
+- La app no solicita acceso a estadísticas de uso ni identifica qué otras apps están activas.
+- Los datos térmicos permanecen en el dispositivo (Room/SQLite local). La única comunicación de red es la consulta de versiones publicadas en GitHub para el actualizador opcional.
 - La app **no contiene publicidad** ni SDKs de monetización.
 
 ---
 
 *Documento preparado: Junio 2025 — ThermaGuard by Jasol Group*
+
