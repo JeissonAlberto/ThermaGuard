@@ -55,16 +55,21 @@ class ThermalMonitorWorker(
             } else {
                 null
             }
-            val previous = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .getString(KEY_LAST_STATUS, null)
+            // Notification transition state is shared with the foreground
+            // ViewModel and atomically de-duplicated by the notifier.
             val decision = ThermalMonitoringPolicy.evaluate(
                 batteryTemperatureCelsius = temperature,
                 systemStatus = systemStatus,
-                previousStatus = previous,
+                previousStatus = null,
                 batteryLevelPercent = batteryTelemetry.levelPercent,
                 isCharging = batteryTelemetry.isCharging
             )
-            notifyOnTransition(context, decision, temperature, systemStatus)
+            ThermalAlertNotifier.notifyOnTransition(
+                context = context,
+                status = decision.status,
+                temperature = temperature,
+                systemStatus = systemStatus
+            )
             if (!decision.pauseNonEssentialWork) {
                 persistSnapshot(context, temperature, batteryTelemetry)
             }
@@ -72,22 +77,6 @@ class ThermalMonitorWorker(
         }.getOrElse { error ->
             Log.w("ThermaGuard", "ThermalMonitorWorker failed: ${error.message}")
             Result.retry()
-        }
-    }
-
-    private fun notifyOnTransition(
-        context: Context,
-        decision: ThermalMonitoringPolicy.Decision,
-        temperature: Float?,
-        systemStatus: String?
-    ) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        if (decision.shouldNotify) {
-            if (ThermalAlertNotifier.notify(context, decision.status, temperature, systemStatus)) {
-                prefs.edit().putString(KEY_LAST_STATUS, decision.status).apply()
-            }
-        } else if (decision.status != "ALERT" && decision.status != "CRITICAL") {
-            prefs.edit().remove(KEY_LAST_STATUS).apply()
         }
     }
 
@@ -121,8 +110,6 @@ class ThermalMonitorWorker(
 
     companion object {
         private const val WORK_NAME = "therma_background_monitor"
-        private const val PREFS_NAME = "therma_background_monitor"
-        private const val KEY_LAST_STATUS = "last_alert_status"
         private const val RETENTION_PREFERENCES = "telemetry_preferences"
         private const val RETENTION_HOURS_KEY = "history_retention_hours"
         private const val DEFAULT_RETENTION_HOURS = 24

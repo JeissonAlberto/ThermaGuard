@@ -18,6 +18,40 @@ import com.jeissonalberto.thermaguard.domain.ThermalMonitoringPolicy
 object ThermalAlertNotifier {
     private const val CHANNEL_ID = "therma_alerts"
     private const val NOTIFICATION_ID = 9902
+    // Shared by the foreground ViewModel and the WorkManager worker so one
+    // thermal transition cannot generate duplicate alerts across lifecycles.
+    private const val STATE_PREFERENCES = "therma_background_monitor"
+    private const val LAST_STATUS_KEY = "last_alert_status"
+    private val transitionLock = Any()
+
+    /**
+     * Delivers at most one notification per observed alert-state transition.
+     * The observed state is persisted even when Android rejects delivery
+     * (for example, notification permission is denied), preventing a retry on
+     * every polling cycle and making the permission outcome explicit.
+     */
+    fun notifyOnTransition(
+        context: Context,
+        status: String,
+        temperature: Float?,
+        systemStatus: String?
+    ): Boolean = synchronized(transitionLock) {
+        val preferences = context.getSharedPreferences(STATE_PREFERENCES, Context.MODE_PRIVATE)
+        val previousStatus = preferences.getString(LAST_STATUS_KEY, null)
+        val shouldNotify = ThermalMonitoringPolicy.shouldNotify(previousStatus, status)
+        val delivered = if (shouldNotify) {
+            notify(context, status, temperature, systemStatus)
+        } else {
+            false
+        }
+
+        if (status == "ALERT" || status == "CRITICAL") {
+            preferences.edit().putString(LAST_STATUS_KEY, status).apply()
+        } else {
+            preferences.edit().remove(LAST_STATUS_KEY).apply()
+        }
+        delivered
+    }
 
     fun notify(
         context: Context,

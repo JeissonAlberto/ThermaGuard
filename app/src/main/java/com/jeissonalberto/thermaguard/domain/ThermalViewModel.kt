@@ -100,8 +100,6 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         )
     )
     val monitoringMode: StateFlow<MonitoringMode> = _monitoringMode
-    private var lastNotifiedEngineStatus: String? = null
-
     private val thermalDao = runCatching {
         ThermalDatabase.getInstance(application).thermalDao()
     }.getOrNull()
@@ -370,21 +368,22 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             _lastUpdated.value = now
         }
         val systemStatus = _systemThermalStatus.value
+        // The notifier owns the persisted transition state shared with the
+        // background worker, preventing duplicate alerts after lifecycle changes.
         val decision = ThermalMonitoringPolicy.evaluate(
             batteryTemperatureCelsius = temperature,
             systemStatus = systemStatus,
-            previousStatus = lastNotifiedEngineStatus,
+            previousStatus = null,
             batteryLevelPercent = batteryTelemetry.levelPercent,
             isCharging = batteryTelemetry.isCharging
         )
         _engineStatus.value = decision.status
-        if (decision.shouldNotify) {
-            if (ThermalAlertNotifier.notify(getApplication<Application>(), decision.status, temperature, systemStatus)) {
-                lastNotifiedEngineStatus = decision.status
-            }
-        } else if (decision.status != "ALERT" && decision.status != "CRITICAL") {
-            lastNotifiedEngineStatus = null
-        }
+        ThermalAlertNotifier.notifyOnTransition(
+            context = getApplication<Application>(),
+            status = decision.status,
+            temperature = temperature,
+            systemStatus = systemStatus
+        )
 
         // Keep retention maintenance independent from sensor availability. A device
         // that stops exposing temperature must not keep stale history indefinitely.
