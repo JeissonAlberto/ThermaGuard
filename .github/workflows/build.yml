@@ -31,8 +31,11 @@ jobs:
       - name: Dar permisos a gradlew
         run: chmod +x gradlew
 
-      - name: Ejecutar pruebas unitarias
+      - name: Ejecutar pruebas unitarias Debug
         run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Ejecutar pruebas unitarias Release
+        run: ./gradlew testReleaseUnitTest --stacktrace
 
       - name: Lint Debug
         run: ./gradlew lintDebug --stacktrace

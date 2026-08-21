@@ -25,40 +25,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-/** Converts Android's public thermal status constants to stable UI labels. */
-internal fun systemThermalStatusLabel(status: Int): String = when (status) {
-    PowerManager.THERMAL_STATUS_NONE -> "NORMAL"
-    PowerManager.THERMAL_STATUS_LIGHT -> "LIGHT"
-    PowerManager.THERMAL_STATUS_MODERATE -> "MODERATE"
-    PowerManager.THERMAL_STATUS_SEVERE -> "SEVERE"
-    PowerManager.THERMAL_STATUS_CRITICAL -> "CRITICAL"
-    PowerManager.THERMAL_STATUS_EMERGENCY -> "EMERGENCY"
-    PowerManager.THERMAL_STATUS_SHUTDOWN -> "SHUTDOWN"
-    else -> "UNKNOWN"
-}
-
-/** A notification is emitted only when the app enters a new alert state. */
-internal fun shouldNotifyThermalStatus(previous: String?, current: String): Boolean =
-    current in setOf("ALERT", "CRITICAL") && previous != current
-
-/** Converts Android's tenths-of-a-degree value without discarding valid sub-zero readings. */
-internal fun batteryTemperatureCelsius(rawTemperature: Int): Float? =
-    rawTemperature.takeUnless { it == Int.MIN_VALUE }?.div(10f)
-
-/** Android reports these states when the system needs the user to reduce thermal load. */
-internal fun isSystemThermalRisk(status: String?): Boolean =
-    status in setOf("SEVERE", "CRITICAL", "EMERGENCY", "SHUTDOWN")
-
-/** Combines the battery reading with Android's aggregated thermal status. */
-internal fun thermalEngineStatus(temperature: Float?, systemStatus: String?): String = when {
-    systemStatus in setOf("CRITICAL", "EMERGENCY", "SHUTDOWN") -> "CRITICAL"
-    systemStatus == "SEVERE" -> "ALERT"
-    temperature == null -> "SENSOR UNAVAILABLE"
-    temperature >= 45f -> "CRITICAL"
-    temperature >= 40f -> "ALERT"
-    else -> "NOMINAL"
-}
-
 /** A missing sample is valid when the sensor is unavailable; cleanup still proves storage works. */
 internal fun historyStorageWriteSucceeded(sampleWriteSucceeded: Boolean?, cleanupSucceeded: Boolean): Boolean =
     sampleWriteSucceeded != false && cleanupSucceeded
@@ -189,7 +155,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private var diagnosticsVisible = false
 
     private val _foregroundPollingPolicy = MutableStateFlow(
-        calculateForegroundPollingPolicy(
+        ThermalMonitoringPolicy.foregroundPolling(
             _monitoringMode.value,
             null,
             null,
@@ -249,7 +215,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         foregroundPollingJob = viewModelScope.launch {
             while (isActive) {
                 refreshReading()
-                val policy = calculateForegroundPollingPolicy(
+                val policy = ThermalMonitoringPolicy.foregroundPolling(
                     _monitoringMode.value,
                     _batteryLevel.value,
                     _isCharging.value,
@@ -309,7 +275,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun updateForegroundPollingPolicy() {
-        _foregroundPollingPolicy.value = calculateForegroundPollingPolicy(
+        _foregroundPollingPolicy.value = ThermalMonitoringPolicy.foregroundPolling(
             _monitoringMode.value,
             _batteryLevel.value,
             _isCharging.value,
@@ -361,7 +327,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         if (_monitoringMode.value == mode) return
         monitoringPreferences.edit().putString(MonitoringMode.MODE_KEY, mode.name).apply()
         _monitoringMode.value = mode
-        _foregroundPollingPolicy.value = calculateForegroundPollingPolicy(
+        _foregroundPollingPolicy.value = ThermalMonitoringPolicy.foregroundPolling(
             mode,
             _batteryLevel.value,
             _isCharging.value,
@@ -384,7 +350,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             UNAVAILABLE
         ) ?: UNAVAILABLE
         val batteryTelemetry = readBatteryTelemetry(intent)
-        val temperature = batteryTemperatureCelsius(rawTemperature)
+        val temperature = ThermalMonitoringPolicy.batteryTemperatureCelsius(rawTemperature)
         val now = System.currentTimeMillis()
         refreshHardwareThermalZones(now)
 
@@ -394,7 +360,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         _isCharging.value = batteryTelemetry.isCharging
         _batteryVoltageMv.value = batteryTelemetry.voltageMv
         _batteryCurrentMicroamps.value = batteryTelemetry.currentMicroamps
-        _foregroundPollingPolicy.value = calculateForegroundPollingPolicy(
+        _foregroundPollingPolicy.value = ThermalMonitoringPolicy.foregroundPolling(
             _monitoringMode.value,
             batteryTelemetry.levelPercent,
             batteryTelemetry.isCharging,
@@ -404,13 +370,19 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             _lastUpdated.value = now
         }
         val systemStatus = _systemThermalStatus.value
-        val currentStatus = thermalEngineStatus(temperature, systemStatus)
-        _engineStatus.value = currentStatus
-        if (shouldNotifyThermalStatus(lastNotifiedEngineStatus, currentStatus)) {
-            if (ThermalAlertNotifier.notify(getApplication<Application>(), currentStatus, temperature, systemStatus)) {
-                lastNotifiedEngineStatus = currentStatus
+        val decision = ThermalMonitoringPolicy.evaluate(
+            batteryTemperatureCelsius = temperature,
+            systemStatus = systemStatus,
+            previousStatus = lastNotifiedEngineStatus,
+            batteryLevelPercent = batteryTelemetry.levelPercent,
+            isCharging = batteryTelemetry.isCharging
+        )
+        _engineStatus.value = decision.status
+        if (decision.shouldNotify) {
+            if (ThermalAlertNotifier.notify(getApplication<Application>(), decision.status, temperature, systemStatus)) {
+                lastNotifiedEngineStatus = decision.status
             }
-        } else if (currentStatus != "ALERT" && currentStatus != "CRITICAL") {
+        } else if (decision.status != "ALERT" && decision.status != "CRITICAL") {
             lastNotifiedEngineStatus = null
         }
 
@@ -418,7 +390,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         // that stops exposing temperature must not keep stale history indefinitely.
         // Match the background worker: alert evaluation continues, but local history
         // writes and retention cleanup pause below the low-battery threshold.
-        if (!shouldPauseNonEssentialWork(batteryTelemetry.levelPercent, batteryTelemetry.isCharging) &&
+        if (!decision.pauseNonEssentialWork &&
             now - lastPersistedAt >= HISTORY_SAMPLE_INTERVAL_MS
         ) {
             lastPersistedAt = now

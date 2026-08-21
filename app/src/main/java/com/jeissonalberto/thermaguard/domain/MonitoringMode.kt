@@ -38,7 +38,7 @@ enum class MonitoringMode(
 
 /** Low battery pauses local persistence, while thermal alerts remain evaluated. */
 internal fun shouldPauseNonEssentialWork(levelPercent: Int?, isCharging: Boolean?): Boolean =
-    levelPercent != null && levelPercent <= 15 && isCharging != true
+    ThermalMonitoringPolicy.shouldPauseNonEssentialWork(levelPercent, isCharging)
 
 /**
  * Policy used by the foreground loop. It deliberately slows, rather than stops,
@@ -57,21 +57,9 @@ internal fun calculateForegroundPollingPolicy(
     batteryLevelPercent: Int?,
     isCharging: Boolean?,
     measuredCost: MonitoringCostSample? = null
-): ForegroundPollingPolicy {
-    val lowBatteryLimited = shouldPauseNonEssentialWork(batteryLevelPercent, isCharging)
-    val baseIntervalMs = if (lowBatteryLimited) {
-        LOW_BATTERY_FOREGROUND_INTERVAL_MS
-    } else {
-        mode.foregroundIntervalMs
-    }
-    val costLimited = !lowBatteryLimited && shouldAdaptForegroundPolling(measuredCost)
-    return ForegroundPollingPolicy(
-        intervalMs = if (costLimited) {
-            adaptedForegroundIntervalMs(baseIntervalMs, measuredCost)
-        } else {
-            baseIntervalMs
-        },
-        lowBatteryLimited = lowBatteryLimited,
-        costLimited = costLimited
-    )
-}
+): ForegroundPollingPolicy = ThermalMonitoringPolicy.foregroundPolling(
+    mode,
+    batteryLevelPercent,
+    isCharging,
+    measuredCost
+)
