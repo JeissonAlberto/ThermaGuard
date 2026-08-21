@@ -11,12 +11,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Assessment
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -35,44 +41,26 @@ import com.jeissonalberto.thermaguard.ui.DiagnosisScreen
 import com.jeissonalberto.thermaguard.ui.theme.ThermaGuardTheme
 
 class MainActivity : ComponentActivity() {
-    private val notificationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { /* Alerts remain visible in-app if permission is declined. */ }
+    private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestNotificationPermissionIfNeeded()
-        // WorkManager keeps monitoring alive after the UI closes; foreground
-        // polling is explicitly tied to this Activity's visible lifecycle.
         UpdateWorker.schedule(applicationContext)
         ThermalMonitorWorker.schedule(applicationContext)
         val thermalViewModel = ViewModelProvider(this)[ThermalViewModel::class.java]
         lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onStart(owner: LifecycleOwner) {
-                thermalViewModel.setForegroundMonitoringActive(true)
-            }
-
-            override fun onStop(owner: LifecycleOwner) {
-                thermalViewModel.setForegroundMonitoringActive(false)
-            }
+            override fun onStart(owner: LifecycleOwner) { thermalViewModel.setForegroundMonitoringActive(true) }
+            override fun onStop(owner: LifecycleOwner) { thermalViewModel.setForegroundMonitoringActive(false) }
         })
-        setContent {
-            ThermaGuardTheme {
-                ThermaGuardApp(thermalViewModel, ::openAndroidSettings)
-            }
-        }
+        setContent { ThermaGuardTheme { ThermaGuardApp(thermalViewModel, ::openAndroidSettings) } }
     }
 
-    /** Opens only user-controlled Android screens; no protected setting is changed by the app. */
     private fun openAndroidSettings(target: AndroidSettingsTarget) {
         val intent = Intent(target.action)
         when (target) {
-            AndroidSettingsTarget.APP_DETAILS -> {
-                intent.data = Uri.fromParts("package", packageName, null)
-            }
-            AndroidSettingsTarget.NOTIFICATIONS -> {
-                intent.putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-            }
+            AndroidSettingsTarget.APP_DETAILS -> intent.data = Uri.fromParts("package", packageName, null)
+            AndroidSettingsTarget.NOTIFICATIONS -> intent.putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
             AndroidSettingsTarget.BATTERY_SAVER -> Unit
         }
         val fallback = Intent(Settings.ACTION_SETTINGS)
@@ -85,51 +73,40 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 }
 
+private data class AppTab(val route: String, val label: String, val icon: @Composable () -> Unit)
+
 @Composable
-private fun ThermaGuardApp(
-    viewModel: ThermalViewModel,
-    onOpenSettings: (AndroidSettingsTarget) -> Unit
-) {
+private fun ThermaGuardApp(viewModel: ThermalViewModel, onOpenSettings: (AndroidSettingsTarget) -> Unit) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val tabs = listOf(
-        Triple("dashboard", "⌂", "INICIO"),
-        Triple("alerts", "!", "ALERTAS"),
-        Triple("diagnosis", "✓", "DIAGNÓSTICO")
+        AppTab("dashboard", "Inicio") { Icon(Icons.Outlined.Home, contentDescription = null) },
+        AppTab("alerts", "Alertas") { Icon(Icons.Outlined.NotificationsNone, contentDescription = null) },
+        AppTab("diagnosis", "Diagnóstico") { Icon(Icons.Outlined.Assessment, contentDescription = null) }
     )
-
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            NavigationBar {
-                tabs.forEach { (route, icon, label) ->
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                tabs.forEach { tab ->
                     NavigationBarItem(
-                        selected = currentRoute == route,
-                        onClick = {
-                            navController.navigate(route) {
-                                launchSingleTop = true
-                            }
-                        },
-                        icon = { Text(icon) },
-                        label = { Text(label) }
+                        selected = currentRoute == tab.route,
+                        onClick = { navController.navigate(tab.route) { launchSingleTop = true; restoreState = true } },
+                        icon = tab.icon,
+                        label = { Text(tab.label) }
                     )
                 }
             }
         }
     ) { contentPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "dashboard",
-            modifier = Modifier.padding(contentPadding)
-        ) {
+        NavHost(navController = navController, startDestination = "dashboard", modifier = Modifier.padding(contentPadding)) {
             composable("dashboard") { DashboardScreen(viewModel, onOpenSettings) }
             composable("alerts") { AlertsScreen(viewModel) }
             composable("diagnosis") { DiagnosisScreen(viewModel) }

@@ -22,27 +22,6 @@
     <string name="tab_logs">Logs</string>
     <string name="tab_about">About</string>
 
-    <!-- Dashboard -->
-    <string name="hero_normal">All good 🟢</string>
-    <string name="hero_warm">Warming up a bit 🟡</string>
-    <string name="hero_hot">High temperature ⚠️</string>
-    <string name="hero_critical">Critical temperature 🔴</string>
-    <string name="hero_emergency">Thermal emergency! 🚨</string>
-    <string name="cpu_temp">CPU Temp</string>
-    <string name="battery_temp">Battery Temp</string>
-    <string name="cpu_usage">CPU Usage</string>
-    <string name="ram_free">Free RAM</string>
-
-    <!-- Modes -->
-    <string name="mode_learning">Learning</string>
-    <string name="mode_auto">Automatic</string>
-    <string name="mode_active">Active</string>
-    <string name="mode_gamer">Gamer 🎮</string>
-    <string name="mode_learning_desc">Observe and learn only · 60s · low power</string>
-    <string name="mode_auto_desc">Act on learned patterns · 30s</string>
-    <string name="mode_active_desc">Maximum intervention · 15s</string>
-    <string name="mode_gamer_desc">Aggressive anti-throttle · 10s · max 43°C</string>
-
     <!-- Diagnosis -->
     <string name="diagnosis_title">Diagnosis</string>
     <string name="components_monitored">components monitored</string>
@@ -106,11 +85,4 @@
     <string name="notif_channel_desc">Device temperature alerts</string>
     <string name="notif_monitoring">ThermaGuard active</string>
     <string name="notif_alert">Temperature alert!</string>
-    <string name="notif_gamer">Gamer mode active — protecting performance</string>
-
-    <!-- Gamer Mode -->
-    <string name="gamer_active">Gamer Mode active 🎮</string>
-    <string name="gamer_protected">Performance protected</string>
-    <string name="gamer_temp_limit">Anti-throttle limit</string>
-    <string name="gamer_cooling">Cooling down…</string>
 </resources>

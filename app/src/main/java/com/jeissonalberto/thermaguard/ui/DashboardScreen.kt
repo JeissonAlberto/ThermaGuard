@@ -1,8 +1,7 @@
 package com.jeissonalberto.thermaguard.ui
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,10 +9,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BatteryChargingFull
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,13 +28,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.jeissonalberto.thermaguard.domain.AndroidSettingsTarget
 import com.jeissonalberto.thermaguard.domain.MonitoringMode
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
 import com.jeissonalberto.thermaguard.domain.isSystemThermalRisk
+import com.jeissonalberto.thermaguard.ui.theme.TGCritical
+import com.jeissonalberto.thermaguard.ui.theme.TGCriticalContainer
+import com.jeissonalberto.thermaguard.ui.theme.TGPrimary
+import com.jeissonalberto.thermaguard.ui.theme.TGTextMuted
+import com.jeissonalberto.thermaguard.ui.theme.TGWarning
+import com.jeissonalberto.thermaguard.ui.theme.TGWarningContainer
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -58,348 +72,157 @@ fun DashboardScreen(
     val pollingPolicy by viewModel.foregroundPollingPolicy.collectAsState()
     val retentionHours by viewModel.retentionHours.collectAsState()
     val systemThermalRisk = isSystemThermalRisk(systemThermalStatus)
+    val tone = statusTone(status, available)
+    val updatedLabel = lastUpdated?.let { SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(it)) }
+        ?: "sin lectura"
+    val chargingLabel = when (isCharging) { true -> "Cargando"; false -> "Sin carga"; null -> "No disponible" }
+    val batteryMeta = buildList {
+        batteryLevel?.let { add("$it%") }
+        add(chargingLabel)
+        batteryVoltageMv?.let { add("${it} mV") }
+        batteryCurrentMicroamps?.let { add("${it / 1000f} mA") }
+    }.joinToString(" • ")
 
-    val temperatureLabel = temp?.let {
-        String.format(Locale.getDefault(), "%.1f°C", it)
-    } ?: "—"
-    val updatedLabel = lastUpdated?.let {
-        SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(it))
-    } ?: "sin lectura"
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF010204))
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxSize()
-        ) {
-            Text(
-                "THERMAGUARD v4.5.1",
-                color = Color(0xFF00F2FF),
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
+        Row(verticalAlignment = Alignment.Top, modifier = Modifier.fillMaxWidth()) {
+            ScreenHeader(
+                eyebrow = "Operación térmica",
+                title = "Estado del dispositivo",
+                description = "Lecturas verificables de Android, almacenadas localmente.",
+                modifier = Modifier.weight(1f)
             )
-            Text(
-                "MONITOR TÉRMICO DEL DISPOSITIVO",
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 10.sp
-            )
+            IconButton(
+                onClick = viewModel::refreshReading,
+                modifier = Modifier.semantics { contentDescription = "Actualizar lectura" }
+            ) { Icon(Icons.Outlined.Refresh, contentDescription = null) }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.07f)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("MODO DE MONITOREO: ${monitoringMode.label}", color = Color(0xFF00F2FF), fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Text(
-                        "Cada ${monitoringMode.intervalMinutes} min${if (monitoringMode == MonitoringMode.PREVENTIVE) " • solo mientras carga" else ""}",
-                        color = Color.White,
-                        fontSize = 12.sp
+        TGCard(containerColor = when (tone) {
+            StatusTone.CRITICAL -> TGCriticalContainer
+            StatusTone.WARNING -> TGWarningContainer
+            else -> androidx.compose.material3.MaterialTheme.colorScheme.surface
+        }) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    StatusPill(
+                        label = when (status) { "NOMINAL" -> "NORMAL"; "WAITING" -> "ESPERANDO"; else -> status },
+                        tone = tone
                     )
-                    Text(
-                        monitoringMode.description,
-                        color = Color.White.copy(alpha = 0.6f),
-                        fontSize = 11.sp
-                    )
-                    Text(
-                        "Pantalla abierta: actualización automática cada ${formatPollingInterval(pollingPolicy.intervalMs)}" +
-                            when {
-                                pollingPolicy.lowBatteryLimited -> " • límite por batería ≤15%"
-                                pollingPolicy.costLimited -> " • intervalo ampliado por costo medido"
-                                else -> ""
-                            },
-                        color = Color.White.copy(alpha = 0.8f),
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        MonitoringMode.values().forEach { mode ->
-                            Button(
-                                onClick = { viewModel.setMonitoringMode(mode) },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(mode.label, fontSize = 9.sp)
-                            }
-                        }
-                    }
-                    Text(
-                        "Con batería ≤15% y sin carga se omite la persistencia no esencial; las alertas térmicas siguen evaluándose.",
-                        color = Color.White.copy(alpha = 0.55f),
-                        fontSize = 10.sp,
-                        modifier = Modifier.padding(top = 6.dp)
-                    )
+                    Text("Actualizado $updatedLabel", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = TGTextMuted)
                 }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("CONFIGURACIÓN ANDROID", color = Color(0xFF00F2FF), fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Text(
-                        "Accesos directos para revisar opciones del sistema. ThermaGuard no cambia ajustes protegidos.",
-                        color = Color.White.copy(alpha = 0.6f),
-                        fontSize = 11.sp
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        AndroidSettingsTarget.values().forEach { target ->
-                            Button(
-                                onClick = { onOpenSettings(target) },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(target.label, fontSize = 8.sp)
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
                 Text(
-                    temperatureLabel,
-                    fontSize = 72.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.ExtraLight
+                    temp?.let { String.format(Locale.getDefault(), "%.1f°C", it) } ?: "—",
+                    style = androidx.compose.material3.MaterialTheme.typography.displaySmall,
+                    modifier = Modifier.padding(top = 14.dp),
+                    color = when (tone) { StatusTone.CRITICAL -> TGCritical; StatusTone.WARNING -> TGWarning; else -> androidx.compose.material3.MaterialTheme.colorScheme.onSurface }
                 )
                 Text(
-                    "ESTADO: $status",
-                    color = if (available) Color(0xFF00F2FF) else Color(0xFFFFB74D),
-                    fontSize = 12.sp,
-                    letterSpacing = 2.sp
-                )
-                Text(
-                    if (available) "LECTURA REAL • BATERÍA • última: $updatedLabel"
-                    else if (lastUpdated != null) "ÚLTIMA LECTURA CONSERVADA • $updatedLabel"
-                    else "ESTE DISPOSITIVO NO EXPONE TEMPERATURA DE BATERÍA",
-                    color = Color.White.copy(alpha = 0.55f),
-                    fontSize = 11.sp
+                    when {
+                        available -> "Temperatura de batería • lectura real"
+                        lastUpdated != null -> "Última lectura conservada • el sensor no está disponible ahora"
+                        else -> "Este dispositivo no expone temperatura de batería"
+                    },
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                    color = TGTextMuted
                 )
                 Button(
                     onClick = viewModel::refreshReading,
-                    modifier = Modifier.padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 18.dp),
+                    colors = ButtonDefaults.buttonColors()
                 ) {
-                    Text("ACTUALIZAR LECTURA")
+                    Icon(Icons.Outlined.Refresh, contentDescription = null)
+                    Text("Actualizar lectura", modifier = Modifier.padding(start = 8.dp))
                 }
             }
+        }
 
-            if (status == "ALERT" || status == "CRITICAL") {
-                val isCritical = status == "CRITICAL"
-                Spacer(modifier = Modifier.height(16.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = (if (isCritical) Color(0xFF5D1717) else Color(0xFF5A3A12))
-                            .copy(alpha = 0.9f)
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            if (isCritical) "ALERTA CRÍTICA" else "ALERTA TÉRMICA",
-                            color = if (isCritical) Color(0xFFFF8A80) else Color(0xFFFFCC80),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
-                        Text(
-                            temp?.let {
-                                if (isCritical) {
-                                    String.format(
-                                        Locale.getDefault(),
-                                        "Batería a %.1f°C • nivel crítico",
-                                        it
-                                    )
-                                } else {
-                                    String.format(
-                                        Locale.getDefault(),
-                                        "Batería a %.1f°C (umbral %.0f°C)",
-                                        it,
-                                        threshold
-                                    )
-                                }
-                            } ?: "Lectura no disponible",
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
-                        Text(
-                            "Reduce la carga del dispositivo y comprueba su ventilación.",
-                            color = Color.White.copy(alpha = 0.75f),
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White.copy(alpha = 0.05f)
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(20.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text("FUENTE", color = Color.Gray, fontSize = 12.sp)
-                        Text(
-                            if (available) "Android BatteryManager" else "No disponible",
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
-                        Text(
-                            batteryLevel?.let { level ->
-                                val chargingLabel = when (isCharging) {
-                                    true -> "cargando"
-                                    false -> "sin carga"
-                                    null -> "estado de carga no disponible"
-                                }
-                                "Batería: $level% • $chargingLabel"
-                            } ?: "Nivel de batería no disponible",
-                            color = Color.White.copy(alpha = 0.55f),
-                            fontSize = 11.sp
-                        )
-                        Text(
-                            buildList {
-                                batteryVoltageMv?.let { add("${it}mV") }
-                                batteryCurrentMicroamps?.let { add("${it / 1000f}mA") }
-                            }.joinToString(" • ").ifEmpty { "Voltaje/corriente no disponibles" },
-                            color = Color.White.copy(alpha = 0.55f),
-                            fontSize = 11.sp
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text("ALERTA", color = Color.Gray, fontSize = 12.sp)
-                        Text(
-                            "≥ ${threshold.toInt()}°C",
-                            color = Color(0xFFFFB74D),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            if (systemThermalRisk) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF5D1717).copy(alpha = 0.9f)
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            "ESTADO TÉRMICO DEL SISTEMA",
-                            color = Color(0xFFFF8A80),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
-                        Text(
-                            "Android reporta ${systemThermalStatus ?: "un estado elevado"}. Reduce la carga del dispositivo.",
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
-                        Text(
-                            "Es una señal agregada del sistema; no identifica por sí sola CPU, GPU o batería.",
-                            color = Color.White.copy(alpha = 0.75f),
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White.copy(alpha = 0.05f)
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text("HISTORIAL LOCAL", color = Color.Gray, fontSize = 12.sp)
+        if (status == "ALERT" || status == "CRITICAL") {
+            TGCard(containerColor = if (status == "CRITICAL") TGCriticalContainer else TGWarningContainer) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(if (status == "CRITICAL") "Intervención recomendada" else "Vigilancia térmica", style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
+                        color = if (status == "CRITICAL") TGCritical else TGWarning)
                     Text(
-                        when {
-                            historyStorageError -> "No disponible en este dispositivo"
-                            history.isEmpty() -> "Sin lecturas persistidas"
-                            else -> "${history.size} lecturas recientes • retención de ${retentionHours} h"
-                        },
-                        color = Color.White,
-                        fontSize = 14.sp
+                        temp?.let { if (status == "CRITICAL") "Batería a %.1f°C; reduce la carga y comprueba la ventilación.".format(it) else "Batería a %.1f°C; supera el umbral de %.0f°C.".format(it, threshold) }
+                            ?: "Lectura no disponible.",
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(top = 5.dp)
                     )
-                    Text(
-                        "Se guarda localmente una lectura real por minuto; sin envío externo ni datos inventados.",
-                        color = Color.White.copy(alpha = 0.55f),
-                        fontSize = 11.sp
-                    )
-                    history.firstOrNull()?.let { latest ->
-                        val timeLabel = SimpleDateFormat("HH:mm", Locale.getDefault())
-                            .format(Date(latest.timestamp))
-                        Text(
-                            String.format(
-                                Locale.getDefault(),
-                                "Última lectura: %.1f°C • %s",
-                                latest.batteryTemp,
-                                timeLabel
-                            ),
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 12.sp
-                        )
-                        val metadata = buildList {
-                            latest.batteryLevel?.let { add("$it%") }
-                            latest.batteryVoltageMv?.let { add("${it}mV") }
-                            latest.batteryCurrentMicroamps?.let { add("${it / 1000f}mA") }
-                        }.joinToString(" • ")
-                        if (metadata.isNotEmpty()) {
-                            Text(
-                                "Telemetría local: $metadata",
-                                color = Color.White.copy(alpha = 0.65f),
-                                fontSize = 11.sp
-                            )
-                        }
+                }
+            }
+        }
+        if (systemThermalRisk) {
+            TGCard(containerColor = TGCriticalContainer) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text("Estado térmico del sistema", style = androidx.compose.material3.MaterialTheme.typography.titleMedium, color = TGCritical)
+                    Text("Android reporta ${systemThermalStatus ?: "un estado elevado"}. Es una señal agregada; no identifica CPU, GPU ni batería.",
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 5.dp))
+                }
+            }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+            MetricTile("Umbral de alerta", "≥ ${threshold.toInt()}°C", "Configurado por la app", Modifier.weight(1f), TGWarning)
+            MetricTile("Historial local", when { historyStorageError -> "No disponible"; history.isEmpty() -> "Sin lecturas"; else -> "${history.size} lecturas" }, "Retención: ${retentionHours} h", Modifier.weight(1f))
+        }
+        TGCard {
+            Column(modifier = Modifier.padding(18.dp)) {
+                SectionLabel("Últimas lecturas")
+                history.firstOrNull()?.let { latest ->
+                    Text("Más reciente: %.1f°C • %s".format(latest.batteryTemp, SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(latest.timestamp))), style = androidx.compose.material3.MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+                    val metadata = buildList { latest.batteryLevel?.let { add("$it%") }; latest.batteryVoltageMv?.let { add("${it} mV") }; latest.batteryCurrentMicroamps?.let { add("${it / 1000f} mA") } }.joinToString(" • ")
+                    if (metadata.isNotEmpty()) Text("Telemetría local: $metadata", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = TGTextMuted, modifier = Modifier.padding(top = 4.dp))
+                }
+                history.drop(1).lastOrNull()?.let { oldest ->
+                    Text("Más antigua disponible: %.1f°C • %s".format(oldest.batteryTemp, SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(oldest.timestamp))), style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = TGTextMuted, modifier = Modifier.padding(top = 5.dp))
+                }
+                if (history.isEmpty()) Text(if (historyStorageError) "El almacenamiento local no está disponible." else "Sin lecturas persistidas.", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium, color = TGTextMuted, modifier = Modifier.padding(top = 8.dp))
+            }
+        }
+
+        TGCard {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.BatteryChargingFull, contentDescription = null, tint = TGPrimary)
+                    Text("Telemetría de batería", style = androidx.compose.material3.MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 10.dp))
+                }
+                Text(batteryMeta.ifEmpty { "Datos de batería no disponibles" }, style = androidx.compose.material3.MaterialTheme.typography.bodyMedium, color = TGTextMuted, modifier = Modifier.padding(top = 10.dp))
+                Text(if (available) "Fuente: Android BatteryManager" else "Fuente no disponible", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = TGTextMuted, modifier = Modifier.padding(top = 5.dp))
+            }
+        }
+
+        TGCard {
+            Column(modifier = Modifier.padding(18.dp)) {
+                SectionLabel("Cadencia de monitoreo")
+                Text(monitoringMode.label, style = androidx.compose.material3.MaterialTheme.typography.titleMedium, color = TGPrimary, modifier = Modifier.padding(top = 6.dp))
+                Text("${monitoringMode.description} Cada ${monitoringMode.intervalMinutes} min${if (monitoringMode == MonitoringMode.PREVENTIVE) " • solo mientras carga" else ""}.", style = androidx.compose.material3.MaterialTheme.typography.bodyMedium, color = TGTextMuted, modifier = Modifier.padding(top = 4.dp))
+                Text("Con la pantalla abierta: ${formatPollingInterval(pollingPolicy.intervalMs)}${if (pollingPolicy.lowBatteryLimited) " • ampliada por batería ≤15%" else if (pollingPolicy.costLimited) " • ampliada por costo medido" else ""}.", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = TGTextMuted, modifier = Modifier.padding(top = 8.dp))
+                Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MonitoringMode.values().forEach { mode ->
+                        FilterChip(selected = monitoringMode == mode, onClick = { viewModel.setMonitoringMode(mode) }, label = { Text(mode.label) })
                     }
-                    history.drop(1).lastOrNull()?.let { oldest ->
-                        val timeLabel = SimpleDateFormat("HH:mm", Locale.getDefault())
-                            .format(Date(oldest.timestamp))
-                        Text(
-                            String.format(
-                                Locale.getDefault(),
-                                "Más antigua disponible: %.1f°C • %s",
-                                oldest.batteryTemp,
-                                timeLabel
-                            ),
-                            color = Color.White.copy(alpha = 0.55f),
-                            fontSize = 11.sp
-                        )
+                }
+                Text("Con batería ≤15% y sin carga se omite la persistencia no esencial; las alertas siguen evaluándose.", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = TGTextMuted, modifier = Modifier.padding(top = 9.dp))
+            }
+        }
+
+        TGCard {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.Settings, contentDescription = null, tint = TGPrimary)
+                    Text("Controles del sistema", style = androidx.compose.material3.MaterialTheme.typography.titleMedium, modifier = Modifier.padding(start = 10.dp))
+                }
+                Text("Accesos directos para revisar ajustes. ThermaGuard no cambia opciones protegidas.", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = TGTextMuted, modifier = Modifier.padding(top = 5.dp))
+                Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AndroidSettingsTarget.values().forEach { target ->
+                        OutlinedButton(onClick = { onOpenSettings(target) }) { Text(target.label.replace("FICHA DE LA APP", "FICHA")) }
                     }
                 }
             }
         }
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }
-
