@@ -12,7 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.jeissonalberto.thermaguard.MainActivity
-import com.jeissonalberto.thermaguard.domain.isSystemThermalRisk
+import com.jeissonalberto.thermaguard.domain.ThermalMonitoringPolicy
 
 /** Posts a thermal alert only when the caller has observed a real state transition. */
 object ThermalAlertNotifier {
@@ -45,7 +45,7 @@ object ThermalAlertNotifier {
                 )
             }
             val batteryLabel = temperature?.let { "%.1f°C".format(it) } ?: "no disponible"
-            val body = if (isSystemThermalRisk(systemStatus)) {
+            val body = if (ThermalMonitoringPolicy.isSystemThermalRisk(systemStatus)) {
                 "Android reportó un estado térmico $systemStatus; la batería marca $batteryLabel. " +
                     "Reduce la carga y comprueba la ventilación del dispositivo."
             } else {

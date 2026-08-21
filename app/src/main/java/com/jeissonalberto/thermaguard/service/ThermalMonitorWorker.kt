@@ -19,12 +19,9 @@ import com.jeissonalberto.thermaguard.data.ThermalDatabase
 import com.jeissonalberto.thermaguard.data.ThermalSnapshot
 import com.jeissonalberto.thermaguard.data.readBatteryTelemetry
 import com.jeissonalberto.thermaguard.domain.MonitoringMode
-import com.jeissonalberto.thermaguard.domain.batteryTemperatureCelsius
+import com.jeissonalberto.thermaguard.domain.ThermalMonitoringPolicy
 import com.jeissonalberto.thermaguard.domain.normalizeHistoryRetentionHours
-import com.jeissonalberto.thermaguard.domain.shouldNotifyThermalStatus
 import com.jeissonalberto.thermaguard.domain.systemThermalStatusLabel
-import com.jeissonalberto.thermaguard.domain.thermalEngineStatus
-import com.jeissonalberto.thermaguard.domain.shouldPauseNonEssentialWork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -49,7 +46,7 @@ class ThermalMonitorWorker(
                 BatteryManager.EXTRA_TEMPERATURE,
                 Int.MIN_VALUE
             ) ?: Int.MIN_VALUE
-            val temperature = batteryTemperatureCelsius(rawTemperature)
+            val temperature = ThermalMonitoringPolicy.batteryTemperatureCelsius(rawTemperature)
             val batteryTelemetry = readBatteryTelemetry(batteryIntent)
             val systemStatus = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 context.getSystemService(PowerManager::class.java)
@@ -58,9 +55,17 @@ class ThermalMonitorWorker(
             } else {
                 null
             }
-            val status = thermalEngineStatus(temperature, systemStatus)
-            notifyOnTransition(context, status, temperature, systemStatus)
-            if (!shouldPauseNonEssentialWork(batteryTelemetry.levelPercent, batteryTelemetry.isCharging)) {
+            val previous = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(KEY_LAST_STATUS, null)
+            val decision = ThermalMonitoringPolicy.evaluate(
+                batteryTemperatureCelsius = temperature,
+                systemStatus = systemStatus,
+                previousStatus = previous,
+                batteryLevelPercent = batteryTelemetry.levelPercent,
+                isCharging = batteryTelemetry.isCharging
+            )
+            notifyOnTransition(context, decision, temperature, systemStatus)
+            if (!decision.pauseNonEssentialWork) {
                 persistSnapshot(context, temperature, batteryTelemetry)
             }
             Result.success()
@@ -72,17 +77,16 @@ class ThermalMonitorWorker(
 
     private fun notifyOnTransition(
         context: Context,
-        status: String,
+        decision: ThermalMonitoringPolicy.Decision,
         temperature: Float?,
         systemStatus: String?
     ) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val previous = prefs.getString(KEY_LAST_STATUS, null)
-        if (shouldNotifyThermalStatus(previous, status)) {
-            if (ThermalAlertNotifier.notify(context, status, temperature, systemStatus)) {
-                prefs.edit().putString(KEY_LAST_STATUS, status).apply()
+        if (decision.shouldNotify) {
+            if (ThermalAlertNotifier.notify(context, decision.status, temperature, systemStatus)) {
+                prefs.edit().putString(KEY_LAST_STATUS, decision.status).apply()
             }
-        } else if (status != "ALERT" && status != "CRITICAL") {
+        } else if (decision.status != "ALERT" && decision.status != "CRITICAL") {
             prefs.edit().remove(KEY_LAST_STATUS).apply()
         }
     }
