@@ -86,11 +86,13 @@ jobs:
         run: |
           set -euo pipefail
           apk="app/build/outputs/apk/release/app-release.apk"
+          ./gradlew clean assembleRelease --stacktrace
           test -s "$apk"
           first_hash="$(sha256sum "$apk" | awk '{print $1}')"
           ./gradlew clean assembleRelease --stacktrace
           test -s "$apk"
           second_hash="$(sha256sum "$apk" | awk '{print $1}')"
+          printf 'Reproducibility hashes: first=%s second=%s\n' "$first_hash" "$second_hash"
           test "$first_hash" = "$second_hash"
           mkdir -p ci/artifacts
           cp "$apk" ci/artifacts/ThermaGuard-release.apk
