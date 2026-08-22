@@ -37,10 +37,10 @@ jobs:
       - name: Ejecutar pruebas unitarias Release
         run: ./gradlew testReleaseUnitTest --stacktrace
 
-      - name: Lint Debug
+      - name: Lint Debug (análisis estático)
         run: ./gradlew lintDebug --stacktrace
 
-      - name: Lint Release
+      - name: Lint Release (análisis estático)
         run: ./gradlew lintRelease --stacktrace
 
       - name: Verificar manifiesto fusionado Debug
@@ -77,8 +77,27 @@ jobs:
       - name: Compilar APK Debug
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Compilar AAB Release
-        run: ./gradlew bundleRelease --stacktrace
+      - name: Compilar APK Release y AAB Release
+        run: |
+          ./gradlew assembleRelease bundleRelease --stacktrace
+
+      - name: Verificar reproducibilidad y generar checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="app/build/outputs/apk/release/app-release.apk"
+          test -s "$apk"
+          first_hash="$(sha256sum "$apk" | awk '{print $1}')"
+          ./gradlew clean assembleRelease --stacktrace
+          test -s "$apk"
+          second_hash="$(sha256sum "$apk" | awk '{print $1}')"
+          test "$first_hash" = "$second_hash"
+          mkdir -p ci/artifacts
+          cp "$apk" ci/artifacts/ThermaGuard-release.apk
+          cp app/build/outputs/bundle/release/app-release.aab ci/artifacts/ThermaGuard-release.aab
+          sha256sum ci/artifacts/ThermaGuard-release.apk > ci/artifacts/ThermaGuard-release.apk.sha256
+          sha256sum ci/artifacts/ThermaGuard-release.aab > ci/artifacts/ThermaGuard-release.aab.sha256
+          printf 'APK SHA-256: %s\nAAB SHA-256: %s\n' "$second_hash" "$(cut -d' ' -f1 ci/artifacts/ThermaGuard-release.aab.sha256)"
 
       - name: Subir APK Debug
         uses: actions/upload-artifact@v4
@@ -87,9 +106,10 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
-      - name: Subir AAB Release
+      - name: Subir APK/AAB Release y checksums
         uses: actions/upload-artifact@v4
         with:
-          name: ThermaGuard-release-aab
-          path: app/build/outputs/bundle/release/app-release.aab
+          name: ThermaGuard-release-artifacts
+          path: ci/artifacts/*
+          if-no-files-found: error
           retention-days: 30
