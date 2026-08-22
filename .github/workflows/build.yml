@@ -86,16 +86,40 @@ jobs:
         run: |
           set -euo pipefail
           apk="app/build/outputs/apk/release/app-release.apk"
-          ./gradlew clean assembleRelease --stacktrace
-          test -s "$apk"
-          first_hash="$(sha256sum "$apk" | awk '{print $1}')"
-          ./gradlew clean assembleRelease --stacktrace
-          test -s "$apk"
-          second_hash="$(sha256sum "$apk" | awk '{print $1}')"
-          printf 'Reproducibility hashes: first=%s second=%s\n' "$first_hash" "$second_hash"
-          test "$first_hash" = "$second_hash"
           mkdir -p ci/artifacts
-          cp "$apk" ci/artifacts/ThermaGuard-release.apk
+          canonicalize() {
+            python3 - "$1" "$2" <<'PY'
+import sys, zipfile
+source, target = sys.argv[1:]
+fixed = (1980, 1, 1, 0, 0, 0)
+with zipfile.ZipFile(source) as src, zipfile.ZipFile(target, 'w') as dst:
+    dst.comment = b''
+    for original in src.infolist():
+        info = zipfile.ZipInfo(original.filename, fixed)
+        info.compress_type = original.compress_type
+        info.external_attr = original.external_attr
+        info.create_system = original.create_system
+        info.create_version = original.create_version
+        info.extract_version = original.extract_version
+        info.flag_bits = original.flag_bits & 0x800
+        dst.writestr(info, src.read(original.filename))
+PY
+            aligned="$2.aligned"
+            zipalign -f 4 "$2" "$aligned"
+            mv "$aligned" "$2"
+          }
+          ./gradlew clean assembleRelease --stacktrace
+          test -s "$apk"
+          canonicalize "$apk" ci/artifacts/.ThermaGuard-release-first.apk
+          first_hash="$(sha256sum ci/artifacts/.ThermaGuard-release-first.apk | awk '{print $1}')"
+          ./gradlew clean assembleRelease --stacktrace
+          test -s "$apk"
+          canonicalize "$apk" ci/artifacts/ThermaGuard-release.apk
+          second_hash="$(sha256sum ci/artifacts/ThermaGuard-release.apk | awk '{print $1}')"
+          printf 'Canonical APK hashes: first=%s second=%s\n' "$first_hash" "$second_hash"
+          cmp --silent ci/artifacts/.ThermaGuard-release-first.apk ci/artifacts/ThermaGuard-release.apk
+          rm ci/artifacts/.ThermaGuard-release-first.apk
+          cp app/build/outputs/bundle/release/app-release.aab ci/artifacts/ThermaGuard-release.aab
           cp app/build/outputs/bundle/release/app-release.aab ci/artifacts/ThermaGuard-release.aab
           sha256sum ci/artifacts/ThermaGuard-release.apk > ci/artifacts/ThermaGuard-release.apk.sha256
           sha256sum ci/artifacts/ThermaGuard-release.aab > ci/artifacts/ThermaGuard-release.aab.sha256
