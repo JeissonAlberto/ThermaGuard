@@ -78,7 +78,7 @@ internal fun buildThermalDiagnosticContract(
     fun <T> observedValue(
         value: T?,
         missingAfterRead: DiagnosticUnavailableReason = DiagnosticUnavailableReason.SENSOR_NOT_EXPOSED
-    ): DiagnosticValue<T> = value?.let(DiagnosticValue::Available)
+    ): DiagnosticValue<T> = value?.let { DiagnosticValue.Available(it) }
         ?: DiagnosticValue.Unavailable(
             if (observedAtMs == null) DiagnosticUnavailableReason.NOT_READ_YET else missingAfterRead
         )
