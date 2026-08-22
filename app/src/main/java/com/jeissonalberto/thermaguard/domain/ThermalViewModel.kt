@@ -101,7 +101,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             charging = _isCharging.value,
             batteryVoltageMv = _batteryVoltageMv.value,
             batteryCurrentMicroamps = _batteryCurrentMicroamps.value,
-            historyCount = _history.value.size,
+            historyCount = _history.value.size.takeIf { historyLoaded },
             historyStorageError = _historyStorageError.value,
             kernelThermalZoneCount = _hardwareThermalZones.value.size.takeIf { it > 0 }
         )
@@ -167,6 +167,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     /** Read-only snapshot built only from Android readings and local Room state. */
     val diagnosticContract: StateFlow<ThermalDiagnosticContract> = _diagnosticContract
 
+    private var historyLoaded = false
     private var lastPersistedAt = 0L
     private var lastHardwareZoneReadAt = 0L
     private var foregroundPollingJob: Job? = null
@@ -201,6 +202,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                     }
                     .collect { snapshots ->
                         _history.value = snapshots
+                        historyLoaded = true
                         publishDiagnosticContract()
                     }
             }
