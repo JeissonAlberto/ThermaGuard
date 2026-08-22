@@ -2,104 +2,38 @@
 
 **Aplicación:** ThermaGuard  
 **Desarrollador:** Jasol Group / Jeisson Alberto Sarmiento Cabrera  
-**Fecha de vigencia:** Junio 2026  
-**Versión:** 1.0  
+**Versión:** 2.0 — agosto de 2026
 
-> ⚠️ Al instalar o usar ThermaGuard, aceptas estos Términos. Si no estás de acuerdo, desinstala la aplicación.
+## 1. Descripción del servicio
 
----
+ThermaGuard es una aplicación Android de observación térmica local. Lee señales públicas de Android, conserva opcionalmente un historial en Room y presenta alertas y decisiones de cadencia explicables. La disponibilidad depende del sistema operativo, el fabricante y el modelo del dispositivo.
 
-## 1. Descripción del Servicio
+La aplicación no controla CPU/GPU, no modifica `sysfs`, no termina procesos, no requiere root y no proporciona un diagnóstico certificado del hardware.
 
-ThermaGuard es una aplicación de monitoreo térmico avanzado para dispositivos Android. Proporciona análisis basado en leyes físicas de termodinámica, gobernanza de CPU/GPU (con root) y telemetría técnica. La app se ofrece gratuitamente y sin garantía de disponibilidad continua.
+## 2. Uso previsto
 
----
+Puedes usar ThermaGuard para consultar las señales que tu dispositivo expone, revisar su historial local y decidir manualmente si deseas abrir ajustes Android o reducir la carga del dispositivo.
 
-## 2. Uso Permitido
+Las señales ausentes se muestran como ausentes. La temperatura de batería no equivale a la temperatura de CPU o GPU y una alerta no constituye una garantía de protección térmica.
 
-Puedes usar ThermaGuard para:
-- Monitorear el estado térmico de tu dispositivo personal.
-- Optimizar el rendimiento de tu propio hardware.
-- Visualizar análisis y diagnósticos técnicos.
+## 3. Datos locales y consentimiento
 
-**Queda prohibido:**
-- Realizar ingeniería inversa, descompilar o modificar la aplicación.
-- Usar la app para dañar dispositivos de terceros.
-- Redistribuir el APK sin autorización expresa de Jasol Group.
+El historial se conserva localmente según una retención elegida por el usuario. La medición del costo propio está desactivada inicialmente y, si se autoriza, guarda solo conteo y duración local de lecturas. Ambos conjuntos pueden borrarse desde la interfaz. No se envía telemetría térmica a Internet.
 
----
+## 4. Permisos
 
-## 3. Funciones de Root
+La aplicación puede solicitar notificaciones. Declara Internet y estado de red para la comprobación de versiones y sus restricciones. No solicita permisos de ubicación, contactos, cámara, micrófono, accesibilidad, overlay, estadísticas de uso ni control del sistema.
 
-Algunas funciones de ThermaGuard requieren acceso root al dispositivo (control de frecuencias CPU/GPU, ajuste de governor del kernel, throttle de emergencia). **El uso de estas funciones es bajo tu exclusiva responsabilidad.** Jasol Group no se hace responsable por:
-- Daños al dispositivo derivados de la modificación de parámetros del kernel.
-- Pérdida de garantía del fabricante por uso de root.
-- Comportamiento inesperado del sistema operativo tras aplicar configuraciones de hardware.
+## 5. Exactitud y disponibilidad
 
-Recomendamos hacer una copia de seguridad antes de usar las funciones de gobernanza avanzada.
+ThermaGuard muestra valores observados o una razón explícita de ausencia. Android puede aplazar los trabajos periódicos y algunos fabricantes pueden ocultar sensores. No se garantiza una frecuencia concreta, disponibilidad permanente, ahorro de batería ni prevención de daños.
 
----
+## 6. Responsabilidad
 
-## 4. Exactitud del Análisis Térmico
+La aplicación se proporciona "tal cual" dentro de los límites permitidos por la legislación aplicable. El usuario conserva la decisión final sobre el uso del dispositivo y debe respetar las protecciones térmicas del sistema y las instrucciones del fabricante.
 
-Los resultados del SiliconPhysicsEngine son **estimaciones orientativas** basadas en modelos matemáticos. No representan mediciones certificadas de laboratorio. No tomes decisiones críticas de hardware basadas únicamente en los datos de ThermaGuard sin validación adicional.
+## 7. Propiedad y contacto
 
----
+El código, interfaz y recursos pertenecen a Jasol Group o se utilizan bajo licencias compatibles. Para consultas: **jeissonsarmiento@avidtel.com.co**, Colombia.
 
-## 5. Arbitraje y Renuncia a Demandas Colectivas
-
-*(Aplicable a usuarios en jurisdicciones donde sea legalmente válido)*
-
-Cualquier disputa derivada de estos Términos o del uso de ThermaGuard se resolverá mediante **arbitraje individual vinculante**, no en tribunales, salvo que la disputa califique para un tribunal de reclamaciones menores. **Tú y Jasol Group renuncian al derecho de participar en una demanda colectiva (class action), acción representativa o arbitraje colectivo.** El arbitraje se llevará a cabo conforme a las reglas de arbitraje aplicables en la jurisdicción del desarrollador (Colombia).
-
-Esta cláusula no aplica a reclamaciones relacionadas con propiedad intelectual, que podrán presentarse ante el tribunal competente.
-
----
-
-## 6. Política DMCA / Derechos de Autor
-
-ThermaGuard no permite la carga de contenido de terceros por parte de los usuarios. Todo el código, interfaz y recursos gráficos de la app son propiedad de Jasol Group o se usan bajo licencias compatibles.
-
-Si consideras que algún elemento de ThermaGuard infringe tus derechos de autor, envía un aviso que incluya:
-1. Tu firma (física o electrónica).
-2. Identificación de la obra protegida supuestamente infringida.
-3. Identificación del material infractor y su ubicación.
-4. Tu información de contacto.
-5. Declaración de buena fe de que el uso no está autorizado.
-6. Declaración, bajo pena de perjurio, de que la información es exacta.
-
-**Agente designado DMCA:**  
-Jasol Group / Jeisson Alberto Sarmiento Cabrera  
-Correo: jeissonsarmiento@avidtel.com.co  
-
-Responderemos a avisos válidos a la mayor brevedad posible.
-
----
-
-## 7. Limitación de Responsabilidad
-
-ThermaGuard se proporciona **"tal cual"** (*as is*), sin garantías expresas ni implícitas. En la máxima medida permitida por la ley aplicable, Jasol Group no será responsable por daños directos, indirectos, incidentales o consecuentes derivados del uso o la imposibilidad de uso de la app, incluyendo daños al hardware del dispositivo.
-
----
-
-## 8. Modificaciones
-
-Jasol Group puede modificar estos Términos en cualquier momento. Los cambios sustanciales se notificarán mediante actualización en Google Play. El uso continuado de la app tras la publicación de cambios constituye aceptación de los nuevos Términos.
-
----
-
-## 9. Ley Aplicable
-
-Estos Términos se rigen por las leyes de la República de Colombia, sin perjuicio de los derechos obligatorios que correspondan al usuario según la legislación de su país de residencia.
-
----
-
-## 10. Contacto
-
-**Jasol Group / ThermaGuard**  
-Correo: jeissonsarmiento@avidtel.com.co  
-País: Colombia  
-
----
-
-*Términos redactados incorporando las 4 protecciones legales estándar para apps SaaS/móviles: claims de IA verificables (FTC), cláusula de arbitraje, cumplimiento de privacidad (Google Play Data Safety) y política DMCA (Sección 512).*
+Estos términos no sustituyen los derechos obligatorios que correspondan al usuario según la legislación aplicable.

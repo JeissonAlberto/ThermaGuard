@@ -90,6 +90,23 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private var samplesAtLastCostPersist = _monitoringCost.value.sampleCount
 
     private fun historyRetentionMs(): Long = _retentionHours.value * 60 * 60 * 1_000L
+
+    private fun publishDiagnosticContract() {
+        _diagnosticContract.value = buildThermalDiagnosticContract(
+            observedAtMs = _lastUpdated.value,
+            appStatus = _engineStatus.value,
+            batteryTemperature = _batteryTemp.value,
+            systemThermalStatus = _systemThermalStatus.value,
+            batteryLevelPercent = _batteryLevel.value,
+            charging = _isCharging.value,
+            batteryVoltageMv = _batteryVoltageMv.value,
+            batteryCurrentMicroamps = _batteryCurrentMicroamps.value,
+            historyCount = _history.value.size,
+            historyStorageError = _historyStorageError.value,
+            kernelThermalZoneCount = _hardwareThermalZones.value.size.takeIf { it > 0 }
+        )
+    }
+
     private val monitoringPreferences = application.getSharedPreferences(
         MonitoringMode.PREFS_NAME,
         Context.MODE_PRIVATE
@@ -146,6 +163,10 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     private val _historyStorageError = MutableStateFlow(thermalDao == null)
     val historyStorageError: StateFlow<Boolean> = _historyStorageError
 
+    private val _diagnosticContract = MutableStateFlow(ThermalDiagnosticContract.initial())
+    /** Read-only snapshot built only from Android readings and local Room state. */
+    val diagnosticContract: StateFlow<ThermalDiagnosticContract> = _diagnosticContract
+
     private var lastPersistedAt = 0L
     private var lastHardwareZoneReadAt = 0L
     private var foregroundPollingJob: Job? = null
@@ -163,6 +184,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
     val foregroundPollingPolicy: StateFlow<ForegroundPollingPolicy> = _foregroundPollingPolicy
 
     init {
+        publishDiagnosticContract()
         thermalDao?.let { dao ->
             viewModelScope.launch(Dispatchers.IO) {
                 val cleanupResult = runCatching {
@@ -170,10 +192,17 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                 }
                 if (cleanupResult.isFailure) {
                     _historyStorageError.value = true
+                    publishDiagnosticContract()
                 }
                 dao.observeRecent(MAX_HISTORY_LIMIT)
-                    .catch { _historyStorageError.value = true }
-                    .collect { snapshots -> _history.value = snapshots }
+                    .catch {
+                        _historyStorageError.value = true
+                        publishDiagnosticContract()
+                    }
+                    .collect { snapshots ->
+                        _history.value = snapshots
+                        publishDiagnosticContract()
+                    }
             }
         }
 
@@ -240,6 +269,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             _hardwareThermalZones.value = runCatching {
                 HardwareProfiler.readCurrentThermalZones()
             }.getOrDefault(emptyList())
+            publishDiagnosticContract()
         }
     }
 
@@ -257,8 +287,14 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         val dao = thermalDao ?: return
         viewModelScope.launch(Dispatchers.IO) {
             runCatching { dao.deleteAll() }
-                .onSuccess { _historyStorageError.value = false }
-                .onFailure { _historyStorageError.value = true }
+                .onSuccess {
+                    _historyStorageError.value = false
+                    publishDiagnosticContract()
+                }
+                .onFailure {
+                    _historyStorageError.value = true
+                    publishDiagnosticContract()
+                }
         }
     }
 
@@ -315,8 +351,14 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
         val dao = thermalDao ?: return
         viewModelScope.launch(Dispatchers.IO) {
             runCatching { dao.deleteOlderThan(System.currentTimeMillis() - historyRetentionMs()) }
-                .onSuccess { _historyStorageError.value = false }
-                .onFailure { _historyStorageError.value = true }
+                .onSuccess {
+                    _historyStorageError.value = false
+                    publishDiagnosticContract()
+                }
+                .onFailure {
+                    _historyStorageError.value = true
+                    publishDiagnosticContract()
+                }
         }
     }
 
@@ -384,6 +426,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
             temperature = temperature,
             systemStatus = systemStatus
         )
+        publishDiagnosticContract()
 
         // Keep retention maintenance independent from sensor availability. A device
         // that stops exposing temperature must not keep stale history indefinitely.
@@ -419,6 +462,7 @@ class ThermalViewModel(application: Application) : AndroidViewModel(application)
                         // A later successful write clears a transient database error.
                         _historyStorageError.value = false
                     }
+                    publishDiagnosticContract()
                 }
             }
         }

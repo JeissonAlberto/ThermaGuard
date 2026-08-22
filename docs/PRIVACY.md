@@ -2,124 +2,49 @@
 
 **Aplicación:** ThermaGuard  
 **Desarrollador:** Jasol Group / Jeisson Alberto Sarmiento Cabrera  
-**Fecha de vigencia:** Junio 2026  
-**Versión:** 2.0  
+**Versión:** 3.0 — agosto de 2026
 
----
+## 1. Qué hace la aplicación
 
-## 1. Introducción
+ThermaGuard observa señales térmicas y de batería que Android expone públicamente. Presenta el resultado en la aplicación, mantiene un historial local opcional y puede mostrar una notificación cuando detecta una transición real a un estado de alerta.
 
-Jasol Group ("nosotros", "nuestro") es el desarrollador de **ThermaGuard**, aplicación nativa de monitoreo térmico avanzado para Android. Esta Política de Privacidad describe de forma transparente qué datos recopila la aplicación, cómo los utiliza, dónde los almacena y los derechos que tienes como usuario.
+La aplicación no ofrece control de CPU/GPU, no requiere root y no afirma medir sensores que el dispositivo no expone.
 
-Al instalar y usar ThermaGuard, aceptas las prácticas descritas en este documento.
+## 2. Datos que pueden permanecer en el dispositivo
 
----
+| Dato | Fuente | Finalidad | Almacenamiento |
+|---|---|---|---|
+| Temperatura de batería | `BatteryManager` | Clasificación y alerta | Room local |
+| Nivel, carga, voltaje y corriente de batería | extras públicos de `BatteryManager` | Contexto del diagnóstico | Room local / memoria |
+| Estado térmico agregado | `PowerManager` en Android compatible | Contexto y alerta | Memoria de la app |
+| Timestamp y estado de lectura | aplicación | Historial y UI | Room local |
+| Conteo y duración de lecturas | medición opt-in del usuario | Ajustar cadencia visible | Preferencias locales |
+| Zonas térmicas legibles | `/sys/class/thermal` cuando el sistema lo permite | Detalle de diagnóstico | Memoria de la app |
 
-## 2. Datos que Recopilamos
+Si una señal no está disponible, se conserva la ausencia y una razón; no se fabrica un valor sustituto. La temperatura de batería no representa necesariamente la de CPU o GPU.
 
-ThermaGuard recopila **exclusivamente** información técnica del dispositivo. No recopilamos nombre, correo electrónico, número de teléfono ni ningún dato de identificación personal vinculable a una persona real.
+## 3. Telemetría y red
 
-| Dato | Descripción | Finalidad |
-|------|-------------|-----------|
-| Temperatura (CPU/GPU/Batería) | Lecturas térmicas del hardware | Análisis térmico con SiliconPhysicsEngine |
-| Uso de CPU y frecuencias | Porcentaje y frecuencia por núcleo | Gobernanza CPU/GPU y cálculo de potencia |
-| Nivel y salud de batería | Porcentaje, voltaje, temperatura | Evaluación de estrés térmico |
-| Modelo del dispositivo | Solo `Build.MODEL` del sistema | Ajuste de umbrales específicos para el SoC |
-| Nombre de perfil de usuario | Nombre/apodo introducido por el usuario | Personalización del dashboard (local) |
-| Telemetría técnica anónima | Versión app, snapshots térmicos | Mejora de algoritmos vía GitHub (sin ID) |
+No se envía telemetría térmica, historial, identificadores ni datos de batería a Internet por defecto. No hay cuenta, analítica, publicidad ni SDK de seguimiento configurados.
 
-### Lo que NO recopilamos
-- Datos de ubicación (GPS)
-- Contactos, calendario, fotos o archivos del usuario
-- Historial de navegación o apps instaladas
-- Identificadores publicitarios (GAID)
-- Datos biométricos
+El permiso `INTERNET` está declarado para el comprobador de versiones existente. Esa comprobación es independiente del historial y del diagnóstico térmico. El permiso `ACCESS_NETWORK_STATE` permite a WorkManager aplicar restricciones de red a ese trabajo.
 
----
+## 4. Consentimiento, retención y borrado
 
-## 3. Uso de la Información
+La medición del costo propio está desactivada inicialmente. El usuario puede autorizarla en Diagnóstico; solo guarda conteo y duración de lecturas foreground. Puede desactivarla y borrarla desde el mismo control.
 
-Los datos recopilados se usan **únicamente** para:
+El historial térmico local tiene una retención elegible de 6, 24 o 72 horas y se purga automáticamente al aplicar la retención. El botón **Borrar historial** elimina lecturas, metadatos de batería y el agregado de costo local. Desinstalar la aplicación elimina sus datos locales conforme al comportamiento de Android.
 
-1. Calcular análisis térmicos en tiempo real mediante el SiliconPhysicsEngine (19 leyes físicas).
-2. Aplicar configuraciones óptimas de CPU/GPU a través del CpuGpuGovernor (requiere root).
-3. Enviar telemetría técnica anónima al repositorio GitHub del desarrollador para mejora continua del algoritmo.
-4. Generar alertas, notificaciones y diagnósticos dentro de la app.
-5. Mostrar el perfil de usuario en el dashboard (almacenado localmente en SharedPreferences).
+## 5. Permisos
 
----
+- `POST_NOTIFICATIONS`: opcional, para alertas del sistema.
+- `INTERNET`: comprobación de versión.
+- `ACCESS_NETWORK_STATE`: restricciones de red del trabajo de actualización.
 
-## 4. Almacenamiento y Transferencia de Datos
+No se solicitan ubicación, contactos, cámara, micrófono, Bluetooth, overlay, accesibilidad, estadísticas de uso, escritura de ajustes, root ni permisos de control del sistema.
 
-| Dato | Dónde se almacena | Se envía a terceros |
-|------|------------------|---------------------|
-| Datos térmicos en tiempo real | Solo en memoria RAM — no persisten | No |
-| Historial térmico (sesión) | Memoria de la app (caché local) | No |
-| Telemetría anónima | GitHub (repositorio del desarrollador) | Solo a GitHub |
-| Nombre/apodo de perfil | SharedPreferences del dispositivo | No |
+## 6. Seguridad y límites
 
-**Telemetría y GitHub:** La app puede enviar snapshots técnicos anónimos (temperatura, voltaje, frecuencias CPU) al repositorio GitHub del desarrollador. Estos datos no contienen ningún identificador personal. El servicio de GitHub se rige por la [Política de Privacidad de GitHub](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
+Los datos del historial se guardan en el almacenamiento privado de la aplicación. Android puede aplazar el trabajo periódico y los fabricantes pueden ocultar sensores. ThermaGuard no sustituye las protecciones térmicas del sistema ni garantiza evitar daños o ahorrar un porcentaje de batería.
 
----
-
-## 5. Permisos de Android
-
-ThermaGuard solicita los siguientes permisos del sistema:
-
-| Permiso | Motivo |
-|---------|--------|
-| `POST_NOTIFICATIONS` | Enviar alertas térmicas al usuario |
-| `INTERNET` | Consultar las versiones publicadas en GitHub para el actualizador |
-| `ACCESS_NETWORK_STATE` | Permitir que WorkManager respete la condición de red del actualizador |
-
-La aplicación no solicita permisos de overlay, arranque automático, estadísticas de uso, Bluetooth, telefonía, accesibilidad, escritura de ajustes ni control root/sysfs. El monitoreo periódico usa WorkManager y no declara un servicio propio en primer plano.
-
----
-
-## 6. Uso de Inteligencia Artificial
-
-ThermaGuard utiliza algoritmos propios de análisis térmico basados en leyes físicas reales (Fourier, Newton, Stefan-Boltzmann, Arrhenius, etc.) y heurísticas de hardware. **No se hacen promesas de precisión absoluta.** Los resultados son estimaciones orientativas para el monitoreo del dispositivo y no sustituyen el diagnóstico técnico profesional.
-
-La app **no utiliza** modelos de IA de terceros (GPT, Gemini, etc.) ni envía datos a servicios de inteligencia artificial externos.
-
----
-
-## 7. Menores de Edad
-
-ThermaGuard no está dirigida a menores de 13 años y no recopila información de menores de forma intencionada.
-
----
-
-## 8. Seguridad
-
-Implementamos medidas técnicas razonables para proteger la información almacenada localmente. La telemetría enviada a GitHub no contiene identificadores personales y se transmite mediante HTTPS.
-
----
-
-## 9. Tus Derechos
-
-Puedes en cualquier momento:
-- **Eliminar tu perfil local:** Ajustes → Perfil → Eliminar datos.
-- **Desactivar la telemetría:** Ajustes → Telemetría → Desactivar.
-- **Desinstalar la app**, lo cual elimina todos los datos locales del dispositivo.
-
----
-
-## 10. Cambios en esta Política
-
-Notificaremos cambios significativos mediante una actualización de la app en Google Play. La fecha de vigencia al inicio de este documento refleja la versión actual.
-
----
-
-## 11. Contacto
-
-Si tienes preguntas sobre esta política:
-
-**Jasol Group / ThermaGuard**  
-Correo: jeissonsarmiento@avidtel.com.co  
-País: Colombia  
-
----
-
-*Esta política fue elaborada con base en los requisitos de Google Play Data Safety, la DMCA (Sección 512) y las directrices de la FTC para claims de IA.*
-
+Para preguntas: **jeissonsarmiento@avidtel.com.co** — Colombia.

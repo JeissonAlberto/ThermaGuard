@@ -23,8 +23,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.jeissonalberto.thermaguard.domain.DiagnosticUnavailableReason
+import com.jeissonalberto.thermaguard.domain.DiagnosticValue
 import com.jeissonalberto.thermaguard.domain.ThermalViewModel
 import com.jeissonalberto.thermaguard.domain.isSystemThermalRisk
+import com.jeissonalberto.thermaguard.domain.unavailableLabel
+import com.jeissonalberto.thermaguard.domain.valueOrNull
 import com.jeissonalberto.thermaguard.ui.theme.TGCritical
 import com.jeissonalberto.thermaguard.ui.theme.TGPrimary
 import com.jeissonalberto.thermaguard.ui.theme.TGTextMuted
@@ -36,18 +40,20 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
         viewModel.setDiagnosticsVisible(true)
         onDispose { viewModel.setDiagnosticsVisible(false) }
     }
-    val temperature by viewModel.batteryTemp.collectAsState()
-    val sensorAvailable by viewModel.sensorAvailable.collectAsState()
-    val status by viewModel.engineStatus.collectAsState()
-    val systemThermalStatus by viewModel.systemThermalStatus.collectAsState()
+    val diagnostic by viewModel.diagnosticContract.collectAsState()
     val hardwareThermalZones by viewModel.hardwareThermalZones.collectAsState()
-    val batteryLevel by viewModel.batteryLevel.collectAsState()
-    val isCharging by viewModel.isCharging.collectAsState()
-    val batteryVoltageMv by viewModel.batteryVoltageMv.collectAsState()
-    val batteryCurrentMicroamps by viewModel.batteryCurrentMicroamps.collectAsState()
-    val lastUpdated by viewModel.lastUpdated.collectAsState()
     val history by viewModel.history.collectAsState()
-    val historyStorageError by viewModel.historyStorageError.collectAsState()
+    val temperature = diagnostic.batteryTemperature.valueOrNull()
+    val sensorAvailable = diagnostic.batteryTemperature is DiagnosticValue.Available
+    val status = diagnostic.appStatus
+    val systemThermalStatus = diagnostic.systemThermalStatus.valueOrNull()
+    val batteryLevel = diagnostic.batteryLevelPercent.valueOrNull()
+    val isCharging = diagnostic.charging.valueOrNull()
+    val batteryVoltageMv = diagnostic.batteryVoltageMv.valueOrNull()
+    val batteryCurrentMicroamps = diagnostic.batteryCurrentMicroamps.valueOrNull()
+    val lastUpdated = diagnostic.observedAtMs
+    val historyStorageError = diagnostic.historyCount is DiagnosticValue.Unavailable &&
+        (diagnostic.historyCount as DiagnosticValue.Unavailable).reason == DiagnosticUnavailableReason.LOCAL_STORAGE_UNAVAILABLE
     val retentionHours by viewModel.retentionHours.collectAsState()
     val costMeasurementEnabled by viewModel.costMeasurementEnabled.collectAsState()
     val monitoringCost by viewModel.monitoringCost.collectAsState()
@@ -74,20 +80,20 @@ fun DiagnosisScreen(viewModel: ThermalViewModel) {
         SectionLabel("Señales comprobadas")
         TGCard {
             Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)) {
-                KeyValueRow("Sensor de temperatura", if (sensorAvailable) "Disponible" else "No disponible")
-                KeyValueRow("Estado térmico de Android", systemThermalStatus ?: "No disponible")
-                KeyValueRow("Temperatura actual", temperature?.let { String.format(Locale.getDefault(), "%.1f°C", it) } ?: "Sin lectura")
-                if (hardwareThermalZones.isEmpty()) KeyValueRow("Zonas térmicas del kernel", "No disponibles o no legibles")
+                KeyValueRow("Sensor de temperatura", diagnostic.batteryTemperature.unavailableLabel())
+                KeyValueRow("Estado térmico de Android", systemThermalStatus ?: "No disponible: ${diagnostic.systemThermalStatus.unavailableLabel()}")
+                KeyValueRow("Temperatura actual", temperature?.let { String.format(Locale.getDefault(), "%.1f°C", it) } ?: "No disponible: ${diagnostic.batteryTemperature.unavailableLabel()}")
+                if (hardwareThermalZones.isEmpty()) KeyValueRow("Zonas térmicas del kernel", "No disponible: ${diagnostic.kernelThermalZoneCount.unavailableLabel()}")
                 else {
                     KeyValueRow("Zonas térmicas del kernel", "${hardwareThermalZones.size} detectadas")
                     hardwareThermalZones.take(8).forEach { zone -> KeyValueRow("Zona ${zone.type}", "%.1f°C".format(zone.tempC)) }
                 }
-                KeyValueRow("Nivel de batería", batteryLevel?.let { "$it%" } ?: "No disponible")
-                KeyValueRow("Estado de carga", when (isCharging) { true -> "Cargando"; false -> "Sin carga"; null -> "No disponible" })
-                KeyValueRow("Voltaje de batería", batteryVoltageMv?.let { "$it mV" } ?: "No disponible")
-                KeyValueRow("Corriente de batería", batteryCurrentMicroamps?.let { "${it / 1000f} mA" } ?: "No disponible")
+                KeyValueRow("Nivel de batería", batteryLevel?.let { "$it%" } ?: "No disponible: ${diagnostic.batteryLevelPercent.unavailableLabel()}")
+                KeyValueRow("Estado de carga", when (isCharging) { true -> "Cargando"; false -> "Sin carga"; null -> "No disponible: ${diagnostic.charging.unavailableLabel()}" })
+                KeyValueRow("Voltaje de batería", batteryVoltageMv?.let { "$it mV" } ?: "No disponible: ${diagnostic.batteryVoltageMv.unavailableLabel()}")
+                KeyValueRow("Corriente de batería", batteryCurrentMicroamps?.let { "${it / 1000f} mA" } ?: "No disponible: ${diagnostic.batteryCurrentMicroamps.unavailableLabel()}")
                 KeyValueRow("Última actualización", if (lastUpdated != null) "Recibida" else "Pendiente")
-                KeyValueRow("Historial local", when { historyStorageError -> "No disponible"; else -> "${history.size} lecturas" })
+                KeyValueRow("Historial local", when { historyStorageError -> "No disponible: ${diagnostic.historyCount.unavailableLabel()}"; else -> "${history.size} lecturas" })
             }
         }
         Text("Las señales se conservan únicamente en este dispositivo durante $retentionHours horas.", style = MaterialTheme.typography.bodySmall, color = TGTextMuted)

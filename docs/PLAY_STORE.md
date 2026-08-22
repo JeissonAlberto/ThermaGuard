@@ -1,174 +1,51 @@
-# ThermaGuard — Ficha de Play Store
+# ThermaGuard — Ficha de Play Store verificada
 
-## Metadatos Generales
+## Descripción corta
 
-| Campo | Valor |
-|-------|-------|
-| **Nombre de la app** | ThermaGuard |
-| **Desarrollador** | Jasol Group |
-| **Categoría** | Herramientas |
-| **Clasificación de contenido** | Para todos |
-| **Público objetivo** | Usuarios avanzados de Android, gamers, desarrolladores |
-| **Precio** | Gratis |
-
----
-
-## Descripción Corta (80 caracteres)
-
-```
-Monitor térmico inteligente con Motor v5 — Ley de Moore para tu Android
+```text
+Monitor térmico local con lecturas reales de Android
 ```
 
-*(71 caracteres — dentro del límite de 80)*
+## Descripción completa
 
----
+ThermaGuard muestra señales térmicas y de batería que Android realmente expone, sin root y sin modificar el sistema.
 
-## Descripción Completa
+### Qué puedes comprobar
 
-```
-🌡️ ThermaGuard — El monitor térmico inteligente para Android
+- Temperatura real de batería cuando `BatteryManager` la publica.
+- Estado térmico agregado de Android en dispositivos compatibles.
+- Nivel, carga, voltaje y corriente cuando el fabricante los expone.
+- Historial local con retención configurable y borrado manual.
+- Zonas térmicas legibles desde la pantalla de diagnóstico, cuando están disponibles.
+- Alertas cuando una lectura real entra en `ALERT` o `CRITICAL`.
+- Cadencia explicable en modos Ahorro, Equilibrado y Preventivo.
+- Medición opcional y local del tiempo que tarda la propia lectura foreground.
 
-¿Tu teléfono se calienta demasiado jugando, usando apps exigentes o cargando? ThermaGuard analiza en tiempo real la temperatura de tu dispositivo y te protege antes de que el sobrecalentamiento cause daños.
+### Ausencias explícitas
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚡ MOTOR v5 — CIENCIA REAL APLICADA A TU ANDROID
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Android no ofrece una API pública uniforme para temperatura de CPU/GPU, uso de otras aplicaciones o potencia térmica. Cuando una señal no existe, ThermaGuard la marca como no disponible y explica la razón. No muestra valores simulados ni promete precisión de laboratorio.
 
-ThermaGuard usa el Motor v5, basado en la fórmula de disipación de potencia dinámica de procesadores CMOS (la misma física que describe la Ley de Moore):
+### Privacidad
 
-   P = C · V² · F
+El historial y la medición opcional se quedan en el dispositivo. No se envía telemetría térmica ni se requieren cuentas. El permiso de Internet solo se usa para comprobar la versión publicada por el actualizador existente.
 
-Donde C es la constante de capacitancia del chip, V es el proxy de voltaje dinámico y F la frecuencia de operación. Esto permite estimar con precisión cuánta energía está disipando tu procesador como calor — no solo leer un sensor.
+### Permisos
 
-El motor se adapta automáticamente a tu dispositivo gracias al ThermalLearningEngine, que aprende el comportamiento térmico único de tu teléfono a lo largo del tiempo usando regresión online y medias móviles exponenciales (EMA) adaptativas.
+- `POST_NOTIFICATIONS`, si quieres recibir alertas del sistema.
+- `INTERNET`, para comprobar versiones.
+- `ACCESS_NETWORK_STATE`, para restricciones del actualizador.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔍 ¿QUÉ MONITOREA THERMAGUARD?
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ThermaGuard no usa root, accesibilidad, overlay, wakelocks permanentes, alarmas exactas, bypass de batería, escritura `sysfs`, control CPU/GPU ni terminación de procesos.
 
-• 🖥️ Temperatura de CPU en tiempo real
-• 🎮 Temperatura de GPU estimada
-• 🔋 Temperatura y nivel de batería
-• 📊 Uso de CPU por ciclo
-• 📱 App activa que genera más calor
-• ⚡ Potencia disipada estimada (Motor v5)
-• 🎯 Risk Score: indicador unificado de riesgo térmico
+### Limitaciones
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🧠 APRENDIZAJE ADAPTATIVO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WorkManager puede ser aplazado por Android. La disponibilidad depende del fabricante y del modelo. La app informa sobre las señales observadas; no controla el hardware, no garantiza ahorro porcentual y no sustituye las protecciones térmicas del sistema.
 
-ThermaGuard no es un monitor genérico. Con cada uso aprende:
+## Capturas que deben representar la app real
 
-✅ La temperatura base normal de TU dispositivo
-✅ Los umbrales críticos reales (no valores genéricos)
-✅ Qué aplicaciones generan más estrés térmico en tu teléfono
-✅ El patrón de comportamiento térmico de tu batería
+1. Inicio con temperatura de batería o ausencia explícita.
+2. Alertas con el estado agregado de Android y la tendencia local.
+3. Diagnóstico con contrato de señales disponibles/no disponibles.
+4. Retención, borrado y consentimiento de medición local.
 
-El factor de aprendizaje α se ajusta dinámicamente (0.08 en carga estable, hasta 0.45 en picos de carga) para reaccionar rápido cuando importa y ser preciso en estado normal.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚨 ALERTAS INTELIGENTES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-ThermaGuard calcula un Risk Score continuo que combina:
-• Temperatura normalizada (peso 45%)
-• Potencia disipada (peso 35%)
-• Estrés de batería (peso 20%)
-
-Cuando el riesgo supera el umbral crítico, recibirás una notificación clara para tomar acción antes de que sea demasiado tarde.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📈 HISTORIAL Y DIAGNÓSTICO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-• Historial completo de snapshots térmicos
-• Diagnóstico por componente: CPU, GPU, Batería, Sistema
-• Recomendaciones personalizadas basadas en tu historial
-• Gráficas de evolución térmica en el tiempo
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔒 PRIVACIDAD TOTAL
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-ThermaGuard funciona 100% offline:
-
-✅ Todos los datos se guardan SOLO en tu dispositivo
-✅ Cero envío de datos a servidores
-✅ Sin cuenta de usuario requerida
-✅ Sin publicidad
-✅ Sin rastreo de ningún tipo
-
-Solo recopilamos datos técnicos del dispositivo (temperatura, CPU, batería, app activa) para el análisis térmico — nada personal.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔑 PERMISOS Y POR QUÉ LOS NECESITAMOS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-• POST_NOTIFICATIONS — Para enviarte alertas cuando la temperatura sea crítica
-• INTERNET — Para consultar manualmente y en segundo plano las versiones publicadas en GitHub
-• ACCESS_NETWORK_STATE — Para que WorkManager respete la condición de red del chequeo de actualizaciones
-
-Ningún permiso accede a tus datos personales, contactos, ubicación, cámara ni micrófono.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📱 COMPATIBLE Y SIN ROOT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-ThermaGuard funciona en cualquier dispositivo Android sin necesidad de root. No modifica el sistema operativo ni requiere permisos especiales de superusuario. Compatible con Android 8.0 (Oreo) y versiones superiores.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-👾 IDEAL PARA
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-• Gamers que quieren saber cuándo su teléfono está al límite
-• Desarrolladores que necesitan monitorear el rendimiento térmico de sus apps
-• Usuarios avanzados que quieren entender el comportamiento de su hardware
-• Cualquiera que haya sentido su teléfono inusualmente caliente y quiera saber por qué
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📬 CONTACTO Y SOPORTE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-¿Tienes preguntas, sugerencias o encontraste un bug?
-📧 jetfixer03@gmail.com
-
-Desarrollado con ❤️ por Jasol Group — Colombia
-```
-
-*(Aprox. 3.800 caracteres — dentro del límite de 4.000)*
-
----
-
-## Etiquetas / Tags
-
-```
-temperature, thermal, CPU, battery, optimization, monitor, heat, cooling, 
-performance, benchmark, thermometer, processor, GPU, Android, diagnostic,
-overheat, temperature monitor, battery health, CPU monitor, system monitor
-```
-
----
-
-## Capturas de Pantalla Recomendadas
-
-1. **Dashboard principal** — Gauge de temperatura + Risk Score en tiempo real
-2. **Motor v5 en acción** — Visualización de P, V, F con valores actuales
-3. **Historial térmico** — Gráfica de temperatura en el tiempo
-4. **Diagnóstico por componente** — Cards CPU / GPU / Battery / System
-5. **Alerta térmica** — Notificación de riesgo crítico
-6. **Configuración** — Umbrales personalizables + reset de datos
-
----
-
-## Notas para el Equipo de Revisión de Google Play
-
-- La app **no requiere root**.
-- La app no solicita acceso a estadísticas de uso ni identifica qué otras apps están activas.
-- Los datos térmicos permanecen en el dispositivo (Room/SQLite local). La única comunicación de red es la consulta de versiones publicadas en GitHub para el actualizador opcional.
-- La app **no contiene publicidad** ni SDKs de monetización.
-
----
-
-*Documento preparado: Junio 2025 — ThermaGuard by Jasol Group*
-
+*No publicar capturas o textos de CPU/GPU, IA, aprendizaje, governors, potencia estimada o riesgo unificado hasta que exista una implementación demostrable y pruebas de dispositivo.*
